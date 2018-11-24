@@ -6,7 +6,7 @@ import math
 import time
 import scipy
 from scipy import ndimage, misc
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from backprop import *
 
