@@ -6,7 +6,7 @@ import math
 import time
 import scipy
 from scipy import ndimage, misc
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 from backprop import *
 
@@ -398,7 +398,7 @@ class Model(object):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.plot(correct_res)
-        plt.show()
+        # plt.show()
 
     def update_mini_batch(self, batch, eta):
         nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]
