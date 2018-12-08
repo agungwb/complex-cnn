@@ -28,7 +28,10 @@ BATCH_SIZE = 50  #defalut 10
 LMBDA = 0.1
 
 # import ipdb; ipdb.set_trace()
+
 training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
+
+#dtcwt
 
 
 '''
