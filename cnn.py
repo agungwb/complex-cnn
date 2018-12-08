@@ -1,9 +1,10 @@
 # This is the basic idea behind the architecture
-
 import numpy as np
 import random
 import math
+import math
 import time
+import sys
 import scipy
 from scipy import ndimage, misc
 import matplotlib.pyplot as plt
@@ -25,14 +26,22 @@ class ConvLayer(object):
         self.padding = padding
         self.num_filters = num_filters
 
-        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size)
-        self.biases = np.random.rand(self.num_filters,1)
+        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size) #filter * depth * filter_size * filter_size
+        self.biases = np.random.rand(self.num_filters,1) #filter * 1
 
-        self.output_dim1 = (self.height_in - self.filter_size + 2*self.padding)/self.stride + 1        # num of rows
-        self.output_dim2 =  (self.width_in - self.filter_size + 2*self.padding)/self.stride + 1         # num of cols
-        
-        
+        #np.random.randn generate random from normal distribution
+        #np.random.rand generate random from [0..1]
+        #random with complex value np.random.rand(4).view(np.complex128)
+
+        # output image height after convolution ((h - filter_size) / stride)) + 1
+        self.output_dim1 = (self.height_in - self.filter_size + 2*self.padding)/self.stride + 1
+        # output image width after confolution ((w - filter_size) / stride)) + 1
+        self.output_dim2 =  (self.width_in - self.filter_size + 2*self.padding)/self.stride + 1
+
+        # output convolution layer (before activation function) (num_filters, output_dim1, output_dim2)
         self.z_values = np.zeros((self.num_filters, self.output_dim1, self.output_dim2))
+
+        #output convolution layer (after activation function) (num_filters, output_dim1, output_dim2)
         self.output = np.zeros((self.num_filters, self.output_dim1, self.output_dim2))
 
 
@@ -46,7 +55,7 @@ class ConvLayer(object):
         self.z_values = self.z_values.reshape((self.num_filters, self.output_dim1 * self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1 * self.output_dim2))
         
-        act_length1d =  self.output.shape[1]
+        act_length1d =  self.output.shape[1] #dim1 * dim2
 
         for j in range(self.num_filters):
             slide = 0
@@ -56,12 +65,12 @@ class ConvLayer(object):
 
                 # ACTIVATIONS -> loop through each conv block horizontally
                 self.z_values[j][i] = np.sum(input_neurons[:,row:self.filter_size+row, slide:self.filter_size + slide] * self.weights[j]) + self.biases[j]
-                self.output[j][i] = sigmoid(self.z_values[j][i])
+                self.output[j][i] = sigmoid(self.z_values[j][i]) #activation function
                 slide += self.stride
 
                 if (self.filter_size + slide)-self.stride >= self.width_in:    # wrap indices at the end of each row
                     slide = 0
-                    row += self.stride
+                    row += self.stride #go to next row
 
         self.z_values = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
@@ -79,6 +88,12 @@ class PoolingLayer(object):
         self.height_out = (self.height_in - self.poolsize[0])/self.poolsize[1] + 1
         self.width_out = (self.width_in - self.poolsize[0])/self.poolsize[1] + 1      # num of output neurons
 
+        # print "self.height_in : ",self.height_in
+        # print "self.poolsize[0] : ",self.poolsize[0]
+        # print "self.poolsize[1] : ",self.poolsize[1]
+        # print "self.height_out : ",self.height_out
+        # print "self.width_out : ",self.width_out
+
         self.output = np.empty((self.depth, self.height_out, self.width_out))
         self.max_indices = np.empty((self.depth, self.height_out, self.width_out, 2))
 
@@ -87,7 +102,7 @@ class PoolingLayer(object):
         self.pool_length1d = self.height_out * self.width_out
 
         self.output = self.output.reshape((self.depth, self.pool_length1d))
-        self.max_indices = self.max_indices.reshape((self.depth, self.pool_length1d, 2))
+        self.max_indices = self.max_indices.reshape((self.depth, self.pool_length1d, 2)) #store index of max output come from
         
         # for each filter map
         for j in range(self.depth):
@@ -97,9 +112,15 @@ class PoolingLayer(object):
                 toPool = input_image[j][row:self.poolsize[0] + row, slide:self.poolsize[0] + slide]
 
                 self.output[j][i] = np.amax(toPool)                # calculate the max activation
-                index = zip(*np.where(np.max(toPool) == toPool))           # save the index of the max
-                if len(index) > 1:
+                # print ("toPool : ", toPool)
+                # print ("np.max(toPool) : ", np.max(toPool))
+                # print ("np.amax(toPool) : ", np.amax(toPool))
+                # print ("p.where(np.max(toPool) == toPool) : ", np.where(np.max(toPool) == toPool))
+                index = zip(*np.where(np.max(toPool) == toPool)) # HERE IT IS save the index of the max, np.where return index of array if condition meets
+                # print "index before : ", index
+                if len(index) > 1: #if there is more than one maximum value
                     index = [index[0]]
+                # print "index after : ", index
                 index = index[0][0]+ row, index[0][1] + slide
                 self.max_indices[j][i] = index
 
@@ -144,7 +165,14 @@ class FullyConnectedLayer(Layer):
         # this is shape of (num_outputs, 1)
         self.z_values = np.dot(self.weights, a) + self.biases
         self.output = sigmoid(self.z_values)
+
+        # print "self.z_values.shape : ", self.z_values.shape
+        # print "self.output.shape : ", self.output.shape
+        # print "self.weights.shape : ", self.weights.shape
+
         self.weights = self.weights.reshape((self.num_output, self.depth, self.height_in, self.width_in))
+
+        # print "self.weights.shape2 : ", self.weights.shape
         
 class ClassifyLayer(Layer):
     def __init__(self, num_inputs, num_classes):
@@ -152,11 +180,14 @@ class ClassifyLayer(Layer):
         num_inputs, col = num_inputs
         self.num_classes = num_classes
         self.weights = np.random.randn(self.num_classes, num_inputs)
+        # print "self.weights.shape : ", self.weights.shape
         self.biases = np.random.randn(self.num_classes,1)
 
     def classify(self, x):
         self.z_values = np.dot(self.weights,x) + self.biases
         self.output = sigmoid(self.z_values)
+        # print "self.z_values.shape : ", self.z_values.shape
+        # print "self.output.shape : ", self.output.shape
 
 
 class Model(object):
@@ -179,7 +210,7 @@ class Model(object):
         '''
 
         self.input_shape = input_shape
-        self._initialize_layers(layer_config)
+        self._initialize_layers(layer_config) #initiate layers based on layer_config
         self.layer_weight_shapes = [l.weights.shape for l in self.layers if not isinstance(l,PoolingLayer)]
         self.layer_biases_shapes = [l.biases.shape for l in self.layers if not isinstance(l,PoolingLayer)]
 
@@ -192,15 +223,18 @@ class Model(object):
         input_shape = self.input_shape
         for layer_spec in layer_config:
             # handle the spec format: {'type': {kwargs}}
-            layer_class = self.layer_type_map[layer_spec.keys()[0]]
-            layer_kwargs = layer_spec.values()[0]
-            layer = layer_class(input_shape, **layer_kwargs)
-            input_shape = layer.output.shape
+            # print "layer_spec.keys()[0] ; ", layer_spec.keys()[0]
+            layer_class = self.layer_type_map[layer_spec.keys()[0]] #just one element so [0] is use
+            layer_kwargs = layer_spec.values()[0] #layer arguments
+            layer = layer_class(input_shape, **layer_kwargs) #passing kwards to layers
+            input_shape = layer.output.shape ##set the input shape is the output from layer before
             layers.append(layer)
         self.layers = layers
 
     def _get_layer_transition(self, inner_ix, outer_ix):
         inner, outer = self.layers[inner_ix], self.layers[outer_ix]
+        print "inner : ",inner
+        print "outer : ",outer
         # either input to FC or pool to FC -> going from 3d matrix to 1d
         if (
             (inner_ix < 0 or isinstance(inner, PoolingLayer)) and 
@@ -239,15 +273,15 @@ class Model(object):
 
             elif isinstance(layer, ConvLayer):
                 layer.convolve(input_to_feed)
-                for i in range(layer.output.shape[0]):
-                    plt.imsave('images/cat_conv%d.png'%i, layer.output[i])
-                for i in range(layer.weights.shape[0]):
-                    plt.imsave('images/filter_conv%s.png'%i, layer.weights[i].reshape((5,5)))
+                # for i in range(layer.output.shape[0]):
+                #     plt.imsave('images/cat_conv%d.png'%i, layer.output[i])
+                # for i in range(layer.weights.shape[0]):
+                #     plt.imsave('images/filter_conv%s.png'%i, layer.weights[i].reshape((5,5)))
 
             elif isinstance(layer, PoolingLayer):
                 layer.pool(input_to_feed)
-                for i in range(layer.output.shape[0]):
-                    plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
+                # for i in range(layer.output.shape[0]):
+                #     plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
 
             elif isinstance(layer, ClassifyLayer):
                 layer.classify(input_to_feed)
@@ -261,17 +295,31 @@ class Model(object):
         return final_activation
 
     def backprop(self, image, label):
-        nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]
-        nabla_b = [np.zeros(s) for s in self.layer_biases_shapes]
+        nabla_w = [np.zeros(s) for s in self.layer_weight_shapes] #create nabla_weight for every layer with same shape
+        nabla_b = [np.zeros(s) for s in self.layer_biases_shapes] #create nabla_biases for every layer with same shape
+
+
+        # print "self.layer_weight_shapes : ", self.layer_weight_shapes
+        # print "self.layer_biases_shapes : ", self.layer_biases_shapes
+        #
+        # for w in nabla_w:
+        #     print "nabla_w.shape : ", w.shape
+        # for b in nabla_b:
+        #     print "nabla_b.shape : ", b.shape
+
+        # print "layer weight shapes : ", self.layer_weight_shapes
+        # print "layer biases shapes : ", self.layer_biases_shapes
 
         # set first params on the final layer
         final_output = self.layers[-1].output
-        last_delta = (final_output - label) * sigmoid_prime(self.layers[-1].z_values)
+        last_delta = (final_output - label) * sigmoid_prime(self.layers[-1].z_values) # Error * sigmoid_prime(z values layer before)
         last_weights = None
         final=True
 
         num_layers = len(self.layers)
         # import ipdb;ipdb.set_trace()
+
+        nabla_idx = len(nabla_w) - 1
 
         for l in range(num_layers - 1, -1, -1):
             # the "outer" layer is closer to classification
@@ -279,6 +327,7 @@ class Model(object):
             inner_layer_ix = l - 1
             if (l-1) <0:
                 inner_layer_ix = 0
+
             outer_layer_ix = l
 
             layer = self.layers[outer_layer_ix]
@@ -287,6 +336,8 @@ class Model(object):
             transition = self._get_layer_transition(
                 inner_layer_ix, outer_layer_ix
             )
+
+            print "transition : ",transition
 
             # inputfc = poolfc
             # fc to fc = fc to final
@@ -341,8 +392,19 @@ class Model(object):
 
             if transition != 'conv_to_pool':
                 # print 'nablasb, db,nabldw, dw, DELTA', nabla_b[inner_layer_ix].shape, db.shape, nabla_w[inner_layer_ix].shape, dw.shape, last_delta.shape
-                nabla_b[inner_layer_ix], nabla_w[inner_layer_ix] = db, dw
+                print 'outer_layer_ix : ',outer_layer_ix
+                print 'inner_layer_ix : ',inner_layer_ix
+                print 'nabla_idx : ',nabla_idx
+                print 'nabla_w[nabla_idx] : ', nabla_w[nabla_idx].shape
+                print 'dw : ', dw.shape
+                print 'nabla_b[nabla_idx] : ', nabla_b[nabla_idx].shape
+                print 'db : ', db.shape
+                nabla_b[nabla_idx], nabla_w[nabla_idx] = db, dw
                 last_weights = layer.weights
+                nabla_idx -= 1
+
+
+        # sys.exit(0)
 
         return self.layers[-1].output, nabla_b, nabla_w
 
@@ -376,21 +438,23 @@ class Model(object):
                 batch_index += 1
                 loss = self.update_mini_batch(batch, eta)
                 losses+=loss
+                print "losses : ",losses
             mean_error.append(round(losses/batch_size,2))
             print "mean error : ", mean_error
 
             if test_data:
                 print "################## VALIDATE #################"
+                print "Epoch {0} complete".format(epoch)
                 res = self.validate(test_data)
                 correct_res.append(res)
-                print "Epoch {0} complete".format(epoch)
-                accuracy = res/n_test
-                print "res: ", res
-                print "Accuracy: ", accuracy
+
+                # print "res: ", res
+                # print "n_tes: ", n_test
+                # accuracy = float(res) / float(n_test)
+                # print "Accuracy: %.2f" % accuracy
                 # time
                 timer = time.time() - start
                 print "Estimated time: ", timer
-                print res
             else :
                 print "NO TEST DATA"
 
@@ -400,6 +464,7 @@ class Model(object):
         ax.plot(correct_res)
         # plt.show()
 
+    # bisa di paralelisasi
     def update_mini_batch(self, batch, eta):
         nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]
         nabla_b = [np.zeros(s) for s in self.layer_biases_shapes]
@@ -408,14 +473,28 @@ class Model(object):
 
         for image, label in batch:
             image = image.reshape((1,28,28))
+
+            # print "image.shape : ", image.shape
+            # print "label.shape : ", label.shape
+
             _ = self.feedforward(image)
             final_res, delta_b, delta_w = self.backprop(image, label)
 
-            nabla_b = [nb + db for nb, db in zip(nabla_b, delta_b)]
-            nabla_w = [nw + dw for nw, dw in zip(nabla_w, delta_w)]
+            # print 'final_res.shape : ', final_res.shape
+            # print 'final_res : ', final_res
+            # print 'delta_b.shape : ', delta_b[0].shape
+            # print 'len(delta_b) : ', len(delta_b)
+            # print 'delta_w.shape : ', delta_w[0].shape
+            # print 'len(delta_w) : ', len(delta_w)
+
+
+            nabla_b = [nb + db for nb, db in zip(nabla_b, delta_b)] #tambah nilai errornya dengan yang baru
+            nabla_w = [nw + dw for nw, dw in zip(nabla_w, delta_w)] #tambah nilai errornya dengan yang baru
+
 
         ################## print LOSS ############
         error = loss(label, final_res)
+        print "error : ", error
         
         num =0
         weight_index = []
@@ -430,10 +509,29 @@ class Model(object):
             layer.biases -= eta * layer_nabla_b / batch_size
         return error
 
-    def validate(self,data):
+    def validate(self, data):
         data = [(im.reshape((1,28,28)),y) for im,y in data]
         test_results = [(np.argmax(self.feedforward(x)),y) for x, y in data]
-        # print test_results
+        output_n = 10
+        confusion_matrix = np.zeros([output_n, output_n])
+        for test_result in test_results:
+            confusion_matrix[test_result[0]][test_result[1]] += 1
+        # print confusion_matrix
+
+        n_test = len(data)
+
+        accuracy = float(np.trace(confusion_matrix))/n_test
+
+        precision = np.diag(confusion_matrix)/np.sum(confusion_matrix, 0)
+        precision = [((p, 0)[math.isnan(p)]) for p in precision]
+        recall = np.diag(confusion_matrix)/np.sum(confusion_matrix, 1)
+        recall = [((r, 0)[math.isnan(r)]) for r in recall]
+
+        print "Accuracy : ", accuracy
+        print "Average Precision : ", np.average(precision)
+        print "Average Recall : ",np.average(recall)
+
+        # print type(test_results)
         return sum(int(x == y) for x, y in test_results)
 
 # helper functions

@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 ######################### TEST IMAGE ##########################
 
 
-ETA = 1.5
+ETA = 1.5 #learning-rate (maybe)
 EPOCHS = 1 #default 5
 INPUT_SHAPE = (28*28)     # for mnist
 BATCH_SIZE = 50  #defalut 10
@@ -49,16 +49,40 @@ print 'shape of input data: ', input_shape
 
 net = Model(input_shape,
             layer_config = [
-                {'conv_layer': {
-                    'filter_size' : 5,
-                    'stride' : 1,
-                    'num_filters' : 20}},
-                {'pool_layer': {
-                    'poolsize' : (2,2)}},
-                {'fc_layer': {
-                    'num_output' : 30}},
-                {'final_layer': {
-                    'num_classes' : 10}}
+                {'conv_layer':
+                    {
+                        'filter_size': 5,
+                        'stride': 1,
+                        'num_filters': 20
+                    }
+                },
+                {'pool_layer':
+                    {
+                        'poolsize': (2,2)
+                    }
+                },
+                # {'conv_layer':
+                #     {
+                #         'filter_size': 3,
+                #         'stride': 1,
+                #         'num_filters': 40
+                #     }
+                # },
+                # {'pool_layer':
+                #     {
+                #         'poolsize': (2,2)
+                #     }
+                # },
+                {'fc_layer':
+                    {
+                        'num_output': 30
+                    }
+                },
+                {'final_layer':
+                    {
+                        'num_classes': 10
+                    }
+                }
             ])
 
 
@@ -69,7 +93,10 @@ net = Model(input_shape,
 # print(training_data[0][1].shape)
 
 # print(training_data[0][0])
+
 # sys.exit(0)
 
-# net.gradient_descent(training_data[0:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
-net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
+
+
+net.gradient_descent(training_data[0:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
+# net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
