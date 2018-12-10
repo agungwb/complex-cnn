@@ -8,6 +8,8 @@ import sys
 import scipy
 from scipy import ndimage, misc
 import matplotlib.pyplot as plt
+from helper import *
+
 
 from backprop import *
 
@@ -65,7 +67,7 @@ class ConvLayer(object):
 
                 # ACTIVATIONS -> loop through each conv block horizontally
                 self.z_values[j][i] = np.sum(input_neurons[:,row:self.filter_size+row, slide:self.filter_size + slide] * self.weights[j]) + self.biases[j]
-                self.output[j][i] = sigmoid(self.z_values[j][i]) #activation function
+                self.output[j][i] = activation(self.z_values[j][i]) #activation function
                 slide += self.stride
 
                 if (self.filter_size + slide)-self.stride >= self.width_in:    # wrap indices at the end of each row
@@ -164,7 +166,7 @@ class FullyConnectedLayer(Layer):
 
         # this is shape of (num_outputs, 1)
         self.z_values = np.dot(self.weights, a) + self.biases
-        self.output = sigmoid(self.z_values)
+        self.output = activation(self.z_values)
 
         # print "self.z_values.shape : ", self.z_values.shape
         # print "self.output.shape : ", self.output.shape
@@ -185,7 +187,7 @@ class ClassifyLayer(Layer):
 
     def classify(self, x):
         self.z_values = np.dot(self.weights,x) + self.biases
-        self.output = sigmoid(self.z_values)
+        self.output = activation(self.z_values)
         # print "self.z_values.shape : ", self.z_values.shape
         # print "self.output.shape : ", self.output.shape
 
@@ -312,7 +314,7 @@ class Model(object):
 
         # set first params on the final layer
         final_output = self.layers[-1].output
-        last_delta = (final_output - label) * sigmoid_prime(self.layers[-1].z_values) # Error * sigmoid_prime(z values layer before)
+        last_delta = (final_output - label) * activation_prime(self.layers[-1].z_values) # Error * activation_prime(z values layer before)
         last_weights = None
         final=True
 
@@ -472,7 +474,8 @@ class Model(object):
         batch_size = len(batch)
 
         for image, label in batch:
-            image = image.reshape((1,28,28))
+            # image = image.reshape((CHANNEL,HEIGHT,WIDTH))
+            image = image.reshape((self.input_shape[0],self.input_shape[1],self.input_shape[2]))
 
             # print "image.shape : ", image.shape
             # print "label.shape : ", label.shape
@@ -510,7 +513,8 @@ class Model(object):
         return error
 
     def validate(self, data):
-        data = [(im.reshape((1,28,28)),y) for im,y in data]
+        # data = [(im.reshape((CHANNEL,HEIGHT,WIDTH)),y) for im,y in data]
+        data = [(im.reshape((self.input_shape[0],self.input_shape[1],self.input_shape[2])),y) for im,y in data]
         test_results = [(np.argmax(self.feedforward(x)),y) for x, y in data]
         output_n = 10
         confusion_matrix = np.zeros([output_n, output_n])
@@ -532,18 +536,6 @@ class Model(object):
         print "Average Recall : ",np.average(recall)
 
         # print type(test_results)
-        return sum(int(x == y) for x, y in test_results)
+        # return sum(int(x == y) for x, y in test_results)
+        return accuracy
 
-# helper functions
-###############################################################
-def cross_entropy(batch_size, output, expected_output):
-    return (-1/batch_size) * np.sum(expected_output * np.log(output) + (1 - expected_output) * np.log(1-output))
-
-def sigmoid(z):
-    return 1.0/(1.0 + np.exp(-z))
-
-def sigmoid_prime(z):
-    return sigmoid(z) * (1-sigmoid(z))
-
-def loss(desired,final):
-    return 0.5*np.sum(desired-final)**2

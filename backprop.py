@@ -1,4 +1,5 @@
 import numpy as np
+from helper import *
 
 
 # backpropagation
@@ -6,7 +7,7 @@ import numpy as np
 
 def backprop_1d_to_1d(delta, prev_weights, prev_activations, z_vals, final=False):
     if not final: # reset delta
-        sp = sigmoid_prime(z_vals)
+        sp = activation_prime(z_vals)
         # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
         delta = np.dot(prev_weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
 
@@ -15,7 +16,7 @@ def backprop_1d_to_1d(delta, prev_weights, prev_activations, z_vals, final=False
     return delta_b, delta_w, delta
 
 def backprop_1d_to_3d(delta, prev_weights, prev_activations, z_vals):
-    sp = sigmoid_prime(z_vals)
+    sp = activation_prime(z_vals)
     # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
     delta = np.dot(prev_weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
 
@@ -39,7 +40,7 @@ def backprop_pool_to_conv(delta, prev_weights, input_from_conv, max_indices, poo
     max_indices = max_indices.reshape((x, y * z, 2))
 
     # backprop delta from fc to pool layer
-    sp = sigmoid_prime(pool_output)
+    sp = activation_prime(pool_output)
     delta = np.dot(prev_weights.transpose(), delta) * sp         # backprop to calc delta on pooling layer
     delta = delta.reshape((x,y*z))
     pool_output = pool_output.reshape((x, y * z))
@@ -96,20 +97,5 @@ def backprop_to_conv(delta, weight_filters, stride, input_to_conv, prev_z_vals):
     return delta_b, delta_w
 
 
-def max_prime(res, delta, tile_to_pool):
-    dim1, dim2 = tile_to_pool.shape
-    tile_to_pool = tile_to_pool.reshape((dim1 * dim2))
-    new_delta = np.zeros((tile_to_pool.shape))
-    for i in range(len(tile_to_pool)):
-        num = tile_to_pool[i]
-        if num < res:
-            new_delta[i] = 0
-        else:
-            new_delta[i] = delta
-    return new_delta.reshape((dim1, dim2))
 
-def sigmoid(z):
-    return 1.0/(1.0 + np.exp(-z))
 
-def sigmoid_prime(z):
-    return sigmoid(z) * (1-sigmoid(z))

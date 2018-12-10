@@ -2,6 +2,7 @@ import mnist_loader
 from cnn import *
 import sys
 from backprop import *
+import mammogram_loader
 
 import collections
 
@@ -23,15 +24,22 @@ import matplotlib.pyplot as plt
 
 ETA = 1.5 #learning-rate (maybe)
 EPOCHS = 1 #default 5
-INPUT_SHAPE = (28*28)     # for mnist
+WIDTH = 32
+HEIGHT = 32
+CHANNEL = 1
+INPUT_SHAPE = (HEIGHT*WIDTH)     # for mnist
 BATCH_SIZE = 50  #defalut 10
 LMBDA = 0.1
 
 # import ipdb; ipdb.set_trace()
 
-training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
+# training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
+training_data, validation_data, test_data = mammogram_loader.load_data()
+# training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt()
+
 
 #dtcwt
+
 
 
 '''
@@ -49,6 +57,9 @@ Args:
 x,y = training_data[0][0].shape
 input_shape = (1,x,y)
 print 'shape of input data: ', input_shape
+print 'len(training_data) : ', len(training_data)
+
+# sys.exit(0)
 
 net = Model(input_shape,
             layer_config = [
@@ -83,7 +94,7 @@ net = Model(input_shape,
                 },
                 {'final_layer':
                     {
-                        'num_classes': 10
+                        'num_classes': 2
                     }
                 }
             ])
@@ -101,5 +112,5 @@ net = Model(input_shape,
 
 
 
-net.gradient_descent(training_data[0:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
-# net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
+# net.gradient_descent(training_data[0:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
+net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
