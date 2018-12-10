@@ -34,8 +34,8 @@ LMBDA = 0.1
 # import ipdb; ipdb.set_trace()
 
 # training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
-training_data, validation_data, test_data = mammogram_loader.load_data()
-# training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt()
+# training_data, validation_data, test_data = mammogram_loader.load_data()
+training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt()
 
 
 #dtcwt
