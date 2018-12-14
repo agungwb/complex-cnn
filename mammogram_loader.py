@@ -20,17 +20,17 @@ def load_data(env):
     path_cancer = PATH_CANCER
     path_normal = PATH_NORMAL
 
-    if env is 'test':
+    if env == 'test':
         path_cancer = PATH_CANCER_TEST
         path_normal = PATH_NORMAL_TEST
 
     #load data cancer
     dataset_cancer = list()
     output_cancer = np.array([[0],[1]])
-    cancer_list = [f for f in listdir(PATH_CANCER) if isfile(join(PATH_CANCER, f))]
+    cancer_list = [f for f in listdir(path_cancer) if isfile(join(path_cancer, f))]
     for cancer_file in cancer_list:
-        print "cancer_file : ",cancer_file
-        input_cancer = cv2.imread(PATH_CANCER+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
+        # print "cancer_file : ",cancer_file
+        input_cancer = cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
         input_cancer = input_cancer/255.0 #normalize value
         dataset_cancer.append(tuple((input_cancer, output_cancer)))
     random.shuffle(dataset_cancer)
@@ -42,10 +42,10 @@ def load_data(env):
     # load data normal
     dataset_normal = list()
     output_normal = np.array([[1], [0]])
-    normal_list = [f for f in listdir(PATH_NORMAL) if isfile(join(PATH_NORMAL, f))]
+    normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
     for normal_file in normal_list:
-        print "normal_file : ",normal_file
-        input_normal = cv2.imread(PATH_NORMAL+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
+        # print "normal_file : ",normal_file
+        input_normal = cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
         input_normal = input_normal / 255.0  # normalize value
         dataset_normal.append(tuple((input_normal, output_normal)))
     random.shuffle(dataset_normal)
@@ -65,17 +65,17 @@ def load_data_dtcwt(env):
     path_cancer = PATH_CANCER
     path_normal = PATH_NORMAL
 
-    if env is 'test':
+    if env == 'test':
         path_cancer = PATH_CANCER_TEST
         path_normal = PATH_NORMAL_TEST
 
         #load data cancer
     dataset_cancer = list()
     output_cancer = np.array([[0],[1]])
-    cancer_list = [f for f in listdir(PATH_CANCER) if isfile(join(PATH_CANCER, f))]
+    cancer_list = [f for f in listdir(path_cancer) if isfile(join(path_cancer, f))]
     for cancer_file in cancer_list:
         # print "cancer_file : ",cancer_file
-        input_cancer = cv2.imread(PATH_CANCER+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
+        input_cancer = cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
         input_cancer_n = input_cancer/255.0 #normalize value
         input_cancer_c = transform.forward(input_cancer_n, nlevels=3)
         for i in range(6):
@@ -89,10 +89,10 @@ def load_data_dtcwt(env):
     # load data normal
     dataset_normal = list()
     output_normal = np.array([[1], [0]])
-    normal_list = [f for f in listdir(PATH_NORMAL) if isfile(join(PATH_NORMAL, f))]
+    normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
     for normal_file in normal_list:
         # print "normal_file : ",normal_file
-        input_normal = cv2.imread(PATH_NORMAL+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
+        input_normal = cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
         input_normal_n = input_normal / 255.0  # normalize value
         input_normal_c = transform.forward(input_normal_n, nlevels=3)
         for i in range(6):
