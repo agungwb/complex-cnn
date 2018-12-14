@@ -2,3 +2,4 @@ images/*
 venv/*
 .idea/*
 dataset/*
+*.log

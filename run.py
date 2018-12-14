@@ -34,8 +34,8 @@ LMBDA = 0.1
 # import ipdb; ipdb.set_trace()
 
 # training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
-training_data, validation_data, test_data = mammogram_loader.load_data()
-# training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt()
+training_data, validation_data, test_data = mammogram_loader.load_data(sys.argv[1] if len(sys.argv) > 1 else 'main')
+# training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[1] if len(sys.argv) > 1 else 'main')
 
 
 #dtcwt
@@ -58,8 +58,10 @@ x,y = training_data[0][0].shape
 input_shape = (1,x,y)
 print 'shape of input data: ', input_shape
 print 'len(training_data) : ', len(training_data)
+print 'len(validation_data) : ', len(validation_data)
+print 'len(training_data) : ', len(training_data)
 
-# sys.exit(0)
+sys.exit(0)
 
 net = Model(input_shape,
             layer_config = [
