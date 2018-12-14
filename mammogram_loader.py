@@ -26,7 +26,7 @@ def load_data(env):
 
     #load data cancer
     dataset_cancer = list()
-    output_cancer = np.array([[0],[1]])
+    output_cancer = np.array([[1]])
     cancer_list = [f for f in listdir(path_cancer) if isfile(join(path_cancer, f))]
     for cancer_file in cancer_list:
         # print "cancer_file : ",cancer_file
@@ -41,7 +41,7 @@ def load_data(env):
 
     # load data normal
     dataset_normal = list()
-    output_normal = np.array([[1], [0]])
+    output_normal = np.array([[0]])
     normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
     for normal_file in normal_list:
         # print "normal_file : ",normal_file
@@ -71,7 +71,7 @@ def load_data_dtcwt(env):
 
         #load data cancer
     dataset_cancer = list()
-    output_cancer = np.array([[0],[1]])
+    output_cancer = np.array([[1]])
     cancer_list = [f for f in listdir(path_cancer) if isfile(join(path_cancer, f))]
     for cancer_file in cancer_list:
         # print "cancer_file : ",cancer_file
@@ -88,7 +88,7 @@ def load_data_dtcwt(env):
 
     # load data normal
     dataset_normal = list()
-    output_normal = np.array([[1], [0]])
+    output_normal = np.array([[0]])
     normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
     for normal_file in normal_list:
         # print "normal_file : ",normal_file

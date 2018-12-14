@@ -95,7 +95,7 @@ net = Model(input_shape,
                 },
                 {'final_layer':
                     {
-                        'num_classes': 2
+                        'num_classes': 1
                     }
                 }
             ])

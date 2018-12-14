@@ -515,8 +515,25 @@ class Model(object):
     def validate(self, data):
         # data = [(im.reshape((CHANNEL,HEIGHT,WIDTH)),y) for im,y in data]
         data = [(im.reshape((self.input_shape[0],self.input_shape[1],self.input_shape[2])),y) for im,y in data]
-        test_results = [(np.argmax(self.feedforward(x)),y) for x, y in data]
-        output_n = 10
+        # print "data : ",data
+
+        # test_results = [(np.argmax(self.feedforward(x)),y) for x, y in data] #argmax return index of max value
+
+        test_results = list()
+        for d in data:
+            result = self.feedforward(d[0])
+            predicted = np.where(result > 0.5, 1, 0)
+            actual = d[1]
+
+            print "result : ", result
+            print "predicted : ", predicted
+            print "actual : ",actual
+            test_results.append((predicted[0][0], actual[0][0]))
+
+        print "test_results : ",test_results
+        print "len(test_results) : ",len(test_results)
+        output_n = len(test_results) if len(test_results) > 1 else 2
+
         confusion_matrix = np.zeros([output_n, output_n])
         for test_result in test_results:
             confusion_matrix[test_result[0]][test_result[1]] += 1
@@ -531,9 +548,13 @@ class Model(object):
         recall = np.diag(confusion_matrix)/np.sum(confusion_matrix, 1)
         recall = [((r, 0)[math.isnan(r)]) for r in recall]
 
+        print "Confusion Matrix : "
+        print confusion_matrix
         print "Accuracy : ", accuracy
-        print "Average Precision : ", np.average(precision)
-        print "Average Recall : ",np.average(recall)
+        # print "Average Precision : ", np.average(precision)
+        # print "Average Recall : ",np.average(recall)
+        print "Precision : ", precision[1]
+        print "Recall : ",recall[1]
 
         # print type(test_results)
         # return sum(int(x == y) for x, y in test_results)
