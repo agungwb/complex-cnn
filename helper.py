@@ -18,20 +18,43 @@ def cross_entropy(batch_size, output, expected_output):
     return (-1/batch_size) * np.sum(expected_output * np.log(output) + (1 - expected_output) * np.log(1-output))
 
 def activation(z):
-    return relu(z)
+    # return relu(z)
     # return tanh(z)
     # return sigmoid(z)
+    return sigmoid_complex(z)
+    # return csigmoid(z)
 
 def activation_prime(z):
-    return relu_prime(z)
+    # return relu_prime(z)
     # return tanh_prime(z)
     # return sigmoid_prime(z)
+    return sigmoid_complex_prime(z)
+    # return csigmoid_prime(z)
+
+def csigmoid(z):
+    np.exp(1j * sigmoid(np.angle(z)))
+
+def csigmoid_prime(z):
+    1j * sigmoid_prime(z) * csigmoid(z)
+    return
 
 def sigmoid(z):
     return 1.0/(1.0 + np.exp(-z))
 
 def sigmoid_prime(z):
     return sigmoid(z) * (1-sigmoid(z))
+
+def sigmoid_complex(z):
+    return sigmoid(z.real) + (1j * z.imag)
+
+def sigmoid_complex_prime(z):
+    return sigmoid_prime(z.real) + (1j * z.imag)
+
+def sigmoid_split_complex(z):
+    return sigmoid(z.real) + (1j * sigmoid(z.imag))
+
+def sigmoid_split_complex_prime(z):
+    return sigmoid_prime(z.real) + (1j * sigmoid_prime(z.imag))
 
 def loss(desired,final):
     return 0.5*np.sum(desired-final)**2

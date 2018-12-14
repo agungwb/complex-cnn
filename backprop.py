@@ -72,8 +72,8 @@ def backprop_to_conv(delta, weight_filters, stride, input_to_conv, prev_z_vals):
     # print 'input shape', input_to_conv.shape
     num_filters, depth, filter_size, filter_size = weight_filters.shape
 
-    delta_b = np.zeros((num_filters, 1))
-    delta_w = np.zeros((weight_filters.shape))            # you need to change the dims of weights
+    delta_b = np.zeros((num_filters, 1), dtype=np.complex128)
+    delta_w = np.zeros((weight_filters.shape), dtype=np.complex128)            # you need to change the dims of weights
 
     # print delta_w.shape, delta_b.shape, delta.shape
     total_deltas_per_layer = (delta.shape[1]) * (delta.shape[2])

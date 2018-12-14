@@ -28,8 +28,9 @@ class ConvLayer(object):
         self.padding = padding
         self.num_filters = num_filters
 
-        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size) #filter * depth * filter_size * filter_size
-        self.biases = np.random.rand(self.num_filters,1) #filter * 1
+        #adding multiplication with 2, for complex128
+        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size * 2).view(np.complex128) #filter * depth * filter_size * filter_size
+        self.biases = np.random.rand(self.num_filters,1 * 2).view(np.complex128) #filter * 1
 
         #np.random.randn generate random from normal distribution
         #np.random.rand generate random from [0..1]
@@ -41,10 +42,10 @@ class ConvLayer(object):
         self.output_dim2 =  (self.width_in - self.filter_size + 2*self.padding)/self.stride + 1
 
         # output convolution layer (before activation function) (num_filters, output_dim1, output_dim2)
-        self.z_values = np.zeros((self.num_filters, self.output_dim1, self.output_dim2))
+        self.z_values = np.zeros((self.num_filters, self.output_dim1, self.output_dim2), dtype=complex)
 
         #output convolution layer (after activation function) (num_filters, output_dim1, output_dim2)
-        self.output = np.zeros((self.num_filters, self.output_dim1, self.output_dim2))
+        self.output = np.zeros((self.num_filters, self.output_dim1, self.output_dim2), dtype=complex)
 
 
     def convolve(self, input_neurons):
@@ -56,7 +57,11 @@ class ConvLayer(object):
         # roll out activations
         self.z_values = self.z_values.reshape((self.num_filters, self.output_dim1 * self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1 * self.output_dim2))
-        
+
+        # print "input_neurons : ",input_neurons
+        # print "self.z_values before : ",self.z_values
+        # print "self.output before : ",self.output
+
         act_length1d =  self.output.shape[1] #dim1 * dim2
 
         for j in range(self.num_filters):
@@ -68,14 +73,25 @@ class ConvLayer(object):
                 # ACTIVATIONS -> loop through each conv block horizontally
                 self.z_values[j][i] = np.sum(input_neurons[:,row:self.filter_size+row, slide:self.filter_size + slide] * self.weights[j]) + self.biases[j]
                 self.output[j][i] = activation(self.z_values[j][i]) #activation function
+                # print "-----------"
+                # print "filter : ",input_neurons[:,row:self.filter_size+row, slide:self.filter_size + slide]
+                # print "biases : ",self.biases[j]
+                # print "weight : ",self.weights[j]
+                # print "z_values : ", self.z_values[j][i]
+                # print "activation : ", self.output[j][i]
                 slide += self.stride
 
                 if (self.filter_size + slide)-self.stride >= self.width_in:    # wrap indices at the end of each row
                     slide = 0
                     row += self.stride #go to next row
 
+        # print "selv.z_values : ",self.z_values
+
         self.z_values = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
+
+        # print "self.z_values after : ", self.z_values
+        # print "self.output after : ", self.output
 
 
 class PoolingLayer(object):
@@ -96,7 +112,7 @@ class PoolingLayer(object):
         # print "self.height_out : ",self.height_out
         # print "self.width_out : ",self.width_out
 
-        self.output = np.empty((self.depth, self.height_out, self.width_out))
+        self.output = np.empty((self.depth, self.height_out, self.width_out), dtype=complex)
         self.max_indices = np.empty((self.depth, self.height_out, self.width_out, 2))
 
     def pool(self, input_image):
@@ -105,12 +121,17 @@ class PoolingLayer(object):
 
         self.output = self.output.reshape((self.depth, self.pool_length1d))
         self.max_indices = self.max_indices.reshape((self.depth, self.pool_length1d, 2)) #store index of max output come from
-        
+
+        # print "self.output.shape : ",self.output.shape
+        # print "self.max_indices.shape : ",self.max_indices.shape
+
         # for each filter map
         for j in range(self.depth):
             row = 0
             slide = 0
             for i in range(self.pool_length1d):
+                # print "input_image[j] : ", input_image[j]
+
                 toPool = input_image[j][row:self.poolsize[0] + row, slide:self.poolsize[0] + slide]
 
                 self.output[j][i] = np.amax(toPool)                # calculate the max activation
@@ -120,6 +141,9 @@ class PoolingLayer(object):
                 # print ("p.where(np.max(toPool) == toPool) : ", np.where(np.max(toPool) == toPool))
                 index = zip(*np.where(np.max(toPool) == toPool)) # HERE IT IS save the index of the max, np.where return index of array if condition meets
                 # print "index before : ", index
+                # print "toPool : ",toPool
+                # print "np.amax(toPool)  : ",np.amax(toPool)
+                # print "index : ",index
                 if len(index) > 1: #if there is more than one maximum value
                     index = [index[0]]
                 # print "index after : ", index
@@ -153,8 +177,8 @@ class FullyConnectedLayer(Layer):
         self.depth, self.height_in, self.width_in = input_shape
         self.num_output = num_output
 
-        self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in)
-        self.biases = np.random.randn(self.num_output,1)
+        self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in * 2).view(np.complex128)
+        self.biases = np.random.randn(self.num_output,1 * 2).view(np.complex128)
 
     def feedforward(self, a):
         '''
@@ -181,13 +205,16 @@ class ClassifyLayer(Layer):
         super(ClassifyLayer, self).__init__(num_inputs, num_classes)
         num_inputs, col = num_inputs
         self.num_classes = num_classes
-        self.weights = np.random.randn(self.num_classes, num_inputs)
+        self.weights = np.random.randn(self.num_classes, num_inputs).view(np.complex64)
         # print "self.weights.shape : ", self.weights.shape
-        self.biases = np.random.randn(self.num_classes,1)
+        self.biases = np.random.randn(self.num_classes,1).view(np.complex64)
 
     def classify(self, x):
         self.z_values = np.dot(self.weights,x) + self.biases
         self.output = activation(self.z_values)
+
+        print "self.z_values : ", self.z_values
+        print "self.output : ", self.output
         # print "self.z_values.shape : ", self.z_values.shape
         # print "self.output.shape : ", self.output.shape
 
@@ -235,8 +262,8 @@ class Model(object):
 
     def _get_layer_transition(self, inner_ix, outer_ix):
         inner, outer = self.layers[inner_ix], self.layers[outer_ix]
-        print "inner : ",inner
-        print "outer : ",outer
+        # print "inner : ",inner
+        # print "outer : ",outer
         # either input to FC or pool to FC -> going from 3d matrix to 1d
         if (
             (inner_ix < 0 or isinstance(inner, PoolingLayer)) and 
@@ -269,29 +296,41 @@ class Model(object):
         for layer in self.layers:
             input_to_feed = prev_activation
 
+            # print "input_to_feed.shape : ",input_to_feed.shape
+            # print "input_to_feed : ",input_to_feed
+
             if isinstance(layer, FullyConnectedLayer):
+                # print "Fullyconnected : ", input_to_feed
                 # z values are huge, while the fc_output is tiny! large negative vals get penalized to 0!
                 layer.feedforward(input_to_feed)
+                print "Fullyconnected : ", layer.output
 
             elif isinstance(layer, ConvLayer):
+                # print "Convolution : ", input_to_feed
                 layer.convolve(input_to_feed)
+                print "Convolution : ", layer.output
                 # for i in range(layer.output.shape[0]):
                 #     plt.imsave('images/cat_conv%d.png'%i, layer.output[i])
                 # for i in range(layer.weights.shape[0]):
                 #     plt.imsave('images/filter_conv%s.png'%i, layer.weights[i].reshape((5,5)))
 
             elif isinstance(layer, PoolingLayer):
+                # print "Pooling : ", input_to_feed
                 layer.pool(input_to_feed)
+                print "Pooling : ", layer.output
                 # for i in range(layer.output.shape[0]):
                 #     plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
 
             elif isinstance(layer, ClassifyLayer):
+                # print "Classify : ", input_to_feed
                 layer.classify(input_to_feed)
+                print "Classify : ", layer.output
 
             else:
                 raise NotImplementedError
 
             prev_activation = layer.output
+
 
         final_activation = prev_activation
         return final_activation
@@ -340,6 +379,7 @@ class Model(object):
             )
 
             print "transition : ",transition
+            print "self.layers[-1].output : ",self.layers[-1].output
 
             # inputfc = poolfc
             # fc to fc = fc to final
@@ -394,19 +434,16 @@ class Model(object):
 
             if transition != 'conv_to_pool':
                 # print 'nablasb, db,nabldw, dw, DELTA', nabla_b[inner_layer_ix].shape, db.shape, nabla_w[inner_layer_ix].shape, dw.shape, last_delta.shape
-                print 'outer_layer_ix : ',outer_layer_ix
-                print 'inner_layer_ix : ',inner_layer_ix
-                print 'nabla_idx : ',nabla_idx
-                print 'nabla_w[nabla_idx] : ', nabla_w[nabla_idx].shape
-                print 'dw : ', dw.shape
-                print 'nabla_b[nabla_idx] : ', nabla_b[nabla_idx].shape
-                print 'db : ', db.shape
+                # print 'outer_layer_ix : ',outer_layer_ix
+                # print 'inner_layer_ix : ',inner_layer_ix
+                # print 'nabla_idx : ',nabla_idx
+                # print 'nabla_w[nabla_idx] : ', nabla_w[nabla_idx].shape
+                # print 'dw : ', dw.shape
+                # print 'nabla_b[nabla_idx] : ', nabla_b[nabla_idx].shape
+                # print 'db : ', db.shape
                 nabla_b[nabla_idx], nabla_w[nabla_idx] = db, dw
                 last_weights = layer.weights
                 nabla_idx -= 1
-
-
-        # sys.exit(0)
 
         return self.layers[-1].output, nabla_b, nabla_w
 
@@ -482,6 +519,8 @@ class Model(object):
 
             _ = self.feedforward(image)
             final_res, delta_b, delta_w = self.backprop(image, label)
+            # print "done"
+
 
             # print 'final_res.shape : ', final_res.shape
             # print 'final_res : ', final_res
@@ -497,7 +536,11 @@ class Model(object):
 
         ################## print LOSS ############
         error = loss(label, final_res)
+        print "label : ", label
+        print "final_res : ",final_res
         print "error : ", error
+        print "done"
+        sys.exit(0)
         
         num =0
         weight_index = []
