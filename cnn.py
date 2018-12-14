@@ -235,8 +235,8 @@ class Model(object):
 
     def _get_layer_transition(self, inner_ix, outer_ix):
         inner, outer = self.layers[inner_ix], self.layers[outer_ix]
-        print "inner : ",inner
-        print "outer : ",outer
+        # print "inner : ",inner
+        # print "outer : ",outer
         # either input to FC or pool to FC -> going from 3d matrix to 1d
         if (
             (inner_ix < 0 or isinstance(inner, PoolingLayer)) and 
@@ -339,7 +339,7 @@ class Model(object):
                 inner_layer_ix, outer_layer_ix
             )
 
-            print "transition : ",transition
+            # print "transition : ",transition
 
             # inputfc = poolfc
             # fc to fc = fc to final
@@ -394,13 +394,13 @@ class Model(object):
 
             if transition != 'conv_to_pool':
                 # print 'nablasb, db,nabldw, dw, DELTA', nabla_b[inner_layer_ix].shape, db.shape, nabla_w[inner_layer_ix].shape, dw.shape, last_delta.shape
-                print 'outer_layer_ix : ',outer_layer_ix
-                print 'inner_layer_ix : ',inner_layer_ix
-                print 'nabla_idx : ',nabla_idx
-                print 'nabla_w[nabla_idx] : ', nabla_w[nabla_idx].shape
-                print 'dw : ', dw.shape
-                print 'nabla_b[nabla_idx] : ', nabla_b[nabla_idx].shape
-                print 'db : ', db.shape
+                # print 'outer_layer_ix : ',outer_layer_ix
+                # print 'inner_layer_ix : ',inner_layer_ix
+                # print 'nabla_idx : ',nabla_idx
+                # print 'nabla_w[nabla_idx] : ', nabla_w[nabla_idx].shape
+                # print 'dw : ', dw.shape
+                # print 'nabla_b[nabla_idx] : ', nabla_b[nabla_idx].shape
+                # print 'db : ', db.shape
                 nabla_b[nabla_idx], nabla_w[nabla_idx] = db, dw
                 last_weights = layer.weights
                 nabla_idx -= 1

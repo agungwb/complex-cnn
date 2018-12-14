@@ -59,9 +59,8 @@ input_shape = (1,x,y)
 print 'shape of input data: ', input_shape
 print 'len(training_data) : ', len(training_data)
 print 'len(validation_data) : ', len(validation_data)
-print 'len(training_data) : ', len(training_data)
+print 'len(test_data) : ', len(test_data)
 
-sys.exit(0)
 
 net = Model(input_shape,
             layer_config = [
@@ -115,4 +114,4 @@ net = Model(input_shape,
 
 
 # net.gradient_descent(training_data[0:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
-net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
+net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data)

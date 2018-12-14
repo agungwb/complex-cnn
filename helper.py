@@ -18,14 +18,14 @@ def cross_entropy(batch_size, output, expected_output):
     return (-1/batch_size) * np.sum(expected_output * np.log(output) + (1 - expected_output) * np.log(1-output))
 
 def activation(z):
-    return relu(z)
+    # return relu(z)
     # return tanh(z)
-    # return sigmoid(z)
+    return sigmoid(z)
 
 def activation_prime(z):
-    return relu_prime(z)
+    # return relu_prime(z)
     # return tanh_prime(z)
-    # return sigmoid_prime(z)
+    return sigmoid_prime(z)
 
 def sigmoid(z):
     return 1.0/(1.0 + np.exp(-z))
@@ -50,5 +50,4 @@ def relu(z):
     return np.maximum(z, 0)
 
 def relu_prime(z):
-    print "z : ", z
     return np.where(z>=0, 1, 0)
