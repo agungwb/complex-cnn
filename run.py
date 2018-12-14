@@ -22,14 +22,23 @@ import matplotlib.pyplot as plt
 ######################### TEST IMAGE ##########################
 
 
-ETA = 1.5 #learning-rate (maybe)
-EPOCHS = 1 #default 5
+ETA = 0.01 #learning-rate (maybe)
+EPOCHS = 2 #default 5
 WIDTH = 32
 HEIGHT = 32
 CHANNEL = 1
 INPUT_SHAPE = (HEIGHT*WIDTH)     # for mnist
 BATCH_SIZE = 50  #defalut 10
 LMBDA = 0.1
+
+print "ETA : ",ETA
+print "EPOCHS : ",EPOCHS
+print "WIDTH : ",WIDTH
+print "HEIGHT : ",HEIGHT
+print "CHANNEL : ",CHANNEL
+print "BATCH_SIZE : ",BATCH_SIZE
+print "LMBDA : ",LMBDA
+
 
 # import ipdb; ipdb.set_trace()
 

@@ -532,9 +532,9 @@ class Model(object):
 
         print "test_results : ",test_results
         print "len(test_results) : ",len(test_results)
-        output_n = len(test_results) if len(test_results) > 1 else 2
+        # output_n = len(test_results) if len(test_results) > 1 else 2
 
-        confusion_matrix = np.zeros([output_n, output_n])
+        confusion_matrix = np.zeros([2, 2])
         for test_result in test_results:
             confusion_matrix[test_result[0]][test_result[1]] += 1
         # print confusion_matrix
