@@ -31,14 +31,6 @@ INPUT_SHAPE = (HEIGHT*WIDTH)     # for mnist
 BATCH_SIZE = 50  #defalut 10
 LMBDA = 0.1
 
-print "ETA : ",ETA
-print "EPOCHS : ",EPOCHS
-print "WIDTH : ",WIDTH
-print "HEIGHT : ",HEIGHT
-print "CHANNEL : ",CHANNEL
-print "BATCH_SIZE : ",BATCH_SIZE
-print "LMBDA : ",LMBDA
-
 
 # import ipdb; ipdb.set_trace()
 
@@ -63,6 +55,16 @@ Args:
 # input_shape = training_data.shape
 # label = np.asarray(([1,0])).reshape((2,1))
 # training_data = (training_data, label)
+
+
+print "ETA : ",ETA
+print "EPOCHS : ",EPOCHS
+print "WIDTH : ",WIDTH
+print "HEIGHT : ",HEIGHT
+print "CHANNEL : ",CHANNEL
+print "BATCH_SIZE : ",BATCH_SIZE
+print "LMBDA : ",LMBDA
+
 x,y = training_data[0][0].shape
 input_shape = (1,x,y)
 print 'shape of input data: ', input_shape
