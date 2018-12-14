@@ -558,9 +558,24 @@ class Model(object):
     def validate(self, data):
         # data = [(im.reshape((CHANNEL,HEIGHT,WIDTH)),y) for im,y in data]
         data = [(im.reshape((self.input_shape[0],self.input_shape[1],self.input_shape[2])),y) for im,y in data]
-        test_results = [(np.argmax(self.feedforward(x)),y) for x, y in data]
-        output_n = 10
-        confusion_matrix = np.zeros([output_n, output_n])
+
+        test_results = list()
+        for d in data:
+            result = self.feedforward(d[0])
+            predicted = np.where(result > 0.5, 1, 0)
+            actual = d[1]
+
+            print "result : ", result
+            print "predicted : ", predicted
+            print "actual : ", actual
+            test_results.append((predicted[0][0], actual[0][0]))
+
+        print "test_results : ", test_results
+        print "len(test_results) : ", len(test_results)
+        # output_n = len(test_results) if len(test_results) > 1 else 2
+
+
+        confusion_matrix = np.zeros([2, 2])
         for test_result in test_results:
             confusion_matrix[test_result[0]][test_result[1]] += 1
         # print confusion_matrix
