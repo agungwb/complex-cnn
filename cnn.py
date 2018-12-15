@@ -507,9 +507,9 @@ class Model(object):
 
         for ix, (layer_nabla_w, layer_nabla_b) in enumerate(zip(nabla_w, nabla_b)):
             layer = self.layers[weight_index[ix]]
-            print "type(layer_nabla_w) : ",layer_nabla_w
-            print "type(layer_nabla_b) : ",layer_nabla_b
-            print "type(layer_nabla_b) : ",layer_nabla_b
+            # print "type(layer_nabla_w) : ",layer_nabla_w
+            # print "type(layer_nabla_b) : ",layer_nabla_b
+            # print "type(layer_nabla_b) : ",layer_nabla_b
             layer.weights -= eta * layer_nabla_w / batch_size
             layer.biases -= eta * layer_nabla_b / batch_size
         return error

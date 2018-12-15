@@ -75,5 +75,5 @@ def relu(z):
     return np.maximum(z, 0)
 
 def relu_prime(z):
-    print "z : ", z
+    # print "z : ", z
     return np.where(z>=0, 1, 0)
