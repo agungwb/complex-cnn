@@ -35,7 +35,7 @@ import matplotlib.pyplot as plt
 ######################### TEST IMAGE ##########################
 
 
-ETA = 0.005 #learning-rate (maybe)
+ETA = 0.01 #learning-rate (maybe)
 EPOCHS = 1 #default 5
 WIDTH = 32
 HEIGHT = 32
