@@ -579,7 +579,7 @@ class Model(object):
         for test_result in test_results:
             print "test_results[0] : ",test_results[0]
             print "test_results[1] : ",test_results[1]
-            confusion_matrix[test_result[0] if test_result[0].real > 0 else 0][test_result[1] if test_result[1].real > 0 else 0] += 1
+            confusion_matrix[test_result[0].real if test_result[0].real > 0 else 0][test_result[1].real if test_result[1].real > 0 else 0] += 1
         # print confusion_matrix
 
         n_test = len(data)

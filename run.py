@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 
 
 ETA = 0.01 #learning-rate (maybe)
-EPOCHS = 2 #default 5
+EPOCHS = 1 #default 5
 WIDTH = 32
 HEIGHT = 32
 CHANNEL = 1
@@ -52,11 +52,17 @@ if sys.argv[1] == 'ccnn':
     HEIGHT = 16
     # training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[2] if len(sys.argv) > 2 else 'main')
     training_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[2] if len(sys.argv) > 2 else 'main')
+    if (len(sys.argv) > 2 and sys.argv[2] == 'test'):
+        BATCH_SIZE = 10  # defalut 10
+        EPOCH = 1
 else:
     WIDTH = 32
     HEIGHT = 32
     # training_data, validation_data, test_data = mammogram_loader.load_data(sys.argv[2] if len(sys.argv) > 2 else 'main')
     training_data, test_data = mammogram_loader.load_data(sys.argv[2] if len(sys.argv) > 2 else 'main')
+    if (len(sys.argv) > 2 and sys.argv[2] == 'test'):
+        BATCH_SIZE = 10  # defalut 10
+        EPOCH = 1
 
 
 
