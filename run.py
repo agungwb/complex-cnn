@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 
 
 ETA = 0.01 #learning-rate (maybe)
-EPOCHS = 1 #default 5
+EPOCHS = 2 #default 5
 WIDTH = 32
 HEIGHT = 32
 CHANNEL = 1
