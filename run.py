@@ -1,10 +1,23 @@
 import mnist_loader
-from cnn import *
 import sys
 from backprop import *
 import mammogram_loader
 
-import collections
+if len(sys.argv) < 2:
+    print "miss an argument: cnn [test] | ccnn [test]"
+    print "system terminated"
+    sys.exit(0)
+
+if sys.argv[1] != 'cnn' and sys.argv[1] != 'ccnn':
+    print "wrong argument: cnn [test] | ccnn [test]"
+    print "system terminated"
+    sys.exit(0)
+
+if sys.argv[1] == 'ccnn':
+    from ccnn import *
+else:
+    from cnn import *
+
 
 
 ######################### TEST IMAGE ##########################
@@ -22,7 +35,7 @@ import matplotlib.pyplot as plt
 ######################### TEST IMAGE ##########################
 
 
-ETA = 1.5 #learning-rate (maybe)
+ETA = 0.005 #learning-rate (maybe)
 EPOCHS = 1 #default 5
 WIDTH = 32
 HEIGHT = 32
@@ -32,13 +45,18 @@ BATCH_SIZE = 50  #defalut 10
 LMBDA = 0.1
 
 # import ipdb; ipdb.set_trace()
-
 # training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
-training_data, validation_data, test_data = mammogram_loader.load_data(sys.argv[1] if len(sys.argv) > 1 else 'main')
-# training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[1] if len(sys.argv) > 1 else 'main')
 
-
-#dtcwt
+if sys.argv[1] == 'ccnn':
+    WIDTH = 16
+    HEIGHT = 16
+    # training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[2] if len(sys.argv) > 2 else 'main')
+    training_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[2] if len(sys.argv) > 2 else 'main')
+else:
+    WIDTH = 32
+    HEIGHT = 32
+    # training_data, validation_data, test_data = mammogram_loader.load_data(sys.argv[2] if len(sys.argv) > 2 else 'main')
+    training_data, test_data = mammogram_loader.load_data(sys.argv[2] if len(sys.argv) > 2 else 'main')
 
 
 
@@ -59,7 +77,7 @@ x,y = training_data[0][0].shape
 input_shape = (1,x,y)
 print 'shape of input data: ', input_shape
 print 'len(training_data) : ', len(training_data)
-print 'len(validation_data) : ', len(validation_data)
+# print 'len(validation_data) : ', len(validation_data)
 print 'len(test_data) : ', len(test_data)
 
 
@@ -96,7 +114,7 @@ net = Model(input_shape,
                 },
                 {'final_layer':
                     {
-                        'num_classes': 2
+                        'num_classes': 1
                     }
                 }
             ])

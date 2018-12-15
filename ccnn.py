@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from helper import *
 
 
-from backprop import *
+from cbackprop import *
 
 
 ''' RECEPTIVE FIELD - WEIGHTS aka FILTER ->
@@ -535,12 +535,12 @@ class Model(object):
 
 
         ################## print LOSS ############
-        error = loss(label, final_res)
-        print "label : ", label
-        print "final_res : ",final_res
-        print "error : ", error
-        print "done"
-        sys.exit(0)
+        # error = loss(label, final_res)
+        error = loss_complex(label, final_res)
+        # print "label : ", label
+        # print "final_res : ",final_res
+        # print "error : ", error
+        # print "done"
         
         num =0
         weight_index = []
@@ -577,7 +577,9 @@ class Model(object):
 
         confusion_matrix = np.zeros([2, 2])
         for test_result in test_results:
-            confusion_matrix[test_result[0]][test_result[1]] += 1
+            print "test_results[0] : ",test_results[0]
+            print "test_results[1] : ",test_results[1]
+            confusion_matrix[test_result[0] if test_result[0].real > 0 else 0][test_result[1] if test_result[1].real > 0 else 0] += 1
         # print confusion_matrix
 
         n_test = len(data)
