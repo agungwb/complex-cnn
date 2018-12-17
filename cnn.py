@@ -193,6 +193,10 @@ class ClassifyLayer(Layer):
     def classify(self, x):
         self.z_values = np.dot(self.weights, x) + self.biases
         self.output = activation(self.z_values)
+        print "x : ", x
+        print "w : ", self.weights
+        print "z : ", self.z_values
+        print "o : ", self.output
         # print "self.z_values.shape : ", self.z_values.shape
         # print "self.output.shape : ", self.output.shape
 
@@ -276,6 +280,7 @@ class Model(object):
             if isinstance(layer, FullyConnectedLayer):
                 # z values are huge, while the fc_output is tiny! large negative vals get penalized to 0!
                 layer.feedforward(input_to_feed)
+                print "FullyConnectedLayer : ", layer.output
 
             elif isinstance(layer, ConvLayer):
                 layer.convolve(input_to_feed)
@@ -291,6 +296,7 @@ class Model(object):
 
             elif isinstance(layer, ClassifyLayer):
                 layer.classify(input_to_feed)
+                print "Classify : ", layer.output
 
             else:
                 raise NotImplementedError

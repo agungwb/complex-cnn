@@ -29,8 +29,10 @@ class ConvLayer(object):
         self.num_filters = num_filters
 
         #adding multiplication with 2, for complex128
-        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size * 2).view(np.complex128) #filter * depth * filter_size * filter_size
-        self.biases = np.random.rand(self.num_filters,1 * 2).view(np.complex128) #filter * 1
+        # self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size * 2).view(np.complex128) #filter * depth * filter_size * filter_size
+        # self.biases = np.random.rand(self.num_filters,1 * 2).view(np.complex128) #filter * 1
+        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size) + 1j * np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size) # filter * depth * filter_size * filter_size
+        self.biases = np.random.rand(self.num_filters, 1) + 1j * np.random.rand(self.num_filters, 1) # filter * 1
 
         #np.random.randn generate random from normal distribution
         #np.random.rand generate random from [0..1]
@@ -177,8 +179,11 @@ class FullyConnectedLayer(Layer):
         self.depth, self.height_in, self.width_in = input_shape
         self.num_output = num_output
 
-        self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in * 2).view(np.complex128)
-        self.biases = np.random.randn(self.num_output,1 * 2).view(np.complex128)
+        # self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in * 2).view(np.complex128)
+        # self.biases = np.random.randn(self.num_output,1 * 2).view(np.complex128)
+
+        self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in) + 1j * np.random.randn(self.num_output, self.depth, self.height_in, self.width_in)
+        self.biases = np.random.randn(self.num_output, 1) + 1j * np.random.randn(self.num_output, 1)
 
     def feedforward(self, a):
         '''
@@ -205,16 +210,22 @@ class ClassifyLayer(Layer):
         super(ClassifyLayer, self).__init__(num_inputs, num_classes)
         num_inputs, col = num_inputs
         self.num_classes = num_classes
-        self.weights = np.random.randn(self.num_classes, num_inputs).view(np.complex64)
-        # print "self.weights.shape : ", self.weights.shape
-        self.biases = np.random.randn(self.num_classes,1).view(np.complex64)
+        # self.weights = np.random.randn(self.num_classes, num_inputs * 2).view(np.complex128)
+        # self.biases = np.random.randn(self.num_classes,1 * 2).view(np.complex128)
+        self.weights = np.random.randn(self.num_classes, num_inputs) + 1j * np.random.randn(self.num_classes, num_inputs)
+        self.biases = np.random.randn(self.num_classes, 1) + 1j * np.random.randn(self.num_classes, 1)
 
     def classify(self, x):
         self.z_values = np.dot(self.weights,x) + self.biases
         self.output = activation(self.z_values)
 
-        print "self.z_values : ", self.z_values
-        print "self.output : ", self.output
+        print "x : ", x
+        print "w : ", self.weights
+        print "z : ", self.z_values
+        print "o : ", self.output
+
+        # print "self.z_values : ", self.z_values
+        # print "self.output : ", self.output
         # print "self.z_values.shape : ", self.z_values.shape
         # print "self.output.shape : ", self.output.shape
 
@@ -308,7 +319,7 @@ class Model(object):
             elif isinstance(layer, ConvLayer):
                 # print "Convolution : ", input_to_feed
                 layer.convolve(input_to_feed)
-                print "Convolution : ", layer.output
+                # print "Convolution : ", layer.output
                 # for i in range(layer.output.shape[0]):
                 #     plt.imsave('images/cat_conv%d.png'%i, layer.output[i])
                 # for i in range(layer.weights.shape[0]):
@@ -317,7 +328,7 @@ class Model(object):
             elif isinstance(layer, PoolingLayer):
                 # print "Pooling : ", input_to_feed
                 layer.pool(input_to_feed)
-                print "Pooling : ", layer.output
+                # print "Pooling : ", layer.output
                 # for i in range(layer.output.shape[0]):
                 #     plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
 
@@ -378,8 +389,8 @@ class Model(object):
                 inner_layer_ix, outer_layer_ix
             )
 
-            print "transition : ",transition
-            print "self.layers[-1].output : ",self.layers[-1].output
+            # print "transition : ",transition
+            # print "self.layers[-1].output : ",self.layers[-1].output
 
             # inputfc = poolfc
             # fc to fc = fc to final
@@ -537,6 +548,7 @@ class Model(object):
         ################## print LOSS ############
         # error = loss(label, final_res)
         error = loss_complex(label, final_res)
+        print "error : ", error
         # print "label : ", label
         # print "final_res : ",final_res
         # print "error : ", error
@@ -579,7 +591,11 @@ class Model(object):
         for test_result in test_results:
             print "test_results[0] : ",test_results[0]
             print "test_results[1] : ",test_results[1]
-            confusion_matrix[test_result[0].real if test_result[0].real > 0 else 0][test_result[1].real if test_result[1].real > 0 else 0] += 1
+            a = int(test_result[0].real if test_result[0].real > 0 else 0)
+            b = int(test_result[1].real if test_result[1].real > 0 else 0)
+            print "a : ", a
+            print "b : ", b
+            confusion_matrix[a][b] += 1
         # print confusion_matrix
 
         n_test = len(data)

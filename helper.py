@@ -20,13 +20,15 @@ def cross_entropy(batch_size, output, expected_output):
 
 def activation(z):
     if sys.argv[1] == 'ccnn':
-        return sigmoid_split_complex(z)
+        # return sigmoid_split_complex(z)
+        return tanh_split_complex(z)
     else:
         return sigmoid(z)
 
 def activation_prime(z):
     if sys.argv[1] == 'ccnn':
-        return sigmoid_split_complex_prime(z)
+        # return sigmoid_split_complex_prime(z)
+        return tanh_split_complex_prime(z)
     else:
         return sigmoid_prime(z)
 
@@ -59,7 +61,7 @@ def loss(desired,final):
     return 0.5*np.sum(desired-final)**2
 
 def loss_complex(desired,final):
-    return 0.5*np.sum(desired.real-final.real)**2 + 0j
+    return 0.5*np.sum(desired.real-final.real)**2
 
 def tanh(z):
     a = np.exp(z)
@@ -68,6 +70,12 @@ def tanh(z):
 
 def tanh_prime(z):
     return 1 - (tanh(z)**2)
+
+def tanh_split_complex(z):
+    return tanh(z.real) + (1j * tanh(z.imag))
+
+def tanh_split_complex_prime(z):
+    return tanh_prime(z.real) + (1j * tanh_prime(z.imag))
 
 def relu(z):
     # print "z : ",z
