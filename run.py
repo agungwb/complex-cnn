@@ -37,8 +37,8 @@ import matplotlib.pyplot as plt
 
 ETA = 0.01 #learning-rate (maybe)
 EPOCHS = 1 #default 5
-WIDTH = 38
-HEIGHT = 38
+WIDTH = 36
+HEIGHT = 36
 CHANNEL = 1
 INPUT_SHAPE = (HEIGHT*WIDTH)     # for mnist
 BATCH_SIZE = 50  #defalut 10
@@ -56,8 +56,8 @@ if sys.argv[1] == 'ccnn':
         BATCH_SIZE = 10  # defalut 10
         EPOCH = 1
 else:
-    WIDTH = 38
-    HEIGHT = 38
+    WIDTH = 36
+    HEIGHT = 36
     # training_data, validation_data, test_data = mammogram_loader.load_data(sys.argv[2] if len(sys.argv) > 2 else 'main')
     training_data, test_data = mammogram_loader.load_data(sys.argv[2] if len(sys.argv) > 2 else 'main')
     if (len(sys.argv) > 2 and sys.argv[2] == 'test'):
