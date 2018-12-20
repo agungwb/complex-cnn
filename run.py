@@ -37,8 +37,8 @@ import matplotlib.pyplot as plt
 
 ETA = 0.01 #learning-rate (maybe)
 EPOCHS = 1 #default 5
-WIDTH = 32
-HEIGHT = 32
+WIDTH = 38
+HEIGHT = 38
 CHANNEL = 1
 INPUT_SHAPE = (HEIGHT*WIDTH)     # for mnist
 BATCH_SIZE = 50  #defalut 10
