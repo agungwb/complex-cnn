@@ -242,31 +242,32 @@ class Model(object):
         self.layers = layers
 
     def _get_layer_transition(self, inner_ix, outer_ix):
+
+
         inner, outer = self.layers[inner_ix], self.layers[outer_ix]
-        # print "inner : ",inner
-        # print "outer : ",outer
+        # print "-----------------------"
+        # print "outer_ix : ", outer_ix," outer : ",outer
+        # print "inner_ix : ", inner_ix," inner : ",inner
+
+
         # either input to FC or pool to FC -> going from 3d matrix to 1d
-        if (
-                (inner_ix < 0 or isinstance(inner, PoolingLayer)) and
-                isinstance(outer, FullyConnectedLayer)
-        ):
+        # if ((inner_ix < 0 or isinstance(inner, PoolingLayer)) and isinstance(outer, FullyConnectedLayer)):
+        if (isinstance(inner, PoolingLayer) and isinstance(outer, FullyConnectedLayer)):
             return '3d_to_1d'
+
         # going from 3d to 3d matrix -> either input to conv or conv to conv
-        if (
-                (inner_ix < 0 or isinstance(inner, ConvLayer)) and
-                isinstance(outer, ConvLayer)
-        ):
+        # if ((inner_ix < 0 or isinstance(inner, ConvLayer)) and isinstance(outer, ConvLayer)):
+        if (isinstance(inner, ConvLayer) and isinstance(outer, ConvLayer)):
             return 'to_conv'
-        if (
-                isinstance(inner, FullyConnectedLayer) and
-                (isinstance(outer, ClassifyLayer) or isinstance(outer, FullyConnectedLayer))
-        ):
+
+        if (isinstance(inner, FullyConnectedLayer) and (isinstance(outer, ClassifyLayer) or isinstance(outer, FullyConnectedLayer))):
             return '1d_to_1d'
-        if (
-                isinstance(inner, ConvLayer) and
-                isinstance(outer, PoolingLayer)
-        ):
+
+        if (isinstance(inner, ConvLayer) and isinstance(outer, PoolingLayer)):
             return 'conv_to_pool'
+
+        if (isinstance(inner, PoolingLayer) and isinstance(outer, ConvLayer)):
+            return 'pool_to_conv'
 
         raise NotImplementedError
 
@@ -323,9 +324,9 @@ class Model(object):
 
         # set first params on the final layer
         final_output = self.layers[-1].output
-        last_delta = (final_output - label) * activation_prime(
+        next_delta = (final_output - label) * activation_prime(
             self.layers[-1].z_values)  # Error * activation_prime(z values layer before)
-        last_weights = None
+        next_weights = None
         final = True
 
         num_layers = len(self.layers)
@@ -343,7 +344,7 @@ class Model(object):
             outer_layer_ix = l
 
             layer = self.layers[outer_layer_ix]
-            activation = self.layers[inner_layer_ix].output if inner_layer_ix >= 0 else image
+            prev_output = self.layers[inner_layer_ix].output if inner_layer_ix >= 0 else image
 
             transition = self._get_layer_transition(
                 inner_layer_ix, outer_layer_ix
@@ -357,48 +358,52 @@ class Model(object):
             # conv to pool -> unique
 
             if transition == '1d_to_1d':  # final to fc, fc to fc
-                db, dw, last_delta = backprop_1d_to_1d(
-                    delta=last_delta,
-                    prev_weights=last_weights,
-                    prev_activations=activation,
+                db, dw, next_delta = backprop_1d_to_1d(
+                    next_delta=next_delta,
+                    next_weights=next_weights,
+                    prev_output=prev_output,
                     z_vals=layer.z_values,
                     final=final)
                 final = False
 
             elif transition == '3d_to_1d':
                 if l == 0:
-                    activation = image
+                    prev_output = image
                 # calc delta on the first final layer
-                db, dw, last_delta = backprop_1d_to_3d(
-                    delta=last_delta,
-                    prev_weights=last_weights,  # shape (10,100) this is the weights from the next layer
-                    prev_activations=activation,  # (28,28)
+                db, dw, next_delta = backprop_1d_to_3d(
+                    next_delta=next_delta,
+                    next_weights=next_weights,  # shape (10,100) this is the weights from the next layer
+                    prev_output=prev_output,  # (28,28)
                     z_vals=layer.z_values)  # (100,1)
                 # layer.weights = layer.weights.reshape((layer.num_output, layer.depth, layer.height_in, layer.width_in))
 
             # pool to conv layer
             elif transition == 'conv_to_pool':
                 # no update for dw,db => only backprops the error
-                last_delta = backprop_pool_to_conv(
-                    delta=last_delta,
-                    prev_weights=last_weights,
-                    input_from_conv=activation,
+                next_delta = backprop_pool_to_conv(
+                    next_delta=next_delta,
+                    next_weights=next_weights,
+                    input_from_conv=prev_output,
                     max_indices=layer.max_indices,
                     poolsize=layer.poolsize,
                     pool_output=layer.output)
+
+            # elif transition == 'pool_to_conv':
+
 
             # conv to conv layer
             elif transition == 'to_conv':
                 # weights passed in are the ones between conv to conv
                 # update the weights and biases
-                activation = image
-                last_weights = layer.weights
+                prev_output = image
+                next_weights = layer.weights
                 db, dw = backprop_to_conv(
-                    delta=last_delta,
-                    weight_filters=last_weights,
+                    next_delta=next_delta,
+                    next_weights=next_weights,
                     stride=layer.stride,
-                    input_to_conv=activation,
+                    prev_output=prev_output,
                     prev_z_vals=layer.z_values)
+
             else:
                 pass
 
@@ -412,7 +417,7 @@ class Model(object):
                 # print 'nabla_b[nabla_idx] : ', nabla_b[nabla_idx].shape
                 # print 'db : ', db.shape
                 nabla_b[nabla_idx], nabla_w[nabla_idx] = db, dw
-                last_weights = layer.weights
+                next_weights = layer.weights
                 nabla_idx -= 1
 
         # sys.exit(0)
@@ -533,19 +538,18 @@ class Model(object):
             predicted = np.where(result > 0.5, 1, 0)
             actual = d[1]
 
-            print "result : ", result
-            print "predicted : ", predicted
-            print "actual : ", actual
+            print "result : ", result[0][0], ", predicted : ", predicted[0][0], " actual : ", actual[0][0]
+
             test_results.append((predicted[0][0], actual[0][0]))
 
-        print "test_results : ", test_results
-        print "len(test_results) : ", len(test_results)
+        # print "test_results : ", test_results
+        # print "len(test_results) : ", len(test_results)
         # output_n = len(test_results) if len(test_results) > 1 else 2
 
         confusion_matrix = np.zeros([2, 2])
         for test_result in test_results:
-            print "test_results[0] : ", test_results[0]
-            print "test_results[1] : ", test_results[1]
+            # print "test_results[0] : ", test_results[0]
+            # print "test_results[1] : ", test_results[1]
             confusion_matrix[test_result[0]][test_result[1]] += 1
         # print confusion_matrix
 

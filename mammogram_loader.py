@@ -12,6 +12,8 @@ PATH_NORMAL = "dataset/mammogram/normal";
 PATH_CANCER_TEST = "dataset/mammogram-test/cancer";
 PATH_NORMAL_TEST = "dataset/mammogram-test/normal";
 
+FILE_TIPE = ".png"
+
 def load_data(env):
     training_data = list()
     validation_data = list()
@@ -30,9 +32,10 @@ def load_data(env):
     cancer_list = [f for f in listdir(path_cancer) if isfile(join(path_cancer, f))]
     for cancer_file in cancer_list:
         # print "cancer_file : ",cancer_file
-        input_cancer = cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
-        input_cancer = input_cancer/255.0 #normalize value
-        dataset_cancer.append(tuple((input_cancer, output_cancer)))
+        if (cancer_file.endswith(FILE_TIPE)):
+            input_cancer = cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
+            input_cancer = input_cancer/255.0 #normalize value
+            dataset_cancer.append(tuple((input_cancer, output_cancer)))
     random.shuffle(dataset_cancer)
     n = len(dataset_cancer)
     training_data.extend(dataset_cancer[:int(0.9*n)])
@@ -45,9 +48,10 @@ def load_data(env):
     normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
     for normal_file in normal_list:
         # print "normal_file : ",normal_file
-        input_normal = cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
-        input_normal = input_normal / 255.0  # normalize value
-        dataset_normal.append(tuple((input_normal, output_normal)))
+        if (normal_file.endswith(FILE_TIPE)):
+            input_normal = cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
+            input_normal = input_normal / 255.0  # normalize value
+            dataset_normal.append(tuple((input_normal, output_normal)))
     random.shuffle(dataset_normal)
     n = len(dataset_normal)
     training_data.extend(dataset_normal[:int(0.9 * n)])
@@ -76,11 +80,12 @@ def load_data_dtcwt(env):
     cancer_list = [f for f in listdir(path_cancer) if isfile(join(path_cancer, f))]
     for cancer_file in cancer_list:
         # print "cancer_file : ",cancer_file
-        input_cancer = cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
-        input_cancer_n = input_cancer/255.0 #normalize value
-        input_cancer_c = transform.forward(input_cancer_n, nlevels=3)
-        for i in range(6):
-            dataset_cancer.append(tuple((input_cancer_c.highpasses[0][:, :, i], output_cancer)))
+        if (cancer_file.endswith(FILE_TIPE)):
+            input_cancer = cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
+            input_cancer_n = input_cancer/255.0 #normalize value
+            input_cancer_c = transform.forward(input_cancer_n, nlevels=3)
+            for i in range(6):
+                dataset_cancer.append(tuple((input_cancer_c.highpasses[0][:, :, i], output_cancer)))
     random.shuffle(dataset_cancer)
     n = len(dataset_cancer)
     training_data.extend(dataset_cancer[:int(0.9 * n)])
@@ -93,11 +98,12 @@ def load_data_dtcwt(env):
     normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
     for normal_file in normal_list:
         # print "normal_file : ",normal_file
-        input_normal = cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
-        input_normal_n = input_normal / 255.0  # normalize value
-        input_normal_c = transform.forward(input_normal_n, nlevels=3)
-        for i in range(6):
-            dataset_normal.append(tuple((input_normal_c.highpasses[0][:, :, i], output_normal)))
+        if (normal_file.endswith(FILE_TIPE)):
+            input_normal = cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
+            input_normal_n = input_normal / 255.0  # normalize value
+            input_normal_c = transform.forward(input_normal_n, nlevels=3)
+            for i in range(6):
+                dataset_normal.append(tuple((input_normal_c.highpasses[0][:, :, i], output_normal)))
     random.shuffle(dataset_normal)
     n = len(dataset_normal)
     training_data.extend(dataset_normal[:int(0.9 * n)])

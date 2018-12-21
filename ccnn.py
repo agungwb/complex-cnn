@@ -219,10 +219,10 @@ class ClassifyLayer(Layer):
         self.z_values = np.dot(self.weights,x) + self.biases
         self.output = activation(self.z_values)
 
-        print "x : ", x
-        print "w : ", self.weights
-        print "z : ", self.z_values
-        print "o : ", self.output
+        # print "x : ", x
+        # print "w : ", self.weights
+        # print "z : ", self.z_values
+        # print "o : ", self.output
 
         # print "self.z_values : ", self.z_values
         # print "self.output : ", self.output
@@ -314,7 +314,7 @@ class Model(object):
                 # print "Fullyconnected : ", input_to_feed
                 # z values are huge, while the fc_output is tiny! large negative vals get penalized to 0!
                 layer.feedforward(input_to_feed)
-                print "Fullyconnected : ", layer.output
+                # print "Fullyconnected : ", layer.output
 
             elif isinstance(layer, ConvLayer):
                 # print "Convolution : ", input_to_feed
@@ -335,7 +335,7 @@ class Model(object):
             elif isinstance(layer, ClassifyLayer):
                 # print "Classify : ", input_to_feed
                 layer.classify(input_to_feed)
-                print "Classify : ", layer.output
+                # print "Classify : ", layer.output
 
             else:
                 raise NotImplementedError
@@ -577,9 +577,9 @@ class Model(object):
             predicted = np.where(result > 0.5, 1, 0)
             actual = d[1]
 
-            print "result : ", result
-            print "predicted : ", predicted
-            print "actual : ", actual
+            # print "result : ", result
+            # print "predicted : ", predicted
+            # print "actual : ", actual
             test_results.append((predicted[0][0], actual[0][0]))
 
         print "test_results : ", test_results
@@ -589,14 +589,15 @@ class Model(object):
 
         confusion_matrix = np.zeros([2, 2])
         for test_result in test_results:
-            print "test_results[0] : ",test_results[0]
-            print "test_results[1] : ",test_results[1]
+            # print "test_results[0] : ",test_results[0]
+            # print "test_results[1] : ",test_results[1]
             a = int(test_result[0].real if test_result[0].real > 0 else 0)
             b = int(test_result[1].real if test_result[1].real > 0 else 0)
-            print "a : ", a
-            print "b : ", b
+            # print "a : ", a
+            # print "b : ", b
             confusion_matrix[a][b] += 1
-        # print confusion_matrix
+        print "confusion_matrix"
+        print confusion_matrix
 
         n_test = len(data)
 

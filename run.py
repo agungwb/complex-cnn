@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 
 
 ETA = 0.01 #learning-rate (maybe)
-EPOCHS = 1 #default 5
+EPOCHS = 2 #default 5
 WIDTH = 36
 HEIGHT = 36
 CHANNEL = 1
@@ -48,8 +48,8 @@ LMBDA = 0.1
 # training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
 
 if sys.argv[1] == 'ccnn':
-    WIDTH = 16
-    HEIGHT = 16
+    WIDTH = 18
+    HEIGHT = 18
     # training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[2] if len(sys.argv) > 2 else 'main')
     training_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[2] if len(sys.argv) > 2 else 'main')
     if (len(sys.argv) > 2 and sys.argv[2] == 'test'):
@@ -96,23 +96,23 @@ net = Model(input_shape,
                         'num_filters': 20
                     }
                 },
-                {'pool_layer':
-                    {
-                        'poolsize': (2,2)
-                    }
-                },
-                # {'conv_layer':
-                #     {
-                #         'filter_size': 3,
-                #         'stride': 1,
-                #         'num_filters': 40
-                #     }
-                # },
                 # {'pool_layer':
                 #     {
                 #         'poolsize': (2,2)
                 #     }
                 # },
+                # {'conv_layer':
+                #     {
+                #         'filter_size': 3,
+                #         'stride': 1,
+                #         'num_filters': 50
+                #     }
+                # },
+                {'pool_layer':
+                    {
+                        'poolsize': (2,2)
+                    }
+                },
                 {'fc_layer':
                     {
                         'num_output': 30
