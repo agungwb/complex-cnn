@@ -60,6 +60,9 @@ def sigmoid_split_complex_prime(z):
 def loss(desired,final):
     return 0.5*np.sum(desired-final)**2
 
+def loss_prime(desired, final):
+    return desired-final
+
 def loss_complex(desired,final):
     return 0.5*np.sum(desired.real-final.real)**2
 

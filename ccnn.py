@@ -254,6 +254,7 @@ class Model(object):
         self.layer_weight_shapes = [l.weights.shape for l in self.layers if not isinstance(l,PoolingLayer)]
         self.layer_biases_shapes = [l.biases.shape for l in self.layers if not isinstance(l,PoolingLayer)]
 
+
     def _initialize_layers(self, layer_config):
         """
         Sets the net's <layer> attribute
@@ -400,7 +401,7 @@ class Model(object):
             if transition == '1d_to_1d':   # final to fc, fc to fc
                 db, dw, last_delta = backprop_1d_to_1d(
                     delta = last_delta,
-                    prev_weights=last_weights,
+                    weights=last_weights,
                     prev_activations=activation,
                     z_vals=layer.z_values,
                     final=final)

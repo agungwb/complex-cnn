@@ -1,17 +1,20 @@
 import mnist_loader
 import sys
+import logging
+
 from backprop import *
 import mammogram_loader
 
+
 if len(sys.argv) < 2:
-    print "miss an argument: cnn [test] | ccnn [test]"
-    print "system terminated"
-    sys.exit(0)
+    print("miss an argument: cnn [test] | ccnn [test]")
+    print("system terminated")
+    print(0)
 
 if sys.argv[1] != 'cnn' and sys.argv[1] != 'ccnn':
-    print "wrong argument: cnn [test] | ccnn [test]"
-    print "system terminated"
-    sys.exit(0)
+    print("wrong argument: cnn [test] | ccnn [test]")
+    print("system terminated")
+    print(0)
 
 if sys.argv[1] == 'ccnn':
     from ccnn import *
@@ -55,6 +58,11 @@ if sys.argv[1] == 'ccnn':
     if (len(sys.argv) > 2 and sys.argv[2] == 'test'):
         BATCH_SIZE = 10  # defalut 10
         EPOCH = 1
+        logging.basicConfig(level=logging.DEBUG)
+        log = logging.getLogger("__run__")
+    else:
+        logging.basicConfig(level=logging.INFO)
+        log = logging.getLogger("__run__")
 else:
     WIDTH = 36
     HEIGHT = 36
@@ -63,6 +71,11 @@ else:
     if (len(sys.argv) > 2 and sys.argv[2] == 'test'):
         BATCH_SIZE = 10  # defalut 10
         EPOCH = 1
+        logging.basicConfig(level=logging.DEBUG)
+        log = logging.getLogger("__run__")
+    else:
+        logging.basicConfig(level=logging.INFO)
+        log = logging.getLogger("__run__")
 
 
 
@@ -78,13 +91,13 @@ Args:
 # input_shape = training_data.shape
 # label = np.asarray(([1,0])).reshape((2,1))
 # training_data = (training_data, label)
-print "training_data[0][0] : ",training_data[0][0].shape
+log.info("training_data[0][0] : ",training_data[0][0].shape)
 x,y = training_data[0][0].shape
 input_shape = (1,x,y)
-print 'shape of input data: ', input_shape
-print 'len(training_data) : ', len(training_data)
+log.info('shape of input data: ', input_shape)
+log.info('len(training_data) : ', len(training_data))
 # print 'len(validation_data) : ', len(validation_data)
-print 'len(test_data) : ', len(test_data)
+log.info('len(test_data) : ', len(test_data))
 
 
 net = Model(input_shape,
@@ -96,18 +109,18 @@ net = Model(input_shape,
                         'num_filters': 20
                     }
                 },
-                # {'pool_layer':
-                #     {
-                #         'poolsize': (2,2)
-                #     }
-                # },
-                # {'conv_layer':
-                #     {
-                #         'filter_size': 3,
-                #         'stride': 1,
-                #         'num_filters': 50
-                #     }
-                # },
+                {'pool_layer':
+                    {
+                        'poolsize': (2,2)
+                    }
+                },
+                {'conv_layer':
+                    {
+                        'filter_size': 3,
+                        'stride': 1,
+                        'num_filters': 50
+                    }
+                },
                 {'pool_layer':
                     {
                         'poolsize': (2,2)

@@ -5,11 +5,11 @@ from helper import *
 # backpropagation
 ##############################################################
 
-def backprop_1d_to_1d(delta, prev_weights, prev_activations, z_vals, final=False):
+def backprop_1d_to_1d(delta, weights, prev_activations, z_vals, final=False):
     if not final:  # reset delta
         sp = activation_prime(z_vals)
         # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
-        delta = np.dot(prev_weights.transpose(), delta) * sp  # backprop to calculate error (delta) at layer - 1
+        delta = np.dot(weights.transpose(), delta) * sp  # backprop to calculate error (delta) at layer - 1
 
     delta_b = delta
     delta_w = np.dot(delta, prev_activations.transpose())

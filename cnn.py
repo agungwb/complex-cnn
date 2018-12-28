@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 from helper import *
 
 from backprop import *
+import logging
+
+log = logging.getLogger("__cnn__")
 
 ''' RECEPTIVE FIELD - WEIGHTS aka FILTER ->
 initialize filters in a way that corresponds to the depth of the image.
@@ -26,6 +29,7 @@ class ConvLayer(object):
         self.stride = stride
         self.padding = padding
         self.num_filters = num_filters
+        # self.num_filters = num_filters * self.depth
 
         self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size,
                                        self.filter_size)  # filter * depth * filter_size * filter_size
@@ -53,6 +57,7 @@ class ConvLayer(object):
         '''
 
         # roll out activations
+        # print "input_neurons.shape : ",input_neurons.shape
         self.z_values = self.z_values.reshape((self.num_filters, self.output_dim1 * self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1 * self.output_dim2))
 
@@ -65,10 +70,14 @@ class ConvLayer(object):
             for i in range(act_length1d):  # loop til the output array is filled up -> one dimensional (600)
 
                 # ACTIVATIONS -> loop through each conv block horizontally
-                self.z_values[j][i] = np.sum(
-                    input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide] * self.weights[j]) + \
-                                      self.biases[j]
+                self.z_values[j][i] = np.sum(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide] * self.weights[j]) + self.biases[j]
                 self.output[j][i] = activation(self.z_values[j][i])  # activation function
+
+                # print "input_neurons sub : ",input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide].shape
+                # print "self.weights[j].shape : ",self.weights[j].shape
+                # print "self.z_values[j][i] : ",self.z_values[j][i]
+                # print "self.output[j][i] : ",self.output[j][i]
+                # sys.exit(0)
                 slide += self.stride
 
                 if (self.filter_size + slide) - self.stride >= self.width_in:  # wrap indices at the end of each row
@@ -224,6 +233,9 @@ class Model(object):
         self.layer_weight_shapes = [l.weights.shape for l in self.layers if not isinstance(l, PoolingLayer)]
         self.layer_biases_shapes = [l.biases.shape for l in self.layers if not isinstance(l, PoolingLayer)]
 
+        # print "layer.shape : ", self.layer_weight_shapes
+        # sys.exit(0)
+
     def _initialize_layers(self, layer_config):
         """
         Sets the net's <layer> attribute
@@ -240,6 +252,13 @@ class Model(object):
             input_shape = layer.output.shape  ##set the input shape is the output from layer before
             layers.append(layer)
         self.layers = layers
+
+        # for layer in layers:
+        #     log.debug("type : "+ type(layer)+
+        #             ", output.shape :  "+ layer.output.shape+
+        #             ", weights.shape : "+ layer.weights.shape if not isinstance(layer, PoolingLayer) else 'None'+
+        #             ", weights.bias : "+ layer.biases.shape if not isinstance(layer, PoolingLayer) else 'None')
+        # sys.exit(0)
 
     def _get_layer_transition(self, inner_ix, outer_ix):
 
@@ -274,8 +293,10 @@ class Model(object):
     def feedforward(self, image):
         prev_activation = image
 
+
         # forwardpass
         for layer in self.layers:
+
             input_to_feed = prev_activation
 
             if isinstance(layer, FullyConnectedLayer):
@@ -304,6 +325,11 @@ class Model(object):
 
             prev_activation = layer.output
 
+        # for layer in self.layers:
+        #     print "output : ",layer.output.shape,", type(layer) : ",type(layer)
+        #
+        # sys.exit(0)
+
         final_activation = prev_activation
         return final_activation
 
@@ -313,20 +339,24 @@ class Model(object):
 
         # print "self.layer_weight_shapes : ", self.layer_weight_shapes
         # print "self.layer_biases_shapes : ", self.layer_biases_shapes
+
+        # print "layer.shape : ", self.layer_weight_shapes
         #
         # for w in nabla_w:
         #     print "nabla_w.shape : ", w.shape
         # for b in nabla_b:
         #     print "nabla_b.shape : ", b.shape
+        #
+        # sys.exit(0)
 
         # print "layer weight shapes : ", self.layer_weight_shapes
         # print "layer biases shapes : ", self.layer_biases_shapes
 
         # set first params on the final layer
         final_output = self.layers[-1].output
-        next_delta = (final_output - label) * activation_prime(
-            self.layers[-1].z_values)  # Error * activation_prime(z values layer before)
-        next_weights = None
+
+        delta = loss_prime(final_output, label) * activation_prime(self.layers[-1].z_values)  # Error * activation_prime(z values layer before)
+        last_weights = None
         final = True
 
         num_layers = len(self.layers)
@@ -346,11 +376,16 @@ class Model(object):
             layer = self.layers[outer_layer_ix]
             prev_output = self.layers[inner_layer_ix].output if inner_layer_ix >= 0 else image
 
+            layer_next = None
+            if (outer_layer_ix < num_layers - 1):
+                layer_next = self.layers[outer_layer_ix + 1]
+
             transition = self._get_layer_transition(
                 inner_layer_ix, outer_layer_ix
             )
 
-            # print "transition : ",transition
+            log.debug("-----------------")
+            log.debug("transition : "+transition)
 
             # inputfc = poolfc
             # fc to fc = fc to final
@@ -358,10 +393,10 @@ class Model(object):
             # conv to pool -> unique
 
             if transition == '1d_to_1d':  # final to fc, fc to fc
-                db, dw, next_delta = backprop_1d_to_1d(
-                    next_delta=next_delta,
-                    next_weights=next_weights,
-                    prev_output=prev_output,
+                db, dw, delta = backprop_1d_to_1d(
+                    delta=delta,
+                    weights=last_weights,
+                    output=prev_output,
                     z_vals=layer.z_values,
                     final=final)
                 final = False
@@ -370,38 +405,48 @@ class Model(object):
                 if l == 0:
                     prev_output = image
                 # calc delta on the first final layer
-                db, dw, next_delta = backprop_1d_to_3d(
-                    next_delta=next_delta,
-                    next_weights=next_weights,  # shape (10,100) this is the weights from the next layer
-                    prev_output=prev_output,  # (28,28)
+                db, dw, delta = backprop_3d_to_1d(
+                    delta=delta,
+                    weights=last_weights,  # shape (10,100) this is the weights from the next layer
+                    output=prev_output,  # (28,28)
                     z_vals=layer.z_values)  # (100,1)
                 # layer.weights = layer.weights.reshape((layer.num_output, layer.depth, layer.height_in, layer.width_in))
 
             # pool to conv layer
             elif transition == 'conv_to_pool':
                 # no update for dw,db => only backprops the error
-                next_delta = backprop_pool_to_conv(
-                    next_delta=next_delta,
-                    next_weights=next_weights,
+                delta = backprop_conv_to_pool(
+                    delta=delta,
+                    weights=last_weights,
                     input_from_conv=prev_output,
                     max_indices=layer.max_indices,
                     poolsize=layer.poolsize,
-                    pool_output=layer.output)
+                    pool_output=layer.output,
+                    from_conv=True if isinstance(layer_next, ConvLayer) else False)
 
-            # elif transition == 'pool_to_conv':
-
+            elif transition == 'pool_to_conv':
+                # prev_output = image
+                # next_weights = layer.weights
+                weights_shape = layer.weights.shape
+                db, dw = backprop_pool_to_conv(
+                    delta=delta,
+                    weights_shape=weights_shape,
+                    stride=layer.stride,
+                    output=prev_output,
+                    prev_z_vals=layer.z_values)
 
             # conv to conv layer
             elif transition == 'to_conv':
                 # weights passed in are the ones between conv to conv
                 # update the weights and biases
-                prev_output = image
-                next_weights = layer.weights
+                # prev_output = image
+                # last_weights = layer.weights
+                weights_shape = layer.weights.shape
                 db, dw = backprop_to_conv(
-                    next_delta=next_delta,
-                    next_weights=next_weights,
+                    delta=delta,
+                    weights_shape=layer.weights.shape,
                     stride=layer.stride,
-                    prev_output=prev_output,
+                    output=image,
                     prev_z_vals=layer.z_values)
 
             else:
@@ -417,7 +462,7 @@ class Model(object):
                 # print 'nabla_b[nabla_idx] : ', nabla_b[nabla_idx].shape
                 # print 'db : ', db.shape
                 nabla_b[nabla_idx], nabla_w[nabla_idx] = db, dw
-                next_weights = layer.weights
+                last_weights = layer.weights
                 nabla_idx -= 1
 
         # sys.exit(0)
@@ -433,13 +478,13 @@ class Model(object):
         mean_error = []
         correct_res = []
 
-        print 'Gradient Descent'
-        print 'batch_size : ', batch_size
-        print 'num_epochs : ', num_epochs
-        print 'eta : ', eta
+        log.info('Gradient Descent')
+        log.info('batch_size : %d', batch_size)
+        log.info('num_epochs : %d', num_epochs)
+        log.info('eta : %d', eta)
 
         for epoch in xrange(num_epochs):
-            print "Starting epochs : ", epoch
+            log.info("Starting epochs : %d", epoch)
             start = time.time()
             random.shuffle(training_data)  # randomize training dataset
             batches = [training_data[k:k + batch_size] for k in xrange(0, training_size, batch_size)]
@@ -449,17 +494,17 @@ class Model(object):
 
             for batch in batches:
                 # print '---batch : {}', batch
-                print '  --- ', batch_index
+                log.info( '------- %d', batch_index)
                 batch_index += 1
                 loss = self.update_mini_batch(batch, eta)
                 losses += loss
-                print "losses : ", losses
+                log.info( "losses : "+ losses)
             mean_error.append(round(losses / batch_size, 2))
-            print "mean error : ", mean_error
+            log.info( "mean error : "+ mean_error)
 
             if test_data:
-                print "################## VALIDATE #################"
-                print "Epoch {0} complete".format(epoch)
+                log.info( "################## VALIDATE #################")
+                log.info( "Epoch {0} complete".format(epoch))
                 res = self.validate(test_data)
                 correct_res.append(res)
 
@@ -469,9 +514,9 @@ class Model(object):
                 # print "Accuracy: %.2f" % accuracy
                 # time
                 timer = time.time() - start
-                print "Estimated time: ", timer
+                log.info( "Estimated time: "+ timer)
             else:
-                print "NO TEST DATA"
+                log.info( "NO TEST DATA")
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -494,6 +539,7 @@ class Model(object):
 
             _ = self.feedforward(image)
             final_res, delta_b, delta_w = self.backprop(image, label)
+            sys.exit(0)
 
             # print 'final_res.shape : ', final_res.shape
             # print 'final_res : ', final_res
@@ -507,7 +553,7 @@ class Model(object):
 
         ################## print LOSS ############
         error = loss(label, final_res)
-        print "error : ", error
+        log.info("error : "+ error)
 
         num = 0
         weight_index = []
@@ -538,7 +584,7 @@ class Model(object):
             predicted = np.where(result > 0.5, 1, 0)
             actual = d[1]
 
-            print "result : ", result[0][0], ", predicted : ", predicted[0][0], " actual : ", actual[0][0]
+            log.info( "result : "+ result[0][0]+ ", predicted : "+ predicted[0][0]+ " actual : "+ actual[0][0])
 
             test_results.append((predicted[0][0], actual[0][0]))
 
@@ -562,13 +608,17 @@ class Model(object):
         recall = np.diag(confusion_matrix) / np.sum(confusion_matrix, 1)
         recall = [((r, 0)[math.isnan(r)]) for r in recall]
 
-        print "Confusion Matrix : "
-        print confusion_matrix
-        print "Accuracy : ", accuracy
-        # print "Average Precision : ", np.average(precision)
-        # print "Average Recall : ",np.average(recall)
-        print "Precision : ", precision[1]
-        print "Recall : ", recall[1]
+        log.info("Confusion Matrix : ")
+        log.info(confusion_matrix)
+        log.info("Accuracy : "+ accuracy)
+
+        # for multiclass
+        log.info("Average Precision : "+ np.average(precision))
+        log.info("Average Recall : "+ np.average(recall))
+
+        # for two class
+        # log.info( "Precision : ", precision[1])
+        # log.info( "Recall : ", recall[1])
 
         # print type(test_results)
         # return sum(int(x == y) for x, y in test_results)

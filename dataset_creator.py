@@ -57,6 +57,10 @@ def translate_if_edge(coordinate, radius):
 
 f = open(METADATA, "r")
 
+normal = 0
+cancer = 0
+total = 0
+
 for line in f:
     words = line.rstrip().split(" ")
     # print "words[0] : ",words[0]
@@ -65,9 +69,12 @@ for line in f:
     # print "---------"
     # print words[0]
     # filename = words[0]
+    total += 1
 
     if (words[2] == "NORM"):
         print "---NORMAL---"
+        normal += 1
+        continue
 
 
         img_name = words[0]
@@ -119,6 +126,7 @@ for line in f:
 
     else:
         print "---CANCER---"
+        cancer += 1
         continue
 
         ###START CANCER
@@ -178,6 +186,9 @@ for line in f:
             # sys.exit(0)
             ### END CANCER
 
+print "normal : ", normal
+print "cancer : ", cancer
+print "total : ", total
 
 # img = cv2.imread('dataset/original/mias/master/mdb063.pgm', cv2.IMREAD_GRAYSCALE)
 # # coordinate = (546, 1023-463) #because origin from metadata is from left-bottom
