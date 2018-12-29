@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 
 
 ETA = 0.01 #learning-rate (maybe)
-EPOCHS = 2 #default 5
+EPOCHS = 1 #default 5
 WIDTH = 36
 HEIGHT = 36
 CHANNEL = 1
@@ -168,4 +168,4 @@ net = Model(input_shape,
 
 # net.gradient_descent(training_data[0:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
 # net.gradient_descent(training_data[:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:100])
-net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data)
+net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, LMBDA, OUTPUT, test_data = test_data)

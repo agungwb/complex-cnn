@@ -471,7 +471,7 @@ class Model(object):
 
         return self.layers[-1].output, nabla_b, nabla_w
 
-    def gradient_descent(self, training_data, batch_size, eta, num_epochs, lmbda=None, test_data=None):
+    def gradient_descent(self, training_data, batch_size, eta, num_epochs, num_output, lmbda=None, test_data=None):
         training_size = len(training_data)
 
         if test_data:
@@ -508,7 +508,10 @@ class Model(object):
                 log.info( "################## VALIDATE #################")
                 log.info( "Epoch {0} complete %s", format(epoch))
                 # res = self.validate(test_data)
-                res = self.validate_multiclass(test_data)
+                if num_output >= 2:
+                    res = self.validate_multiclass(test_data)
+                else:
+                    res = self.validate(test_data)
                 correct_res.append(res)
 
                 # print "res: ", res
@@ -628,7 +631,7 @@ class Model(object):
         # return sum(int(x == y) for x, y in test_results)
         return accuracy
 
-    def validate_multiclass(self, data):
+    def validate_multiclass(self, data, num_output):
         # data = [(im.reshape((CHANNEL,HEIGHT,WIDTH)),y) for im,y in data]
         data = [(im.reshape((self.input_shape[0], self.input_shape[1], self.input_shape[2])), y) for im, y in data]
         # print "data : ",data
@@ -650,7 +653,7 @@ class Model(object):
         # print "len(test_results) : ", len(test_results)
         # output_n = len(test_results) if len(test_results) > 1 else 2
 
-        confusion_matrix = np.zeros([10, 10])
+        confusion_matrix = np.zeros([num_output, num_output])
         for test_result in test_results:
             # print "test_results[0] : ", test_results[0]
             # print "test_results[1] : ", test_results[1]

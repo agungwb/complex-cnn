@@ -460,7 +460,7 @@ class Model(object):
         return self.layers[-1].output, nabla_b, nabla_w
 
       
-    def gradient_descent(self, training_data, batch_size, eta, num_epochs, lmbda=None, test_data = None):
+    def gradient_descent(self, training_data, batch_size, eta, num_epochs, num_output, lmbda=None, test_data = None):
         training_size = len(training_data)
 
         if test_data:
