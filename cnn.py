@@ -253,11 +253,13 @@ class Model(object):
             layers.append(layer)
         self.layers = layers
 
-        # for layer in layers:
-        #     log.debug("type : "+ type(layer)+
-        #             ", output.shape :  "+ layer.output.shape+
-        #             ", weights.shape : "+ layer.weights.shape if not isinstance(layer, PoolingLayer) else 'None'+
-        #             ", weights.bias : "+ layer.biases.shape if not isinstance(layer, PoolingLayer) else 'None')
+        for layer in layers:
+            log.debug("type : %s | output.shape : %s | weights.shape : %s | biases.shape : %s ",
+                      type(layer), layer.output.shape,
+                    layer.weights.shape if not isinstance(layer, PoolingLayer) else "None",
+                    layer.biases.shape if not isinstance(layer, PoolingLayer) else "None")
+
+
         # sys.exit(0)
 
     def _get_layer_transition(self, inner_ix, outer_ix):
@@ -479,9 +481,9 @@ class Model(object):
         correct_res = []
 
         log.info('Gradient Descent')
-        log.info('batch_size : %d', batch_size)
-        log.info('num_epochs : %d', num_epochs)
-        log.info('eta : %d', eta)
+        log.info('batch_size : %s', batch_size)
+        log.info('num_epochs : %s', num_epochs)
+        log.info('eta : %s', eta)
 
         for epoch in xrange(num_epochs):
             log.info("Starting epochs : %d", epoch)
@@ -498,14 +500,15 @@ class Model(object):
                 batch_index += 1
                 loss = self.update_mini_batch(batch, eta)
                 losses += loss
-                log.info( "losses : "+ losses)
+                log.info( "losses : %s", losses)
             mean_error.append(round(losses / batch_size, 2))
-            log.info( "mean error : "+ mean_error)
+            log.info( "mean error : %s", mean_error)
 
             if test_data:
                 log.info( "################## VALIDATE #################")
-                log.info( "Epoch {0} complete".format(epoch))
-                res = self.validate(test_data)
+                log.info( "Epoch {0} complete %s", format(epoch))
+                # res = self.validate(test_data)
+                res = self.validate_multiclass(test_data)
                 correct_res.append(res)
 
                 # print "res: ", res
@@ -514,9 +517,9 @@ class Model(object):
                 # print "Accuracy: %.2f" % accuracy
                 # time
                 timer = time.time() - start
-                log.info( "Estimated time: "+ timer)
+                log.info("Estimated time: %s", timer)
             else:
-                log.info( "NO TEST DATA")
+                log.info("NO TEST DATA")
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -539,7 +542,7 @@ class Model(object):
 
             _ = self.feedforward(image)
             final_res, delta_b, delta_w = self.backprop(image, label)
-            sys.exit(0)
+            # sys.exit(0)
 
             # print 'final_res.shape : ', final_res.shape
             # print 'final_res : ', final_res
@@ -553,7 +556,7 @@ class Model(object):
 
         ################## print LOSS ############
         error = loss(label, final_res)
-        log.info("error : "+ error)
+        log.info("error : %s", error)
 
         num = 0
         weight_index = []
@@ -584,7 +587,8 @@ class Model(object):
             predicted = np.where(result > 0.5, 1, 0)
             actual = d[1]
 
-            log.info( "result : "+ result[0][0]+ ", predicted : "+ predicted[0][0]+ " actual : "+ actual[0][0])
+            log.info("result : %s | predicted : %s | actual : %s", result, predicted, actual)
+
 
             test_results.append((predicted[0][0], actual[0][0]))
 
@@ -610,11 +614,65 @@ class Model(object):
 
         log.info("Confusion Matrix : ")
         log.info(confusion_matrix)
-        log.info("Accuracy : "+ accuracy)
+        log.info("Accuracy : %s", accuracy)
 
         # for multiclass
-        log.info("Average Precision : "+ np.average(precision))
-        log.info("Average Recall : "+ np.average(recall))
+        log.info("Average Precision : %s", np.average(precision))
+        log.info("Average Recall : %s", np.average(recall))
+
+        # for two class
+        # log.info( "Precision : ", precision[1])
+        # log.info( "Recall : ", recall[1])
+
+        # print type(test_results)
+        # return sum(int(x == y) for x, y in test_results)
+        return accuracy
+
+    def validate_multiclass(self, data):
+        # data = [(im.reshape((CHANNEL,HEIGHT,WIDTH)),y) for im,y in data]
+        data = [(im.reshape((self.input_shape[0], self.input_shape[1], self.input_shape[2])), y) for im, y in data]
+        # print "data : ",data
+
+        # test_results = [(np.argmax(self.feedforward(x)),y) for x, y in data] #argmax return index of max value
+
+        test_results = list()
+        for d in data:
+            result = self.feedforward(d[0])
+            # predicted = np.where(result > 0.5, 1, 0)
+            actual = d[1]
+
+            # log.info("result : %s | predicted : %s | actual : %s", result, predicted, actual)
+
+
+            test_results.append((np.argmax(result)+1, actual))
+
+        # print "test_results : ", test_results
+        # print "len(test_results) : ", len(test_results)
+        # output_n = len(test_results) if len(test_results) > 1 else 2
+
+        confusion_matrix = np.zeros([10, 10])
+        for test_result in test_results:
+            # print "test_results[0] : ", test_results[0]
+            # print "test_results[1] : ", test_results[1]
+            confusion_matrix[test_result[0]][test_result[1]] += 1
+        # print confusion_matrix
+
+        n_test = len(data)
+
+        accuracy = float(np.trace(confusion_matrix)) / n_test
+
+        precision = np.diag(confusion_matrix) / np.sum(confusion_matrix, 0)
+        precision = [((p, 0)[math.isnan(p)]) for p in precision]
+        recall = np.diag(confusion_matrix) / np.sum(confusion_matrix, 1)
+        recall = [((r, 0)[math.isnan(r)]) for r in recall]
+
+        log.info("Confusion Matrix : ")
+        log.info(confusion_matrix)
+        log.info("Accuracy : %s", accuracy)
+
+        # for multiclass
+        log.info("Average Precision : %s", np.average(precision))
+        log.info("Average Recall : %s", np.average(recall))
 
         # for two class
         # log.info( "Precision : ", precision[1])
