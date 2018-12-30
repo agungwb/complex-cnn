@@ -1,10 +1,14 @@
 import cv2
-import numpy as np
 import sys
 import random
 from os import listdir
 from os.path import isfile, join
 import dtcwt
+
+try:
+    import cupy as np
+except ImportError:
+    import numpy as np
 
 PATH_CANCER = "dataset/mammogram/cancer";
 PATH_NORMAL = "dataset/mammogram/normal";

@@ -1,5 +1,9 @@
-import numpy as np
 import sys
+
+try:
+    import cupy as np
+except ImportError:
+    import numpy as np
 
 # helper functions
 ###############################################################

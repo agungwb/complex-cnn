@@ -1,6 +1,9 @@
-import numpy as np
 from helper import *
 
+try:
+    import cupy as np
+except ImportError:
+    import numpy as np
 
 # backpropagation
 ##############################################################

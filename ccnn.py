@@ -1,5 +1,4 @@
 # This is the basic idea behind the architecture
-import numpy as np
 import random
 import math
 import math
@@ -13,6 +12,10 @@ from helper import *
 
 from cbackprop import *
 
+try:
+    import cupy as np
+except ImportError:
+    import numpy as np
 
 ''' RECEPTIVE FIELD - WEIGHTS aka FILTER ->
 initialize filters in a way that corresponds to the depth of the image.

@@ -14,7 +14,10 @@ import gzip
 import sys
 
 # Third-party libraries
-import numpy as np
+try:
+    import cupy as np
+except ImportError:
+    import numpy as np
 
 def load_data():
     """Return the MNIST data as a tuple containing the training data,
