@@ -76,21 +76,21 @@ class ConvLayer(object):
 
                 # ACTIVATIONS -> loop through each conv block horizontally
 
-                a = input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide]
-                b = self.weights[j]
-                c = self.biases[j]
-                log.debug("a : %s", type(a))
-                log.debug("b : %s", type(b))
-                log.debug("c : %s", type(c))
+                # a = input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide]
+                # b = self.weights[j]
+                # c = self.biases[j]
+                # log.debug("a : %s", type(a))
+                # log.debug("b : %s", type(b))
+                # log.debug("c : %s", type(c))
+                #
+                # d = np.multiply(a,b)
+                # e = np.sum(d)
+                # log.debug("d : %s", type(d))
+                # log.debug("e : %s", type(e))
+                #
+                # f = np.add(e,c)
+                # log.debug("e : %s", type(f))
 
-                d = np.multiply(a,b)
-                e = np.sum(d)
-                log.debug("d : %s", type(d))
-                log.debug("e : %s", type(e))
-
-                f = np.add(e,c)
-                log.debug("e : %s", type(f))
-                
 
                 self.z_values[j][i] = np.add(np.sum(np.multiply(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide], self.weights[j])), self.biases[j])
                 self.output[j][i] = activation(self.z_values[j][i])  # activation function

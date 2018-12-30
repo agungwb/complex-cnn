@@ -37,7 +37,7 @@ def load_data(env):
     for cancer_file in cancer_list:
         # print "cancer_file : ",cancer_file
         if (cancer_file.endswith(FILE_TIPE)):
-            input_cancer = cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
+            input_cancer = np.array(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
             input_cancer = input_cancer/255.0 #normalize value
             dataset_cancer.append(tuple((input_cancer, output_cancer)))
     random.shuffle(dataset_cancer)
@@ -53,7 +53,7 @@ def load_data(env):
     for normal_file in normal_list:
         # print "normal_file : ",normal_file
         if (normal_file.endswith(FILE_TIPE)):
-            input_normal = cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
+            input_normal = np.array(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
             input_normal = input_normal / 255.0  # normalize value
             dataset_normal.append(tuple((input_normal, output_normal)))
     random.shuffle(dataset_normal)
@@ -85,7 +85,7 @@ def load_data_dtcwt(env):
     for cancer_file in cancer_list:
         # print "cancer_file : ",cancer_file
         if (cancer_file.endswith(FILE_TIPE)):
-            input_cancer = cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE)
+            input_cancer = np.array(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
             input_cancer_n = input_cancer/255.0 #normalize value
             input_cancer_c = transform.forward(input_cancer_n, nlevels=3)
             for i in range(6):
@@ -103,7 +103,7 @@ def load_data_dtcwt(env):
     for normal_file in normal_list:
         # print "normal_file : ",normal_file
         if (normal_file.endswith(FILE_TIPE)):
-            input_normal = cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE)
+            input_normal = np.array(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
             input_normal_n = input_normal / 255.0  # normalize value
             input_normal_c = transform.forward(input_normal_n, nlevels=3)
             for i in range(6):
