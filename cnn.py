@@ -75,6 +75,23 @@ class ConvLayer(object):
             for i in range(act_length1d):  # loop til the output array is filled up -> one dimensional (600)
 
                 # ACTIVATIONS -> loop through each conv block horizontally
+
+                a = input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide]
+                b = self.weights[j]
+                c = self.biases[j]
+                log.debug("a : %s", type(a))
+                log.debug("b : %s", type(b))
+                log.debug("c : %s", type(c))
+
+                d = np.multiply(a,b)
+                e = np.sum(d)
+                log.debug("d : %s", type(d))
+                log.debug("e : %s", type(e))
+
+                f = np.add(e,c)
+                log.debug("e : %s", type(f))
+                
+
                 self.z_values[j][i] = np.add(np.sum(np.multiply(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide], self.weights[j])), self.biases[j])
                 self.output[j][i] = activation(self.z_values[j][i])  # activation function
 
@@ -183,7 +200,7 @@ class FullyConnectedLayer(Layer):
         a = a.reshape((self.depth * self.height_in * self.width_in, 1))
 
         # this is shape of (num_outputs, 1)
-        self.z_values = np.dot(self.weights, a) + self.biases
+        self.z_values = np.add(np.dot(self.weights, a), self.biases)
         self.output = activation(self.z_values)
 
         # print "self.z_values.shape : ", self.z_values.shape
