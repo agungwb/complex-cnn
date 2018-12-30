@@ -1,7 +1,11 @@
-import numpy as np
 from helper import *
 
 import logging
+
+try:
+    import cupy as np
+except ImportError:
+    import numpy as np
 
 log = logging.getLogger("__backprop__")
 

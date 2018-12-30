@@ -1,5 +1,5 @@
 # This is the basic idea behind the architecture
-import numpy as np
+
 import random
 import math
 import math
@@ -12,6 +12,11 @@ from helper import *
 
 from backprop import *
 import logging
+
+try:
+    import cupy as np
+except ImportError:
+    import numpy as np
 
 log = logging.getLogger("__cnn__")
 
