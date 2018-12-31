@@ -166,7 +166,11 @@ class PoolingLayer(object):
                     index = [index[0]]
                 # print "index after : ", index
                 index = index[0][0] + row, index[0][1] + slide
+                print "index : ", type(index)
+                print "self.max_indices[j][i] : ", type(self.max_indices[j][i])
                 self.max_indices[j][i] = index
+
+                sys.exit(0)
 
                 slide += self.poolsize[1]
 
