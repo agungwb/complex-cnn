@@ -91,7 +91,6 @@ class ConvLayer(object):
                 f = np.add(e,c)
                 log.debug("f : %s", f.shape)
 
-
                 # self.z_values[j][i] = np.add(np.sum(np.multiply(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide], self.weights[j])), self.biases[j])
 
                 self.z_values[j][i] = np.sum(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide] * self.weights[j]) + self.biases[j]
