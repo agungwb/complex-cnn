@@ -89,13 +89,16 @@ class ConvLayer(object):
                 log.debug("e : %s", e.shape)
 
                 f = np.add(e,c)
-                log.debug("f : %s", f.shape)
+                log.debug("f : %s", type(f))
+                log.debug("f : %s", f)
                 log.debug("self.z_values[j][i].shape : %s", self.z_values[j][i].shape)
 
                 # self.z_values[j][i] = np.add(np.sum(np.multiply(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide], self.weights[j])), self.biases[j])
-                # self.z_values[j][i] = np.sum(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide] * self.weights[j]) + self.biases[j]
+                self.z_values[j][i] = np.sum(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide] * self.weights[j]) + self.biases[j]
 
-                self.z_values[j][i] = f
+                # self.z_values[j][i] = f
+                log.debug("self.z_values[j][i].shape : %s", self.z_values[j][i])
+                log.debug("self.z_values[j][i].shape : %s", type(self.z_values[j][i]))
                 self.output[j][i] = activation(self.z_values[j][i])  # activation function
 
                 sys.exit(0)
