@@ -121,12 +121,12 @@ def backprop_pool_to_conv(delta, weights_shape, stride, output, prev_z_vals):
 
 @numba.jit(nopython=True)
 def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize, pool_output, from_conv=False):
-    log.debug("## delta.shape : %s", delta.shape)
-    log.debug("## weights.shape : %s", weights.shape)
-    log.debug("## input_from_conv.shape : %s", input_from_conv.shape)
-    log.debug("## max_indices.shape : %s", max_indices.shape)
-    log.debug("## poolsize: %s", poolsize)
-    log.debug("## pool_output.shape: %s", pool_output.shape)
+    # log.debug("## delta.shape : %s", delta.shape)
+    # log.debug("## weights.shape : %s", weights.shape)
+    # log.debug("## input_from_conv.shape : %s", input_from_conv.shape)
+    # log.debug("## max_indices.shape : %s", max_indices.shape)
+    # log.debug("## poolsize: %s", poolsize)
+    # log.debug("## pool_output.shape: %s", pool_output.shape)
 
     # reshape the "z values" of the pool layer
     x,y,z = pool_output.shape
@@ -146,10 +146,10 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
 
         # sp = pool_output #versi awb sotoy, pooling gak pake activation
         sp = activation_prime(pool_output) #versi old
-        log.debug("## sp.shape : %s", sp.shape)
-        log.debug("## weights.transpose().shape : %s", weights.transpose().shape)
+        # log.debug("## sp.shape : %s", sp.shape)
+        # log.debug("## weights.transpose().shape : %s", weights.transpose().shape)
         delta = np.dot(weights.transpose(), delta) * sp         # backprop to calc delta on pooling layer
-        log.debug("## delta.shape (after) : %s", delta.shape)
+        # log.debug("## delta.shape (after) : %s", delta.shape)
         delta = delta.reshape((x, y * z))
     else:
         stride = 1
@@ -254,8 +254,8 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
     depth, height, width = input_from_conv.shape
     delta_new = np.zeros((depth, height, width)) # calc the delta on the conv layer
 
-    log.debug( "## pool_output.shape : %s", pool_output.shape)
-    log.debug( "## delta_new.shape : %s", delta_new.shape)
+    # log.debug( "## pool_output.shape : %s", pool_output.shape)
+    # log.debug( "## delta_new.shape : %s", delta_new.shape)
 
     for d in range(depth):    # depth is the same for conv + pool layer
         row = 0
@@ -283,7 +283,7 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
 
     # print "backprop_1d_to_1d next_weights : ", next_weights.shape
     # print "backprop_pool_to_conv : ", delta_new.shape
-    log.debug( "-> [backprop_conv_to_pool]  delta : %s", delta_new.shape)
+    # log.debug( "-> [backprop_conv_to_pool]  delta : %s", delta_new.shape)
     return delta_new
 
 def backprop_to_conv(delta, weights_shape, stride, output, prev_z_vals):
