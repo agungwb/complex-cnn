@@ -34,11 +34,11 @@ def activation(z):
 
 @numba.jit("f8[:](f8[:])", nopython=True, parallel=True)
 def activation_prime(z):
-    if sys.argv[1] == 'ccnn':
-        # return sigmoid_split_complex_prime(z)
-        return tanh_split_complex_prime(z)
-    else:
-        return sigmoid_prime(z)
+    # if sys.argv[1] == 'ccnn':
+    #     # return sigmoid_split_complex_prime(z)
+    #     return tanh_split_complex_prime(z)
+    # else:
+    return sigmoid_prime(z)
 
 def csigmoid(z):
     np.exp(1j * sigmoid(np.angle(z)))
