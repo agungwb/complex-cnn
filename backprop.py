@@ -215,7 +215,7 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
     # log.debug( "-> [backprop_conv_to_pool]  delta : %s", delta_new.shape)
     return delta_new
 
-@numba.jit(nopython=True, parallel=True)
+@numba.jit(parallel=True)
 def function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride):
     for d in range(depth):
         # h_gap = (h - dim1) / 2
