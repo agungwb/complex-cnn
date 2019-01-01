@@ -88,7 +88,7 @@ def tanh_prime(z):
 def tanh_split_complex(z):
     return tanh(z.real) + (1j * tanh(z.imag))
 
-@numba.jit("f8[:](f8[:])", nopython=True, parallel=True)
+@numba.jit("c16[:](c16[:])", nopython=True, parallel=True)
 def tanh_split_complex_prime(z):
     return tanh_prime(z.real) + (1j * tanh_prime(z.imag))
 
