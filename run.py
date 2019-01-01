@@ -4,6 +4,7 @@ import logging
 
 from backprop import *
 import mammogram_loader
+import numba
 
 import numpy as np
 

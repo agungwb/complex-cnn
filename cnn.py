@@ -1,5 +1,6 @@
 # This is the basic idea behind the architecture
 
+import numba
 import random
 import math
 import math
@@ -57,7 +58,7 @@ class ConvLayer(object):
         # output convolution layer (after activation function) (num_filters, output_dim1, output_dim2)
         self.output = np.zeros((self.num_filters, self.output_dim1, self.output_dim2))
 
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def convolve(self, input_neurons):
         '''
         Pass in the actual input data and do the convolution.
@@ -142,7 +143,7 @@ class PoolingLayer(object):
         self.output = np.empty((self.depth, self.height_out, self.width_out))
         self.max_indices = np.empty((self.depth, self.height_out, self.width_out, 2))
 
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def pool(self, input_image):
 
         self.pool_length1d = self.height_out * self.width_out
@@ -212,7 +213,7 @@ class FullyConnectedLayer(Layer):
         self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in)
         self.biases = np.random.randn(self.num_output, 1)
 
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def feedforward(self, a):
         '''
         forwardpropagates through the FC layer to the final output layer
@@ -243,7 +244,7 @@ class ClassifyLayer(Layer):
         # print "self.weights.shape : ", self.weights.shape
         self.biases = np.random.randn(self.num_classes, 1)
 
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def classify(self, x):
         self.z_values = np.dot(self.weights, x) + self.biases
         self.output = activation(self.z_values)
@@ -281,7 +282,7 @@ class Model(object):
         # print "layer.shape : ", self.layer_weight_shapes
         # sys.exit(0)
 
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def _initialize_layers(self, layer_config):
         """
         Sets the net's <layer> attribute
@@ -338,7 +339,7 @@ class Model(object):
 
         raise NotImplementedError
 
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def feedforward(self, image):
         prev_activation = image
 
@@ -382,7 +383,7 @@ class Model(object):
         final_activation = prev_activation
         return final_activation
 
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def backprop(self, image, label):
         nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]  # create nabla_weight for every layer with same shape
         nabla_b = [np.zeros(s) for s in self.layer_biases_shapes]  # create nabla_biases for every layer with same shape
@@ -519,7 +520,7 @@ class Model(object):
 
         return self.layers[-1].output, nabla_b, nabla_w
 
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def gradient_descent(self, training_data, batch_size, eta, num_epochs, num_output, lmbda=None, test_data=None):
         training_size = len(training_data)
 
@@ -579,7 +580,7 @@ class Model(object):
         # plt.show()
 
     # bisa di paralelisasi
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def update_mini_batch(self, batch, eta):
         nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]
         nabla_b = [np.zeros(s) for s in self.layer_biases_shapes]

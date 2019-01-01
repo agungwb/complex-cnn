@@ -3,6 +3,7 @@ from helper import *
 import logging
 
 import numpy as np
+import numba
 
 # try:
 #     import cupy as np
@@ -18,7 +19,7 @@ log = logging.getLogger("__backprop__")
 # delta_L = weights_L (dot) delta_L+1 .*  activation_prime(z_L)
 
 
-@jit(nopython=True)
+@numba.jit(nopython=True)
 def backprop_1d_to_1d(delta, weights, output, z_vals, final=False):
     log.debug("## delta.shape : %s", delta.shape)
     log.debug("## weights.shape : %s", weights)
@@ -41,7 +42,7 @@ def backprop_1d_to_1d(delta, weights, output, z_vals, final=False):
     return delta_b, delta_w, delta
 
 #fc to pool
-@jit(nopython=True)
+@numba.jit(nopython=True)
 def backprop_3d_to_1d(delta, weights, output, z_vals):
     log.debug("## delta.shape : %s", delta.shape)
     log.debug("## weights.shape : %s", weights.shape)
@@ -66,7 +67,7 @@ def backprop_3d_to_1d(delta, weights, output, z_vals):
     return delta_b, delta_w, delta
 
 #test
-@jit(nopython=True)
+@numba.jit(nopython=True)
 def backprop_pool_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     '''weights passed in are the ones between pooling and fc layer'''
 
@@ -121,7 +122,7 @@ def backprop_pool_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     log.debug("-> [backprop_to_conv]  delta %s, delta_w : %s, delta_b : %s ", delta.shape, delta_w.shape,delta_b.shape)
     return delta_b, delta_w
 
-@jit(nopython=True)
+@numba.jit(nopython=True)
 def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize, pool_output, from_conv=False):
     log.debug("## delta.shape : %s", delta.shape)
     log.debug("## weights.shape : %s", weights.shape)
@@ -288,7 +289,7 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
     log.debug( "-> [backprop_conv_to_pool]  delta : %s", delta_new.shape)
     return delta_new
 
-@jit(nopython=True)
+@numba.jit(nopython=True)
 def backprop_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     log.debug( "## delta.shape : %s", delta.shape)
     log.debug( "## weights.shape : %s", weights_shape)
