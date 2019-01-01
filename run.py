@@ -5,13 +5,14 @@ import logging
 from backprop import *
 import mammogram_loader
 
+import numpy as np
 
-try:
-    import cupy as np
-    print "<<< Backend powered by CuPy >>>"
-except ImportError:
-    import numpy as np
-    print "<<< Backend powered by NumPy >>>"
+# try:
+#     import cupy as np
+#     print "<<< Backend powered by CuPy >>>"
+# except ImportError:
+#     import numpy as np
+#     print "<<< Backend powered by NumPy >>>"
 
 
 if len(sys.argv) < 2:
