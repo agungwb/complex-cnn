@@ -272,10 +272,10 @@ def function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights,
 
                 # sp = activation_prime(pool_output[j, row, column])
 
-                if isinstance(pool_output[j, row, column], (list,)):
-                    activation_prime_parallel = numba.jit("f8[:](f8[:])")(activation_prime())
-                else :
-                    activation_prime_parallel = numba.jit("f8(f8)")(activation_prime)
+                # if isinstance(pool_output[j, row, column], (list,)):
+                activation_prime_parallel = numba.jit("f8[:](f8[:])")(activation_prime())
+                # else :
+                #     activation_prime_parallel = numba.jit("f8(f8)")(activation_prime)
 
                 sp = activation_prime_parallel(pool_output[j, row, column])
 
