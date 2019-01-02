@@ -215,7 +215,7 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
     # log.debug( "-> [backprop_conv_to_pool]  delta : %s", delta_new.shape)
     return delta_new
 
-@numba.jit(nopython=True, parallel=True)
+# @numba.jit(nopython=True, parallel=True)
 def function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride):
     for d in range(depth):
         # h_gap = (h - dim1) / 2
@@ -270,14 +270,14 @@ def function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights,
                 # temp = delta_padded_zero[row:filter_size + row, column:filter_size + column]
                 # print "temp.shape : ",temp.shape
 
-                # sp = activation_prime(pool_output[j, row, column])
+                sp = activation_prime(pool_output[j, row, column])
 
                 # if isinstance(pool_output[j, row, column], (list,)):
-                activation_prime_parallel = numba.jit("f8[:](f8[:])")(activation_prime())
-                # else :
+                #     activation_prime_parallel = numba.jit("f8[:](f8[:])")(activation_prime())
+                # else:
                 #     activation_prime_parallel = numba.jit("f8(f8)")(activation_prime)
-
-                sp = activation_prime_parallel(pool_output[j, row, column])
+                #
+                # sp = activation_prime_parallel(pool_output[j, row, column])
 
                 delta[j][i] += np.sum(
                     delta_padded_zero[row:filter_size + row, column:filter_size + column] * filter_rotated) * sp
