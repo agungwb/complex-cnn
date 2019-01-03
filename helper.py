@@ -102,7 +102,7 @@ def relu_prime(z):
     # print "z : ", z
     return np.where(z>=0, 1, 0)
 
-@numba.njit('f8[:,:](f8[:,:])', parallel=True, cache=True)
+@numba.njit('f8[:,:](f8[:,:])')
 def rot180(a):
     row, col = a.shape
     temp = np.zeros((row, col), dtype=np.float64)
@@ -112,3 +112,9 @@ def rot180(a):
             # print("5-x, 5-y : %s, %s", col-x, row-y)
             temp[x-1][y-1]=a[row-x][col-y]
     return temp
+
+@numba.njit('f8[:,:](i8,i8,i8,i8,i8,i8,f8[:,:])')
+def delta_padded_zeros(height_in, width_in, h_gap, w_gap, dim1, dim2, delta_temp):
+    delta_padded_zero = np.zeros((height_in, width_in))
+    delta_padded_zero[h_gap:dim1 + h_gap, w_gap:dim2 + w_gap] = delta_temp
+    return delta_padded_zero
