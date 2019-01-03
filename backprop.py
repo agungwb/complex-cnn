@@ -173,8 +173,7 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
         # print "## act_length1d : ",act_length1d
 
         ##function
-        function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta,
-                   stride)
+        function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride)
         ##endfunction
 
 
@@ -215,7 +214,7 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
     # log.debug( "-> [backprop_conv_to_pool]  delta : %s", delta_new.shape)
     return delta_new
 
-@numba.jit(nopython=True, parallel=True)
+@numba.njit(parallel=True)
 def function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride):
     for d in range(depth):
         # h_gap = (h - dim1) / 2
@@ -243,7 +242,8 @@ def function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights,
             # print "j : ",j
             # print "weights.shape : ",weights.shape
             # print "weights[d,j] : ", weights[d,j].shape
-            filter_rotated = np.rot90(np.rot90(weights[d, j]))
+            # filter_rotated = np.rot90(np.rot90(weights[d, j]))
+            filter_rotated = rot180(weights[d, j])
 
             for i in range(act_length1d):
 
@@ -270,7 +270,14 @@ def function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights,
                 # temp = delta_padded_zero[row:filter_size + row, column:filter_size + column]
                 # print "temp.shape : ",temp.shape
 
-                sp = activation_prime(pool_output[j, row, column])
+                # sp = activation_prime(pool_output[j, row, column])
+                z = pool_output[j, row, column]
+                sigmoid = 1.0/(1.0 + np.exp(-z))
+
+                sp = sigmoid * (1-sigmoid)
+
+                # print "type(pool_output[j, row, column]) : ",type(pool_output[j, row, column])
+                # print "type(sp) : ",type(sp)
 
                 # if isinstance(pool_output[j, row, column], (list,)):
                 #     activation_prime_parallel = numba.jit("f8[:](f8[:])")(activation_prime())

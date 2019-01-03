@@ -32,6 +32,7 @@ def activation(z):
     else:
         return sigmoid(z)
 
+# @numba.jit('f8(f8)', nopython=True, parallel=True)
 def activation_prime(z):
     # if sys.argv[1] == 'ccnn':
     #     # return sigmoid_split_complex_prime(z)
@@ -46,11 +47,14 @@ def csigmoid_prime(z):
     1j * sigmoid_prime(z) * csigmoid(z)
     return
 
+# @numba.jit('f8(f8)', nopython=True, parallel=True)
 def sigmoid(z):
     return 1.0/(1.0 + np.exp(-z))
 
+# @numba.jit('f8(f8)', nopython=True, parallel=True)
 def sigmoid_prime(z):
-    return sigmoid(z) * (1-sigmoid(z))
+    sig = sigmoid(z)
+    return sig * (1-sig)
 
 def sigmoid_complex(z):
     return sigmoid(z.real) + (1j * z.imag)
@@ -78,14 +82,14 @@ def tanh(z):
     b = np.exp(-z)
     return (a-b)/(a+b)
 
-@numba.jit("f8[:](f8[:])", parallel=True)
+# @numba.jit("f8[:](f8[:])", parallel=True)
 def tanh_prime(z):
     return 1 - (tanh(z)**2)
 
 def tanh_split_complex(z):
     return tanh(z.real) + (1j * tanh(z.imag))
 
-@numba.jit("c16[:](c16[:])", parallel=True)
+# @numba.jit("c16[:](c16[:])", parallel=True)
 def tanh_split_complex_prime(z):
     return tanh_prime(z.real) + (1j * tanh_prime(z.imag))
 
@@ -97,3 +101,14 @@ def relu(z):
 def relu_prime(z):
     # print "z : ", z
     return np.where(z>=0, 1, 0)
+
+@numba.njit('f8[:,:](f8[:,:])', parallel=True, cache=True)
+def rot180(a):
+    row, col = a.shape
+    temp = np.zeros((row, col), dtype=np.float64)
+    for x in range (col, 0, -1):
+        for y in range (row, 0, -1):
+            # print("x, y : %s, %s", x, y)
+            # print("5-x, 5-y : %s, %s", col-x, row-y)
+            temp[x-1][y-1]=a[row-x][col-y]
+    return temp
