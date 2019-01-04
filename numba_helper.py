@@ -85,10 +85,10 @@ def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices
             # print ("p.where(np.max(toPool) == toPool) : ", np.where(np.max(toPool) == toPool))
             index = zip(*np.where(np.max(toPool) == toPool))  # HERE IT IS save the index of the max, np.where return index of array if condition meets
             # print "index before : ", index
-            print "index : ",type(index)
-            print "index : ",index
-            print "index : ",len(index)
-            sys.exit(0)
+            # print "index : ",type(index)
+            # print "index : ",index
+            # print "index : ",len(index)
+            # sys.exit(0)
             if len(index) > 1:  # if there is more than one maximum value
                 index = [index[0]]
             # print "index after : ", index
