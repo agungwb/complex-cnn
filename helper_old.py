@@ -118,10 +118,3 @@ def delta_padded_zeros(height_in, width_in, h_gap, w_gap, dim1, dim2, delta_temp
     delta_padded_zero = np.zeros((height_in, width_in))
     delta_padded_zero[h_gap:dim1 + h_gap, w_gap:dim2 + w_gap] = delta_temp
     return delta_padded_zero
-
-
-# @numba.njit('f8[:,]')
-def transpose(x):
-    y = x.transpose()  # or x.T
-    return y
-

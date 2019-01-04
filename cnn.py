@@ -10,6 +10,7 @@ import scipy
 from scipy import ndimage, misc
 import matplotlib.pyplot as plt
 from helper import *
+from numba_helper import *
 
 from backprop import *
 import logging
@@ -71,54 +72,16 @@ class ConvLayer(object):
 
         act_length1d = self.output.shape[1]  # dim1 * dim2
 
-        for j in range(self.num_filters):
-            slide = 0
-            row = 0
-
-            for i in range(act_length1d):  # loop til the output array is filled up -> one dimensional (600)
-
-                # ACTIVATIONS -> loop through each conv block horizontally
-
-                # a = input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide]
-                # b = self.weights[j]
-                # c = self.biases[j]
-                # log.debug("a : %s", a.shape)
-                # log.debug("b : %s", b.shape)
-                # log.debug("c : %s", c.shape)
-                #
-                # d = np.multiply(a,b)
-                # e = np.sum(d)
-                # log.debug("d : %s", d.shape)
-                # log.debug("e : %s", e.shape)
-                #
-                # f = np.add(e,c)
-                # log.debug("f : %s", type(f))
-                # log.debug("f : %s", f)
-                # log.debug("self.z_values[j][i].shape : %s", type(self.z_values[j][i]))
-
-                # self.z_values[j][i] = np.add(np.sum(np.multiply(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide], self.weights[j])), self.biases[j])
-                self.z_values[j][i] = float(np.sum(input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide] * self.weights[j]) + self.biases[j])
-
-                # self.z_values[j][i] = f
-                # log.debug("self.z_values[j][i].shape : %s", self.z_values[j][i])
-                # log.debug("self.z_values[j][i].shape : %s", type(self.z_values[j][i]))
-                self.output[j][i] = activation(self.z_values[j][i])  # activation function
-
-                # sys.exit(0)
-
-                # print "input_neurons sub : ",input_neurons[:, row:self.filter_size + row, slide:self.filter_size + slide].shape
-                # print "self.weights[j].shape : ",self.weights[j].shape
-                # print "self.z_values[j][i] : ",self.z_values[j][i]
-                # print "self.output[j][i] : ",self.output[j][i]
-                # sys.exit(0)
-                slide += self.stride
-
-                if (self.filter_size + slide) - self.stride >= self.width_in:  # wrap indices at the end of each row
-                    slide = 0
-                    row += self.stride  # go to next row
+        # import time
+        # start = time.time()
+        convole_loop(self.num_filters, act_length1d, self.z_values, input_neurons, self.width_in, self.weights,self.filter_size, self.stride, self.biases, self.output)
+        # end = time.time()
+        # time = end - start
+        # print "TIME convole_loop : ", time
 
         self.z_values = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
+
 
 
 class PoolingLayer(object):
@@ -150,42 +113,13 @@ class PoolingLayer(object):
         self.max_indices = self.max_indices.reshape(
             (self.depth, self.pool_length1d, 2))  # store index of max output come from
 
-        # for each filter map
-        for j in range(self.depth):
-            row = 0
-            slide = 0
-            for i in range(self.pool_length1d):
-                toPool = input_image[j][row:self.poolsize[0] + row, slide:self.poolsize[0] + slide]
+        # import time
+        # start = time.time()
+        pool_loop(self.depth, self.pool_length1d, input_image, self.width_in, self.poolsize, self.max_indices, self.output)
+        # end = time.time()
+        # time = end - start
+        # print "TIME pool_loop : ", time
 
-                self.output[j][i] = np.amax(toPool)  # calculate the max activation
-                # print ("toPool : ", toPool)
-                # print ("np.max(toPool) : ", np.max(toPool))
-                # print ("np.amax(toPool) : ", np.amax(toPool))
-                # print ("p.where(np.max(toPool) == toPool) : ", np.where(np.max(toPool) == toPool))
-                index = zip(*np.where(np.max(
-                    toPool) == toPool))  # HERE IT IS save the index of the max, np.where return index of array if condition meets
-                # print "index before : ", index
-                if len(index) > 1:  # if there is more than one maximum value
-                    index = [index[0]]
-                # print "index after : ", index
-                index = index[0][0] + row, index[0][1] + slide
-                # print "index : ", type(index)
-                # print "index : ", index
-                # print "self.max_indices[j][i] : ", type(self.max_indices[j][i])
-                # print "self.max_indices[j][i] : ", self.max_indices[j][i].shape
-                # print "self.max_indices[j][i] : ", self.max_indices[j][i]
-                # self.max_indices[j][i] = index
-                self.max_indices[j][i][0] = index[0]
-                self.max_indices[j][i][1] = index[1]
-                # print "self.max_indices[j][i] : ", self.max_indices[j][i]
-                # sys.exit(0)
-
-                slide += self.poolsize[1]
-
-                # modify this if stride != filter for poolsize
-                if slide >= self.width_in:
-                    slide = 0
-                    row += self.poolsize[1]
 
         self.output = self.output.reshape((self.depth, self.height_out, self.width_out))
         self.max_indices = self.max_indices.reshape((self.depth, self.height_out, self.width_out, 2))
@@ -449,7 +383,6 @@ class Model(object):
             elif transition == '3d_to_1d':
                 if l == 0:
                     prev_output = image
-                # calc delta on the first final layer
                 db, dw, delta = backprop_3d_to_1d(
                     delta=delta,
                     weights=last_weights,  # shape (10,100) this is the weights from the next layer
@@ -542,7 +475,13 @@ class Model(object):
                 # print '---batch : {}', batch
                 log.info( '------- %d', batch_index)
                 batch_index += 1
+
+                start = time.time()
                 loss = self.update_mini_batch(batch, eta)
+                end = time.time()
+                execution_time = end - start
+                print "TIME mini_batch : ", execution_time
+
                 losses += loss
                 log.info( "losses : %s", losses)
             mean_error.append(round(losses / batch_size, 2))
@@ -580,6 +519,9 @@ class Model(object):
 
         batch_size = len(batch)
 
+        ex_feedforward = 0;
+        ex_backprop = 0;
+
         for image, label in batch:
             # image = image.reshape((CHANNEL,HEIGHT,WIDTH))
             image = image.reshape((self.input_shape[0], self.input_shape[1], self.input_shape[2]))
@@ -587,8 +529,15 @@ class Model(object):
             # print "image.shape : ", image.shape
             # print "label.shape : ", label.shape
 
+            start = time.time()
             _ = self.feedforward(image)
+            end1 = time.time()
+            execution_feedforward = end1 - start
+            ex_feedforward += execution_feedforward
             final_res, delta_b, delta_w = self.backprop(image, label)
+            end2 = time.time()
+            execution_backprop = end2 - end1
+            ex_backprop += execution_backprop
             # sys.exit(0)
 
             # print 'final_res.shape : ', final_res.shape
@@ -601,9 +550,15 @@ class Model(object):
             nabla_b = [nb + db for nb, db in zip(nabla_b, delta_b)]  # tambah nilai errornya dengan yang baru
             nabla_w = [nw + dw for nw, dw in zip(nabla_w, delta_w)]  # tambah nilai errornya dengan yang baru
 
+        print "TIME ex_feedforward : ", ex_feedforward
+        print "TIME ex_backprop : ", ex_backprop
+        ex_total = ex_feedforward + ex_backprop
+        print "TIME total : ", ex_total
+
         ################## print LOSS ############
         error = loss(label, final_res)
         log.info("error : %s", error)
+
 
         num = 0
         weight_index = []
@@ -619,6 +574,7 @@ class Model(object):
             # print "type(layer_nabla_b) : ",layer_nabla_b
             layer.weights -= eta * layer_nabla_w / batch_size
             layer.biases -= eta * layer_nabla_b / batch_size
+
         return error
 
     def validate(self, data):

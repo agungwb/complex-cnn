@@ -1,5 +1,4 @@
 from helper import *
-from numba_helper import *
 
 import logging
 
@@ -21,16 +20,15 @@ log = logging.getLogger("__backprop__")
 # delta_L = weights_L (dot) delta_L+1 .*  activation_prime(z_L)
 
 
-@numba.njit()
 def backprop_1d_to_1d(delta, weights, output, z_vals, final=False):
-    # log.debug("## delta.shape : %s", delta.shape)
-    # log.debug("## weights.shape : %s", weights)
-    # log.debug("## z_vals.shape : %s", z_vals.shape)
+    log.debug("## delta.shape : %s", delta.shape)
+    log.debug("## weights.shape : %s", weights)
+    log.debug("## z_vals.shape : %s", z_vals.shape)
 
-    # if not final: # if final delta from loss function
-    #     sp = activation_prime(z_vals)
-    #     # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
-    #     delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
+    if not final: # if final delta from loss function
+        sp = activation_prime(z_vals)
+        # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
+        delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
 
     delta_b = delta
     delta_w = np.dot(delta, output.transpose())
@@ -38,24 +36,18 @@ def backprop_1d_to_1d(delta, weights, output, z_vals, final=False):
     # print "backprop_1d_to_1d delta : ", delta
     # print "backprop_1d_to_1d delta_w : ", delta_w.shape
     # print "backprop_1d_to_1d delta_b : ", delta_b.shape
-    # log.debug("-> [backprop_1d_to_1d]  delta %s, delta_w : %s, delta_b : %s ",delta.shape, delta_w.shape, delta_b.shape)
+    log.debug("-> [backprop_1d_to_1d]  delta %s, delta_w : %s, delta_b : %s ",delta.shape, delta_w.shape, delta_b.shape)
 
 
     return delta_b, delta_w, delta
 
 #fc to pool
-@numba.njit()
 def backprop_3d_to_1d(delta, weights, output, z_vals):
-    # log.debug("## delta.shape : %s", delta.shape)
-    # log.debug("## weights.shape : %s", weights.shape)
-    # log.debug("## z_vals.shape : %s", z_vals.shape)
+    log.debug("## delta.shape : %s", delta.shape)
+    log.debug("## weights.shape : %s", weights.shape)
+    log.debug("## z_vals.shape : %s", z_vals.shape)
 
-    # sp = activation_prime(z_vals)
-
-    z = z_vals
-    sigmoid = 1.0 / (1.0 + np.exp(-z))
-    sp = sigmoid * (1 - sigmoid)
-
+    sp = activation_prime(z_vals)
     # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
     delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
 
@@ -69,7 +61,7 @@ def backprop_3d_to_1d(delta, weights, output, z_vals):
     # print "backprop_1d_to_3d delta : ", delta.shape
     # print "backprop_1d_to_3d delta_w : ", delta_w.shape
     # print "backprop_1d_to_3d delta_b : ", delta_b.shape
-    # log.debug("-> [backprop_3d_to_1d]  delta %s, delta_w : %s, delta_b : %s ", delta.shape, delta_w.shape,delta_b.shape)
+    log.debug("-> [backprop_3d_to_1d]  delta %s, delta_w : %s, delta_b : %s ", delta.shape, delta_w.shape,delta_b.shape)
 
     return delta_b, delta_w, delta
 
@@ -100,14 +92,27 @@ def backprop_pool_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     log.debug("## delta_w.shape : %s", delta_w.shape)
     log.debug("## delta_b.shape : %s", delta_b.shape)
 
-    #PARALEL WITH NUMBA
-    # import time
-    # start = time.time()
-    backprop_pool_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b,stride)
-    # end = time.time()
-    # time = end - start
-    # print "TIME : ", time
 
+    for j in range(num_filters):
+        slide = 0
+        row = 0
+
+        for i in range(total_deltas_per_layer):
+            to_conv = output[:, row:filter_size + row, slide:filter_size + slide]
+            # print "## slide : ", slide
+            # print "## filter_size : ", filter_size
+            # print "## to_conv.shape : ", to_conv.shape
+            # print "## delta_w[j].shape  : ", delta_w[j].shape
+            #
+            # sys.exit(0)
+
+            delta_w[j] += to_conv * delta[j][i]
+            delta_b[j] += delta[j][i]  # not fully sure, but im just summing up the bias deltas over the conv layer
+            slide += stride
+
+            if (slide + filter_size) - stride >= output.shape[2]:  # wrap indices at the end of each row
+                slide = 0
+                row += stride
 
     # print "backprop_1d_to_1d next_weights : ", next_weights.shape
     # print "backprop_to_conv delta_w : ", delta_w.shape
@@ -169,12 +174,12 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
         # print "## act_length1d : ",act_length1d
 
         ##function
-        # import time
-        # start = time.time()
-        backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride)
-        # end = time.time()
-        # time = end - start
-        # print "TIME backprop_conv_to_pool_loop: ",time
+        import time
+        start = time.time()
+        function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride)
+        end = time.time()
+        time = end - start
+        print "TIME : ",time
         ##endfunction
 
 
@@ -215,6 +220,104 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
     # log.debug( "-> [backprop_conv_to_pool]  delta : %s", delta_new.shape)
     return delta_new
 
+@numba.njit()
+def function_1(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride):
+    # import time
+    # start = time.time()
+    for d in range(depth):
+        # h_gap = (h - dim1) / 2
+        # w_gap = (w - dim2) / 2
+
+        h_gap = filter_size - 1
+        w_gap = filter_size - 1
+
+        height_in = dim1 + 2 * h_gap
+        width_in = dim2 + 2 * w_gap
+
+        # delta_padded_zero = np.zeros((height_in, width_in))
+        # delta_padded_zero[h_gap:dim1 + h_gap, w_gap:dim2 + w_gap] = delta_temp[d]
+        delta_padded_zero = delta_padded_zeros(height_in, width_in, h_gap, w_gap, dim1, dim2, delta_temp[d])
+
+
+
+        # print "delta_pedded_zero.shape : ",delta_padded_zero.shape
+        # print "h_gap : ",h_gap
+        # print "w_gap : ",w_gap
+        for j in range(num_filters):
+            column = 0
+            row = 0
+
+            # print "d : ",d
+            # print "i : ",i
+            # print "j : ",j
+            # print "weights.shape : ",weights.shape
+            # print "weights[d,j] : ", weights[d,j].shape
+            # filter_rotated = np.rot90(np.rot90(weights[d, j]))
+            filter_rotated = rot180(weights[d, j])
+
+            for i in range(act_length1d):
+
+                # print "depth : ", depth
+                # print "dim1 : ", dim1
+                # print "dim2 : ", dim2
+                # print "h : ", h
+                # print "w : ", w
+                # print "delta_padded_zero.shape : ", delta_padded_zero.shape
+                # print "filter.shape : ", filter.shape
+
+                # ACTIVATIONS -> loop through each conv block horizontally
+                # sp = activation_prime(pool_output[i])
+                # print "---"
+                # print "i : ", i
+                # print "j : ", j
+                # print "row : ",row
+                # print "filter_size + row : ", filter_size + row
+                # print "filter_size : ",filter_size
+                # print "column : ",column
+                # print "filter_size + column", filter_size + column
+
+                #
+                # temp = delta_padded_zero[row:filter_size + row, column:filter_size + column]
+                # print "temp.shape : ",temp.shape
+
+                # sp = activation_prime(pool_output[j, row, column])
+                z = pool_output[j, row, column]
+                sigmoid = 1.0/(1.0 + np.exp(-z))
+
+                sp = sigmoid * (1-sigmoid)
+
+                # print "type(pool_output[j, row, column]) : ",type(pool_output[j, row, column])
+                # print "type(sp) : ",type(sp)
+
+                # if isinstance(pool_output[j, row, column], (list,)):
+                #     activation_prime_parallel = numba.jit("f8[:](f8[:])")(activation_prime())
+                # else:
+                #     activation_prime_parallel = numba.jit("f8(f8)")(activation_prime)
+                #
+                # sp = activation_prime_parallel(pool_output[j, row, column])
+
+                delta[j][i] += np.multiply(np.sum(np.multiply(delta_padded_zero[row:filter_size + row, column:filter_size + column], filter_rotated)),sp)
+
+                # print "delta[",j,"][",i,"] : ",delta[j][i]
+
+                # sys.exit(0)
+                column += stride
+
+                if (filter_size + column) - stride >= width_in:  # wrap indices at the end of each row
+                    # print "-------"
+                    # print "i : ",i
+                    # print "filter_size : ",filter_size
+                    # print "row : ", row
+                    # print "column : ",column
+                    # print "stride : ",stride
+                    # print "act_length1d : ",act_length1d
+                    column = 0
+                    row += stride  # go to next row
+
+    # end = time.time()
+    # time = end - start
+    # print "TIME : ", time
+
 
 def backprop_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     log.debug( "## delta.shape : %s", delta.shape)
@@ -245,21 +348,30 @@ def backprop_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     # print "## total_deltas_per_layer: ", total_deltas_per_layer
     # print "## num_filters: ", num_filters
 
-    # import time
-    # start = time.time()
-    backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride)
-    # end = time.time()
-    # time = end - start
-    # print "TIME backprop_to_conv_loop: ",time
+    for j in range(num_filters):
+        slide = 0
+        row = 0
 
+        for i in range(total_deltas_per_layer):
+            to_conv = output[:, row:filter_size + row, slide:filter_size + slide]
+            # print "## slide : ", slide
+            # print "## filter_size : ", filter_size
+            # print "## to_conv.shape : ", to_conv.shape
+            # print "## delta_w[j].shape  : ", delta_w[j].shape
+            # sys.exit(0)
+            delta_w[j] += to_conv * delta[j][i]
+            delta_b[j] += delta[j][i]       # not fully sure, but im just summing up the bias deltas over the conv layer
+            slide += stride
+
+            if (slide + filter_size)-stride >= output.shape[2]:    # wrap indices at the end of each row
+                slide = 0
+                row+=stride
 
     # print "backprop_1d_to_1d next_weights : ", next_weights.shape
     # print "backprop_to_conv delta_w : ", delta_w.shape
     # print "backprop_to_conv delta_b : ", delta_b.shape
     log.debug("-> [backprop_to_conv]  delta %s, delta_w : %s, delta_b : %s ", delta.shape, delta_w.shape,delta_b.shape)
     return delta_b, delta_w
-
-
 
 
 
