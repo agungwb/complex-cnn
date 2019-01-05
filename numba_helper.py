@@ -69,36 +69,59 @@ def convole_loop(num_filters, act_length1d, z_values, input_neurons, width_in, w
                 slide = 0
                 row += stride  # go to next row
 
-# @numba.njit()
+@numba.njit()
 def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices, output):
     # for each filter map
-    for j in range(depth):
+    for j in numba.prange(depth):
         row = 0
         slide = 0
-        for i in range(pool_length1d):
+        for i in numba.prange(pool_length1d):
             toPool = input_image[j][row:poolsize[0] + row, slide:poolsize[0] + slide]
 
-            output[j][i] = np.amax(toPool)  # calculate the max activation
+            # output[j][i] = np.amax(toPool)  # calculate the max activation
             # print ("toPool : ", toPool)
             # print ("np.max(toPool) : ", np.max(toPool))
             # print ("np.amax(toPool) : ", np.amax(toPool))
             # print ("p.where(np.max(toPool) == toPool) : ", np.where(np.max(toPool) == toPool))
-            index = zip(*np.where(np.max(toPool) == toPool))  # HERE IT IS save the index of the max, np.where return index of array if condition meets
+            # index = zip(*np.where(np.max(toPool) == toPool))  # HERE IT IS save the index of the max, np.where return index of array if condition meets
             # print "index before : ", index
             # print "index : ",type(index)
             # print "index : ",index
             # print "index : ",len(index)
             # sys.exit(0)
-            if len(index) > 1:  # if there is more than one maximum value
-                index = [index[0]]
+
+            # if len(index) > 1:  # if there is more than one maximum value
+            #     index = [index[0]]
+
             # print "index after : ", index
-            index = index[0][0] + row, index[0][1] + slide
+            # index = index[0][0] + row, index[0][1] + slide
             # print "index : ", type(index)
             # print "index : ", index
             # print "max_indices[j][i] : ", type(max_indices[j][i])
             # print "max_indices[j][i] : ", max_indices[j][i].shape
             # print "max_indices[j][i] : ", max_indices[j][i]
             # max_indices[j][i] = index
+
+
+            #new algo
+            max = toPool[0][0]
+            index = list([0, 0])
+            for r in numba.prange(poolsize[0]):
+                for c in numba.prange(poolsize[0]):
+                    if toPool[r, c] > max:
+                        max = toPool[r, c]
+                        index = list([r, c])
+
+            output[j][i] = max
+            index = list([index[0] + row, index[1] + slide])
+            # print "---------------"
+            # print "output[j][i] : ", output[j][i]
+            # print "max : ", max
+            # print "index : ", index
+            # print "pos : ", pos
+            #new algo end
+
+
             max_indices[j][i][0] = index[0]
             max_indices[j][i][1] = index[1]
             # print "max_indices[j][i] : ", max_indices[j][i]
@@ -234,6 +257,52 @@ def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_f
     # end = time.time()
     # time = end - start
     # print "TIME : ", time
+
+@numba.njit()
+def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, pool_output, delta, width, delta_new):
+    for d in range(depth):    # depth is the same for conv + pool layer
+        row = 0
+        slide = 0
+        for i in range(max_indices.shape[1]):
+            toPool = input_from_conv[d][row:poolsize[0] + row, slide:poolsize[0] + slide]
+
+            # calculate the new delta for the conv layer based on the max result + pooling input
+            # print "pool_output[d][i] : ",pool_output[d][i]
+            # print "delta[d][i] : ",delta[d][i]
+            # print "toPool : ",toPool
+
+            # deltas_from_pooling_old = max_prime(pool_output[d][i], delta[d][i], toPool)
+
+            delta_pool = delta[d][i]
+            res = pool_output[d][i]
+            dim1, dim2 = toPool.shape
+            #reshape
+            # tile_to_pool = toPool.reshape((dim1 * dim2))
+            tile_to_pool = np.zeros(dim1 * dim2)
+            for r in range(dim1):
+                for c in range(dim2):
+                    tile_to_pool[r*dim1 + c] = toPool[r][c]
+            new_delta = np.zeros((tile_to_pool.shape))
+            for i in range(len(tile_to_pool)):
+                num = tile_to_pool[i]
+                if num < res:
+                    new_delta[i] = 0
+                else:
+                    new_delta[i] = delta_pool
+
+            deltas_from_pooling = new_delta.reshape((dim1, dim2))
+
+            # print "---------------------"
+            # print "deltas_from_pooling_old : ",deltas_from_pooling_old
+            # print "deltas_from_pooling : ",deltas_from_pooling
+
+            delta_new[d][row:poolsize[0] + row, slide:poolsize[0] + slide] = deltas_from_pooling
+
+            slide += poolsize[1]
+            if slide >= width:
+                slide = 0
+                row+= poolsize[1]
+
 
 @numba.njit(parallel=True)
 def backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):

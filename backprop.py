@@ -73,15 +73,16 @@ def backprop_3d_to_1d(delta, weights, output, z_vals):
 
     return delta_b, delta_w, delta
 
-#test
+#test(
+@numba.njit
 def backprop_pool_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     '''weights passed in are the ones between pooling and fc layer'''
 
-    log.debug("## delta.shape : %s", delta.shape)
-    log.debug("## weights.shape : %s", weights_shape)
-    log.debug("## stride : %s", stride)
-    log.debug("## output.shape : %s", output.shape)
-    log.debug("## prev_z_vals.shape : %s", prev_z_vals.shape)
+    # log.debug("## delta.shape : %s", delta.shape)
+    # log.debug("## weights.shape : %s", weights_shape)
+    # log.debug("## stride : %s", stride)
+    # log.debug("## output.shape : %s", output.shape)
+    # log.debug("## prev_z_vals.shape : %s", prev_z_vals.shape)
 
     # print 'weight filter, delta shape', weight_filters.shape, delta.shape
     # print 'input shape', input_to_conv.shape
@@ -94,11 +95,11 @@ def backprop_pool_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     total_deltas_per_layer = (delta.shape[1]) * (delta.shape[2])
     # print 'total_deltas_per_layer', total_deltas_per_layer
     delta = delta.reshape((delta.shape[0], delta.shape[1] * delta.shape[2]))
-    log.debug("## delta.reshape : %s", delta.shape)
-    log.debug("## total_deltas_per_layer: %s", total_deltas_per_layer)
-    log.debug("## num_filters: %s", num_filters)
-    log.debug("## delta_w.shape : %s", delta_w.shape)
-    log.debug("## delta_b.shape : %s", delta_b.shape)
+    # log.debug("## delta.reshape : %s", delta.shape)
+    # log.debug("## total_deltas_per_layer: %s", total_deltas_per_layer)
+    # log.debug("## num_filters: %s", num_filters)
+    # log.debug("## delta_w.shape : %s", delta_w.shape)
+    # log.debug("## delta_b.shape : %s", delta_b.shape)
 
     #PARALEL WITH NUMBA
     # import time
@@ -112,9 +113,10 @@ def backprop_pool_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     # print "backprop_1d_to_1d next_weights : ", next_weights.shape
     # print "backprop_to_conv delta_w : ", delta_w.shape
     # print "backprop_to_conv delta_b : ", delta_b.shape
-    log.debug("-> [backprop_to_conv]  delta %s, delta_w : %s, delta_b : %s ", delta.shape, delta_w.shape,delta_b.shape)
+    # log.debug("-> [backprop_to_conv]  delta %s, delta_w : %s, delta_b : %s ", delta.shape, delta_w.shape,delta_b.shape)
     return delta_b, delta_w
 
+# @numba.njit()
 def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize, pool_output, from_conv=False):
     # log.debug("## delta.shape : %s", delta.shape)
     # log.debug("## weights.shape : %s", weights.shape)
@@ -168,7 +170,7 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
         # print "## num_filters : ",num_filters
         # print "## act_length1d : ",act_length1d
 
-        ##function
+        ##PARALLEL
         # import time
         # start = time.time()
         backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride)
@@ -186,42 +188,27 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
     # log.debug( "## pool_output.shape : %s", pool_output.shape)
     # log.debug( "## delta_new.shape : %s", delta_new.shape)
 
-    for d in range(depth):    # depth is the same for conv + pool layer
-        row = 0
-        slide = 0
-        for i in range(max_indices.shape[1]):
-            toPool = input_from_conv[d][row:poolsize[0] + row, slide:poolsize[0] + slide]
-
-            # calculate the new delta for the conv layer based on the max result + pooling input
-            # print "pool_output[d][i] : ",pool_output[d][i]
-            # print "delta[d][i] : ",delta[d][i]
-            # print "toPool : ",toPool
-            deltas_from_pooling = max_prime(pool_output[d][i], delta[d][i], toPool)
-
-            # print "deltas_from_pooling : ",deltas_from_pooling
-            # sys.exit(0)
-
-            delta_new[d][row:poolsize[0] + row, slide:poolsize[0] + slide] = deltas_from_pooling
-
-            slide += poolsize[1]
-            if slide >= width:
-                slide = 0
-                row+= poolsize[1]
-
-
+    # print "delta_new : ",delta_new
+    # import time
+    # start = time.time()
+    backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, pool_output, delta, width, delta_new)
+    # end = time.time()
+    # ex_time = end - start
+    # print "TIME backprop_conv_to_pool_loop1 : ",ex_time
+    # print "delta_new n : ", delta_new
 
     # print "backprop_1d_to_1d next_weights : ", next_weights.shape
     # print "backprop_pool_to_conv : ", delta_new.shape
     # log.debug( "-> [backprop_conv_to_pool]  delta : %s", delta_new.shape)
     return delta_new
 
-
+@numba.njit()
 def backprop_to_conv(delta, weights_shape, stride, output, prev_z_vals):
-    log.debug( "## delta.shape : %s", delta.shape)
-    log.debug( "## weights.shape : %s", weights_shape)
-    log.debug( "## stride : %s", stride)
-    log.debug( "## output.shape : %s", output.shape)
-    log.debug( "## prev_z_vals.shape : %s", prev_z_vals.shape)
+    # log.debug( "## delta.shape : %s", delta.shape)
+    # log.debug( "## weights.shape : %s", weights_shape)
+    # log.debug( "## stride : %s", stride)
+    # log.debug( "## output.shape : %s", output.shape)
+    # log.debug( "## prev_z_vals.shape : %s", prev_z_vals.shape)
 
     '''weights passed in are the ones between pooling and fc layer'''
 
@@ -245,6 +232,7 @@ def backprop_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     # print "## total_deltas_per_layer: ", total_deltas_per_layer
     # print "## num_filters: ", num_filters
 
+    #PARALLEL
     # import time
     # start = time.time()
     backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride)
@@ -256,7 +244,7 @@ def backprop_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     # print "backprop_1d_to_1d next_weights : ", next_weights.shape
     # print "backprop_to_conv delta_w : ", delta_w.shape
     # print "backprop_to_conv delta_b : ", delta_b.shape
-    log.debug("-> [backprop_to_conv]  delta %s, delta_w : %s, delta_b : %s ", delta.shape, delta_w.shape,delta_b.shape)
+    # log.debug("-> [backprop_to_conv]  delta %s, delta_w : %s, delta_b : %s ", delta.shape, delta_w.shape,delta_b.shape)
     return delta_b, delta_w
 
 

@@ -106,7 +106,6 @@ class PoolingLayer(object):
         self.max_indices = np.empty((self.depth, self.height_out, self.width_out, 2))
 
     def pool(self, input_image):
-
         self.pool_length1d = self.height_out * self.width_out
 
         self.output = self.output.reshape((self.depth, self.pool_length1d))
@@ -279,23 +278,39 @@ class Model(object):
 
             if isinstance(layer, FullyConnectedLayer):
                 # z values are huge, while the fc_output is tiny! large negative vals get penalized to 0!
+                # start = time.time()
                 layer.feedforward(input_to_feed)
+                # end = time.time()
+                # ex_time = end - start
+                # print "Time FullyConnectedLayer : ", ex_time
                 # print "FullyConnectedLayer : ", layer.output
 
             elif isinstance(layer, ConvLayer):
+                # start = time.time()
                 layer.convolve(input_to_feed)
+                # end = time.time()
+                # ex_time = end - start
+                # print "Time ConvLayer : ", ex_time
                 # for i in range(layer.output.shape[0]):
                 #     plt.imsave('images/cat_conv%d.png'%i, layer.output[i])
                 # for i in range(layer.weights.shape[0]):
                 #     plt.imsave('images/filter_conv%s.png'%i, layer.weights[i].reshape((5,5)))
 
             elif isinstance(layer, PoolingLayer):
+                # start = time.time()
                 layer.pool(input_to_feed)
+                # end = time.time()
+                # ex_time = end - start
+                # print "Time PoolingLayer : ", ex_time
                 # for i in range(layer.output.shape[0]):
                 #     plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
 
             elif isinstance(layer, ClassifyLayer):
+                # start = time.time()
                 layer.classify(input_to_feed)
+                # end = time.time()
+                # ex_time = end - start
+                # print "Time ClassifyLayer : ", ex_time
                 # print "Classify : ", layer.output
 
             else:
@@ -530,10 +545,12 @@ class Model(object):
             # print "label.shape : ", label.shape
 
             start = time.time()
+
             _ = self.feedforward(image)
             end1 = time.time()
             execution_feedforward = end1 - start
             ex_feedforward += execution_feedforward
+
             final_res, delta_b, delta_w = self.backprop(image, label)
             end2 = time.time()
             execution_backprop = end2 - end1
