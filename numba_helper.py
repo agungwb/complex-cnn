@@ -1,5 +1,6 @@
 ##FEED FORWARD OPTIMIZATION
 import numba
+from numba imoprt cuda
 import numpy as np
 from helper import *
 
@@ -69,7 +70,7 @@ def convole_loop(num_filters, act_length1d, z_values, input_neurons, width_in, w
                 slide = 0
                 row += stride  # go to next row
 
-@numba.njit(target='cuda')
+@numba.njit()
 def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices, output):
     # for each filter map
     for j in numba.prange(depth):
@@ -136,7 +137,7 @@ def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices
 
 
 # BACKPROP
-@numba.njit(target='cuda')
+@numba.njit()
 def backprop_pool_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):
     for j in range(num_filters):
         slide = 0
@@ -159,7 +160,7 @@ def backprop_pool_to_conv_loop(num_filters, total_deltas_per_layer, output, filt
                 slide = 0
                 row += stride
 
-@numba.njit(target='cuda')
+@numba.njit()
 def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride):
     # import time
     # start = time.time()
@@ -258,7 +259,7 @@ def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_f
     # time = end - start
     # print "TIME : ", time
 
-@numba.njit(target='cuda')
+@cuda.njit()
 def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, pool_output, delta, width, delta_new):
     for d in range(depth):    # depth is the same for conv + pool layer
         row = 0
@@ -304,7 +305,7 @@ def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, p
                 row+= poolsize[1]
 
 
-@numba.njit(parallel=True, target='cuda')
+@numba.njit(parallel=True)
 def backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):
     for j in numba.prange(num_filters):
         slide = 0

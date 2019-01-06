@@ -21,7 +21,7 @@ log = logging.getLogger("__backprop__")
 # delta_L = weights_L (dot) delta_L+1 .*  activation_prime(z_L)
 
 
-@numba.njit(target='cuda')
+@numba.njit()
 def backprop_1d_to_1d(delta, weights, output, z_vals, final=False):
     # log.debug("## delta.shape : %s", delta.shape)
     # log.debug("## weights.shape : %s", weights)
@@ -44,7 +44,7 @@ def backprop_1d_to_1d(delta, weights, output, z_vals, final=False):
     return delta_b, delta_w, delta
 
 #fc to pool
-@numba.njit(target='cuda')
+@numba.njit()
 def backprop_3d_to_1d(delta, weights, output, z_vals):
     # log.debug("## delta.shape : %s", delta.shape)
     # log.debug("## weights.shape : %s", weights.shape)
@@ -74,7 +74,7 @@ def backprop_3d_to_1d(delta, weights, output, z_vals):
     return delta_b, delta_w, delta
 
 #test(
-@numba.njit(target='cuda')
+@numba.njit()
 def backprop_pool_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     '''weights passed in are the ones between pooling and fc layer'''
 
@@ -202,7 +202,7 @@ def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize
     # log.debug( "-> [backprop_conv_to_pool]  delta : %s", delta_new.shape)
     return delta_new
 
-@numba.njit(target='cuda')
+@numba.njit()
 def backprop_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     # log.debug( "## delta.shape : %s", delta.shape)
     # log.debug( "## weights.shape : %s", weights_shape)
