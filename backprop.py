@@ -20,17 +20,35 @@ log = logging.getLogger("__backprop__")
 
 # delta_L = weights_L (dot) delta_L+1 .*  activation_prime(z_L)
 
-
 @numba.njit()
-def backprop_1d_to_1d(delta, weights, output, z_vals, final=False):
+def backprop_1d_to_1d(delta, weights, output, z_vals):
     # log.debug("## delta.shape : %s", delta.shape)
     # log.debug("## weights.shape : %s", weights)
     # log.debug("## z_vals.shape : %s", z_vals.shape)
 
-    # if not final: # if final delta from loss function
-    #     sp = activation_prime(z_vals)
-    #     # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
-    #     delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
+    sp = activation_prime(z_vals)
+    # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
+    delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
+
+    delta_b = delta
+    delta_w = np.dot(delta, output.transpose())
+    # print "backprop_1d_to_1d next_weights : ", next_weights
+    # print "backprop_1d_to_1d delta : ", delta
+    # print "backprop_1d_to_1d delta_w : ", delta_w.shape
+    # print "backprop_1d_to_1d delta_b : ", delta_b.shape
+    # log.debug("-> [backprop_1d_to_1d]  delta %s, delta_w : %s, delta_b : %s ",delta.shape, delta_w.shape, delta_b.shape)
+
+
+    return delta_b, delta_w, delta
+
+@numba.njit()
+def backprop_1d_to_1d_final(delta, output, z_vals):
+    # log.debug("## delta.shape : %s", delta.shape)
+    # log.debug("## weights.shape : %s", weights)
+    # log.debug("## z_vals.shape : %s", z_vals.shape)
+
+    sp = activation_prime(z_vals)
+    delta = delta * sp
 
     delta_b = delta
     delta_w = np.dot(delta, output.transpose())

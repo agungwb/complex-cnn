@@ -33,11 +33,8 @@ def activation(z):
         return sigmoid(z)
 
 # @numba.jit('f8(f8)', nopython=True, parallel=True)
+@numba.njit()
 def activation_prime(z):
-    # if sys.argv[1] == 'ccnn':
-    #     # return sigmoid_split_complex_prime(z)
-    #     return tanh_split_complex_prime(z)
-    # else:
     return sigmoid_prime(z)
 
 def csigmoid(z):
@@ -48,10 +45,12 @@ def csigmoid_prime(z):
     return
 
 # @numba.jit('f8(f8)', nopython=True, parallel=True)
+@numba.njit()
 def sigmoid(z):
     return 1.0/(1.0 + np.exp(-z))
 
 # @numba.jit('f8(f8)', nopython=True, parallel=True)
+@numba.njit()
 def sigmoid_prime(z):
     sig = sigmoid(z)
     return sig * (1-sig)
@@ -119,6 +118,22 @@ def delta_padded_zeros(height_in, width_in, h_gap, w_gap, dim1, dim2, delta_temp
     delta_padded_zero[h_gap:dim1 + h_gap, w_gap:dim2 + w_gap] = delta_temp
     return delta_padded_zero
 
+@numba.njit('c16[:,:](c16[:,:])')
+def rot180_complex(a):
+    row, col = a.shape
+    temp = np.zeros((row, col)) + 0j
+    for x in range (col, 0, -1):
+        for y in range (row, 0, -1):
+            # print("x, y : %s, %s", x, y)
+            # print("5-x, 5-y : %s, %s", col-x, row-y)
+            temp[x-1][y-1]=a[row-x][col-y]
+    return temp
+
+@numba.njit('c16[:,:](i8,i8,i8,i8,i8,i8,c16[:,:])')
+def delta_padded_zeros_complex(height_in, width_in, h_gap, w_gap, dim1, dim2, delta_temp):
+    delta_padded_zero = np.zeros((height_in, width_in)) + 0j
+    delta_padded_zero[h_gap:dim1 + h_gap, w_gap:dim2 + w_gap] = delta_temp
+    return delta_padded_zero
 
 # @numba.njit('f8[:,]')
 def transpose(x):

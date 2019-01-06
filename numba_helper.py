@@ -283,7 +283,9 @@ def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, p
             for r in range(dim1):
                 for c in range(dim2):
                     tile_to_pool[r*dim1 + c] = toPool[r][c]
+
             new_delta = np.zeros((tile_to_pool.shape))
+
             for i in range(len(tile_to_pool)):
                 num = tile_to_pool[i]
                 if num < res:

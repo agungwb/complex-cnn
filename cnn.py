@@ -385,13 +385,18 @@ class Model(object):
             # conv to pool -> unique
 
             if transition == '1d_to_1d':  # final to fc, fc to fc
-                db, dw, delta = backprop_1d_to_1d(
-                    delta=delta,
-                    weights=last_weights,
-                    output=prev_output,
-                    z_vals=layer.z_values,
-                    final=final)
-                final = False
+                if final:
+                    db, dw, delta = backprop_1d_to_1d_final(
+                        delta=delta,
+                        output=prev_output,
+                        z_vals=layer.z_values)
+                    final = False
+                else:
+                    db, dw, delta = backprop_1d_to_1d(
+                        delta=delta,
+                        weights=last_weights,
+                        output=prev_output,
+                        z_vals=layer.z_values)
 
             elif transition == '3d_to_1d':
                 if l == 0:
