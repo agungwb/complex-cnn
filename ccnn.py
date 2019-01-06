@@ -612,7 +612,7 @@ class Model(object):
         test_results = list()
         for d in data:
             result = self.feedforward(d[0])
-            predicted = np.where(result > 0.5, 1, 0)
+            predicted = np.where(result.real > 0, 1, 0)
             actual = d[1]
 
             log.info("result : %s | predicted : %s | actual : %s", result, predicted, actual)
