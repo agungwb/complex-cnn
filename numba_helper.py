@@ -18,7 +18,7 @@ from helper import *
 
 
 #FEED FORWARD
-@numba.njit(parallel=True, target='cuda')
+@numba.njit(parallel=True)
 def convole_loop(num_filters, act_length1d, z_values, input_neurons, width_in, weights, filter_size, stride, biases, output):
     for j in numba.prange(num_filters):
         slide = 0
