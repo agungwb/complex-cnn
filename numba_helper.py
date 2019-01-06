@@ -1,6 +1,6 @@
 ##FEED FORWARD OPTIMIZATION
 import numba
-from numba imoprt cuda
+from numba import cuda
 import numpy as np
 from helper import *
 
