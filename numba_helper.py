@@ -259,7 +259,7 @@ def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_f
     # time = end - start
     # print "TIME : ", time
 
-@cuda.njit()
+@cuda.jit()
 def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, pool_output, delta, width, delta_new):
     for d in range(depth):    # depth is the same for conv + pool layer
         row = 0
