@@ -1,6 +1,6 @@
 ##FEED FORWARD OPTIMIZATION
 import numba
-from numba import cuda
+# from numba import cuda
 import numpy as np
 from helper import *
 
@@ -259,7 +259,7 @@ def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_f
     # time = end - start
     # print "TIME : ", time
 
-@numba.jit(nopython=True, target='cuda')
+@numba.njit()
 def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, pool_output, delta, width, delta_new):
     for d in range(depth):    # depth is the same for conv + pool layer
         row = 0
