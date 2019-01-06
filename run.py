@@ -48,7 +48,7 @@ import matplotlib.pyplot as plt
 ######################### TEST IMAGE ##########################
 
 
-ETA = 0.01 #learning-rate (maybe)
+ETA = 0.001 #learning-rate (maybe)
 EPOCHS = 1 #default 5
 WIDTH = 36
 HEIGHT = 36
@@ -141,9 +141,9 @@ net = Model(input_shape,
                 },
                 {'conv_layer':
                     {
-                        'filter_size': 3,
+                        'filter_size': 5,
                         'stride': 1,
-                        'num_filters': 50
+                        'num_filters': 100
                     }
                 },
                 {'pool_layer':
@@ -153,7 +153,7 @@ net = Model(input_shape,
                 },
                 {'fc_layer':
                     {
-                        'num_output': 30
+                        'num_output': 100
                     }
                 },
                 {'final_layer':

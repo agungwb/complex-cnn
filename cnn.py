@@ -40,8 +40,7 @@ class ConvLayer(object):
         self.num_filters = num_filters
         # self.num_filters = num_filters * self.depth
 
-        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size,
-                                       self.filter_size)  # filter * depth * filter_size * filter_size
+        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size)  # filter * depth * filter_size * filter_size
         self.biases = np.random.rand(self.num_filters, 1)  # filter * 1
 
         # np.random.randn generate random from normal distribution
@@ -81,7 +80,6 @@ class ConvLayer(object):
 
         self.z_values = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
-
 
 
 class PoolingLayer(object):
