@@ -50,7 +50,7 @@ def load_data(env):
 
     # load data normal
     dataset_normal = list()
-    output_normal = np.array([[0]])
+    output_normal = np.array([[-1]])
     normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
     for normal_file in normal_list:
         # print "normal_file : ",normal_file

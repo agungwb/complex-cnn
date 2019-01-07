@@ -611,7 +611,7 @@ class Model(object):
         for d in data:
             result = self.feedforward(d[0])
             predicted = np.where(result.real > 0, 1, 0)
-            actual = d[1]
+            actual = np.where(d[1].real > 0, 1, 0)
 
             log.info("result : %s | predicted : %s | actual : %s", result, predicted, actual)
 
