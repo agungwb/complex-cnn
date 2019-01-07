@@ -55,9 +55,11 @@ def sigmoid_complex(z):
 def sigmoid_complex_prime(z):
     return sigmoid_prime(z.real) + (1j * z.imag)
 
+@numba.njit()
 def sigmoid_split_complex(z):
     return sigmoid(z.real) + (1j * sigmoid(z.imag))
 
+@numba.njit()
 def sigmoid_split_complex_prime(z):
     return sigmoid_prime(z.real) + (1j * sigmoid_prime(z.imag))
 

@@ -273,7 +273,6 @@ class Model(object):
     def feedforward(self, image):
         prev_activation = image
 
-
         # forwardpass
         for layer in self.layers:
 
@@ -552,18 +551,17 @@ class Model(object):
             # print "image.shape : ", image.shape
             # print "label.shape : ", label.shape
 
-            start = time.time()
+            # start = time.time()
 
             _ = self.feedforward(image)
-            end1 = time.time()
-            execution_feedforward = end1 - start
-            ex_feedforward += execution_feedforward
+            # end1 = time.time()
+            # execution_feedforward = end1 - start
+            # ex_feedforward += execution_feedforward
 
             final_res, delta_b, delta_w = self.backprop(image, label)
-            end2 = time.time()
-            execution_backprop = end2 - end1
-            ex_backprop += execution_backprop
-            # sys.exit(0)
+            # end2 = time.time()
+            # execution_backprop = end2 - end1
+            # ex_backprop += execution_backprop
 
             # print 'final_res.shape : ', final_res.shape
             # print 'final_res : ', final_res
@@ -575,10 +573,10 @@ class Model(object):
             nabla_b = [nb + db for nb, db in zip(nabla_b, delta_b)]  # tambah nilai errornya dengan yang baru
             nabla_w = [nw + dw for nw, dw in zip(nabla_w, delta_w)]  # tambah nilai errornya dengan yang baru
 
-        print "TIME ex_feedforward : ", ex_feedforward
-        print "TIME ex_backprop : ", ex_backprop
-        ex_total = ex_feedforward + ex_backprop
-        print "TIME total : ", ex_total
+        # print "TIME ex_feedforward : ", ex_feedforward
+        # print "TIME ex_backprop : ", ex_backprop
+        # ex_total = ex_feedforward + ex_backprop
+        # print "TIME total : ", ex_total
 
         ################## print LOSS ############
         error = loss_complex(label, final_res)

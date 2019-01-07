@@ -139,18 +139,18 @@ net = Model(input_shape,
                         'poolsize': (2,2)
                     }
                 },
-                {'conv_layer':
-                    {
-                        'filter_size': 5,
-                        'stride': 1,
-                        'num_filters': 100
-                    }
-                },
-                {'pool_layer':
-                    {
-                        'poolsize': (2,2)
-                    }
-                },
+                # {'conv_layer':
+                #     {
+                #         'filter_size': 5,
+                #         'stride': 1,
+                #         'num_filters': 100
+                #     }
+                # },
+                # {'pool_layer':
+                #     {
+                #         'poolsize': (2,2)
+                #     }
+                # },
                 {'fc_layer':
                     {
                         'num_output': 100
