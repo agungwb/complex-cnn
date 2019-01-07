@@ -63,14 +63,32 @@ def sigmoid_split_complex(z):
 def sigmoid_split_complex_prime(z):
     return sigmoid_prime(z.real) + (1j * sigmoid_prime(z.imag))
 
-def loss(desired,final):
-    return 0.5*np.sum(desired-final)**2
+def loss(desired, final):
+    return binary_cross_entropy(desired, final)
 
 def loss_prime(desired, final):
-    return desired-final
+    return binary_cross_entropy_prime(desired, final)
 
-def loss_complex(desired,final):
+def quadratic_loss(desired,final):
     return 0.5*np.sum(desired.real-final.real)**2
+
+def quadratic_loss_prime(desired, final):
+    return desired.real-final.real
+
+def binary_cross_entropy(desired,final):
+    if (desired.real == 1):
+        result = -np.log(desired+1)
+    else:
+        result = -np.log(1-desired)
+    return result
+
+def binary_cross_entropy_prime(desired, final):
+    if (desired.real == 1):
+        result = -(1/(desired+1))
+    else:
+        result = 1/(1-desired)
+    return result
+
 
 def loss_complex_prime(desired, final):
     return desired.real - final.real

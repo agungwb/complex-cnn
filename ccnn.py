@@ -579,7 +579,7 @@ class Model(object):
         # print "TIME total : ", ex_total
 
         ################## print LOSS ############
-        error = loss_complex(label, final_res)
+        error = loss(label, final_res)
         log.info("error : %s", error)
 
 
