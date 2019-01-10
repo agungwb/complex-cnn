@@ -4,3 +4,6 @@ venv/*
 dataset/*
 *.log
 *.pyc
+tensorflow/MNIST*
+tensorflow/tmp/*
+
