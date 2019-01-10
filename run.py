@@ -93,7 +93,7 @@ elif sys.argv[1] == 'cnn':
 elif sys.argv[1] == 'mnist':
     WIDTH = 28
     HEIGHT = 28
-    OUTPUT = 5
+    OUTPUT = 10
     EPOCHS = 1
     training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
     logging.basicConfig(level=logging.INFO)

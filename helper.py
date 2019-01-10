@@ -67,9 +67,11 @@ def sigmoid_split_complex(z):
 def sigmoid_split_complex_prime(z):
     return sigmoid_prime(z.real) + (1j * sigmoid_prime(z.imag))
 
+# @numba.njit()
 def loss(desired,final):
     return 0.5*np.sum(desired-final)**2
 
+# @numba.njit()
 def loss_prime(desired, final):
     return desired-final
 
