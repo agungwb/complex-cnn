@@ -12,25 +12,18 @@ import numpy as np
 # except ImportError:
 #     import numpy as np
 
-PATH_CANCER = "dataset/mammogram/cancer";
-PATH_NORMAL = "dataset/mammogram/normal";
+PATH_CANCER = "dataset/hanacaraka/ga";
+PATH_NORMAL = "dataset/hanacaraka/ra";
 
-PATH_CANCER_TEST = "dataset/mammogram-test/cancer";
-PATH_NORMAL_TEST = "dataset/mammogram-test/normal";
+FILE_TIPE = ".jpg"
 
-FILE_TIPE = ".png"
-
-def load_data(env):
+def load_data():
     training_data = list()
     validation_data = list()
     test_data = list()
 
     path_cancer = PATH_CANCER
     path_normal = PATH_NORMAL
-
-    if env == 'test':
-        path_cancer = PATH_CANCER_TEST
-        path_normal = PATH_NORMAL_TEST
 
     #load data cancer
     dataset_cancer = list()
@@ -67,19 +60,19 @@ def load_data(env):
     random.shuffle(dataset_normal)
     n = len(dataset_normal)
 
-    # training_data.extend(dataset_normal[:int(0.9 * n)])
-    dataset_normal = dataset_normal[0:int(n / 10)]
-    training_data.extend(dataset_normal)
+    training_data.extend(dataset_normal[:int(0.9 * n)])
+    # dataset_normal = dataset_normal[0:int(n / 10)]
+    # training_data.extend(dataset_normal)
 
     # validation_data.extend(dataset_normal[int(0.8 * n):int(0.9 * n)])
 
-    # test_data.extend(dataset_normal[int(0.9 * n):])
-    test_data.extend(dataset_normal[:200])
+    test_data.extend(dataset_normal[int(0.9 * n):])
+    # test_data.extend(dataset_normal[:200])
 
     # return (training_data, validation_data, test_data)
     return (training_data, test_data)
 
-def load_data_dtcwt(env):
+def load_data_dtcwt():
     transform = dtcwt.Transform2d()
     training_data = list()
     validation_data = list()
@@ -87,10 +80,6 @@ def load_data_dtcwt(env):
 
     path_cancer = PATH_CANCER
     path_normal = PATH_NORMAL
-
-    if env == 'test':
-        path_cancer = PATH_CANCER_TEST
-        path_normal = PATH_NORMAL_TEST
 
         #load data cancer
     dataset_cancer = list()
@@ -107,16 +96,16 @@ def load_data_dtcwt(env):
     random.shuffle(dataset_cancer)
 
     n = len(dataset_cancer)
-    # training_data.extend(dataset_cancer[:int(0.9 * n)])
-    # dataset_cancer = dataset_cancer[:int(n/10)]
-    dataset_cancer = dataset_cancer
-    training_data.extend(dataset_cancer)
+    training_data.extend(dataset_cancer[:int(0.9 * n)])
+    dataset_cancer = dataset_cancer[:int(n/10)]
+    # dataset_cancer = dataset_cancer
+    # training_data.extend(dataset_cancer)
 
     # validation_data.extend(dataset_cancer[int(0.8 * n):int(0.9 * n)])
 
-    # test_data.extend(dataset_cancer[int(0.9 * n):])
-    test_data.extend(dataset_cancer[:300])
-    test_data.extend(dataset_cancer)
+    test_data.extend(dataset_cancer[int(0.9 * n):])
+    # test_data.extend(dataset_cancer[:300])
+    # test_data.extend(dataset_cancer)
 
     # load data normal
     dataset_normal = list()

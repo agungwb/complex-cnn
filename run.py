@@ -4,6 +4,7 @@ import logging
 
 from backprop import *
 import mammogram_loader
+import hanacaraka_loader
 import numba
 
 import numpy as np
@@ -21,7 +22,7 @@ if len(sys.argv) < 2:
     print("system terminated")
     print(0)
 
-if sys.argv[1] != 'cnn' and sys.argv[1] != 'ccnn' and sys.argv[1] != 'mnist':
+if sys.argv[1] != 'cnn' and sys.argv[1] != 'ccnn' and sys.argv[1] != 'mnist' and sys.argv[1] != 'hanacaraka' and sys.argv[1] != 'hanacaraka-complex':
     print("wrong argument: cnn [test] | ccnn [test]")
     print("system terminated")
     print(0)
@@ -49,12 +50,12 @@ import matplotlib.pyplot as plt
 
 
 ETA = 0.001 #learning-rate (maybe)
-EPOCHS = 1 #default 5
+EPOCHS = 10 #default 5
 WIDTH = 36
 HEIGHT = 36
 CHANNEL = 1
 INPUT_SHAPE = (HEIGHT*WIDTH)     # for mnist
-BATCH_SIZE = 50  #defalut 10
+BATCH_SIZE = 10  #defalut 10
 LMBDA = 0.1
 OUTPUT = 1
 
@@ -92,9 +93,26 @@ elif sys.argv[1] == 'cnn':
 elif sys.argv[1] == 'mnist':
     WIDTH = 28
     HEIGHT = 28
-    OUTPUT = 10
+    OUTPUT = 5
     EPOCHS = 1
     training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
+    logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger("__run__")
+
+elif sys.argv[1] == 'hanacaraka':
+    WIDTH = 78
+    HEIGHT = 60
+    OUTPUT = 1
+    EPOCHS = 10
+    training_data, test_data = hanacaraka_loader.load_data()
+    logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger("__run__")
+elif sys.argv[1] == 'hanacaraka-complex':
+    WIDTH = 78
+    HEIGHT = 60
+    OUTPUT = 1
+    EPOCHS = 1
+    training_data, test_data = hanacaraka_loader.load_data_dtcwt()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 else:

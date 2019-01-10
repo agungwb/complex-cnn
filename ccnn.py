@@ -40,10 +40,13 @@ class ConvLayer(object):
         self.num_filters = num_filters
         # self.num_filters = num_filters * self.depth
 
-        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size,self.filter_size) + 1j * np.random.randn(self.num_filters, self.depth,
-                                                                                self.filter_size,
-                                                                                self.filter_size)  # filter * depth * filter_size * filter_size
-        self.biases = np.random.rand(self.num_filters, 1) + 1j * np.random.rand(self.num_filters, 1)  # filter * 1
+        # self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size,self.filter_size) + 1j * np.random.randn(self.num_filters, self.depth,
+        #                                                                         self.filter_size,
+        #                                                                         self.filter_size)  # filter * depth * filter_size * filter_size
+        # self.biases = np.random.rand(self.num_filters, 1) + 1j * np.random.rand(self.num_filters, 1)  # filter * 1
+
+        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size,self.filter_size * 2).view(np.complex128)# filter * depth * filter_size * filter_size
+        self.biases = np.random.rand(self.num_filters, 1 * 2).view(np.complex128) # filter * 1
 
         # np.random.randn generate random from normal distribution
         # np.random.rand generate random from [0..1]
@@ -142,10 +145,13 @@ class FullyConnectedLayer(Layer):
         self.num_output = num_output
 
 
-        self.weights = np.random.randn(self.num_output, self.depth, self.height_in,
-                                       self.width_in) + 1j * np.random.randn(self.num_output, self.depth,
-                                                                             self.height_in, self.width_in)
-        self.biases = np.random.randn(self.num_output, 1) + 1j * np.random.randn(self.num_output, 1)
+        # self.weights = np.random.randn(self.num_output, self.depth, self.height_in,
+        #                                self.width_in) + 1j * np.random.randn(self.num_output, self.depth,
+        #                                                                      self.height_in, self.width_in)
+        # self.biases = np.random.randn(self.num_output, 1) + 1j * np.random.randn(self.num_output, 1)
+
+        self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in*2).view(np.complex128)
+        self.biases = np.random.randn(self.num_output, 1*2).view(np.complex128)
 
     def feedforward(self, a):
         '''
@@ -174,8 +180,11 @@ class ClassifyLayer(Layer):
         num_inputs, col = num_inputs
         self.num_classes = num_classes
 
-        self.weights = np.random.randn(self.num_classes, num_inputs) + 1j * np.random.randn(self.num_classes, num_inputs)
-        self.biases = np.random.randn(self.num_classes, 1) + 1j * np.random.randn(self.num_classes, 1)
+        # self.weights = np.random.randn(self.num_classes, num_inputs) + 1j * np.random.randn(self.num_classes, num_inputs)
+        # self.biases = np.random.randn(self.num_classes, 1) + 1j * np.random.randn(self.num_classes, 1)
+
+        self.weights = np.random.randn(self.num_classes, num_inputs*2).view(np.complex128)
+        self.biases = np.random.randn(self.num_classes, 1*2).view(np.complex128)
 
     def classify(self, x):
         self.z_values = np.dot(self.weights, x) + self.biases
@@ -502,7 +511,7 @@ class Model(object):
                 loss = self.update_mini_batch(batch, eta)
                 end = time.time()
                 execution_time = end - start
-                print "TIME mini_batch : ", execution_time
+                # print "TIME mini_batch : ", execution_time
 
                 losses += loss
                 log.info( "losses : %s", losses)

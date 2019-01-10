@@ -64,10 +64,10 @@ def sigmoid_split_complex_prime(z):
     return sigmoid_prime(z.real) + (1j * sigmoid_prime(z.imag))
 
 def loss(desired, final):
-    return binary_cross_entropy(desired, final)
+    return quadratic_loss(desired, final)
 
 def loss_prime(desired, final):
-    return binary_cross_entropy_prime(desired, final)
+    return quadratic_loss_prime(desired, final)
 
 def quadratic_loss(desired,final):
     return 0.5*np.sum(desired.real-final.real)**2
@@ -111,14 +111,24 @@ def tanh_split_complex(z):
 def tanh_split_complex_prime(z):
     return tanh_prime(z.real) + (1j * tanh_prime(z.imag))
 
+@numba.njit()
 def relu(z):
     # print "z : ",z
     # return z if z >= 0 else 0
     return np.maximum(z, 0)
 
+@numba.njit()
 def relu_prime(z):
     # print "z : ", z
     return np.where(z>=0, 1, 0)
+
+@numba.njit()
+def relu_split_complex(z):
+    return relu(z.real) + 1j * relu(z.imag)
+
+@numba.njit()
+def relu_split_complex_prime(z):
+    return relu_prime(z.real) + 1j * relu_prime(z.imag)
 
 @numba.njit('f8[:,:](f8[:,:])')
 def rot180(a):

@@ -498,10 +498,10 @@ class Model(object):
                 loss = self.update_mini_batch(batch, eta)
                 end = time.time()
                 execution_time = end - start
-                print "TIME mini_batch : ", execution_time
+                # print "TIME mini_batch : ", execution_time
 
                 losses += loss
-                log.info( "losses : %s", losses)
+                # log.info( "losses : %s", losses)
             mean_error.append(round(losses / batch_size, 2))
             log.info( "mean error : %s", mean_error)
 
