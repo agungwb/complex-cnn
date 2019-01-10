@@ -55,7 +55,7 @@ WIDTH = 36
 HEIGHT = 36
 CHANNEL = 1
 INPUT_SHAPE = (HEIGHT*WIDTH)     # for mnist
-BATCH_SIZE = 10  #defalut 10
+BATCH_SIZE = 100  #defalut 10
 LMBDA = 0.1
 OUTPUT = 1
 
@@ -149,7 +149,7 @@ net = Model(input_shape,
                     {
                         'filter_size': 5,
                         'stride': 1,
-                        'num_filters': 20
+                        'num_filters': 32
                     }
                 },
                 {'pool_layer':
@@ -161,7 +161,7 @@ net = Model(input_shape,
                     {
                         'filter_size': 5,
                         'stride': 1,
-                        'num_filters': 100
+                        'num_filters': 64
                     }
                 },
                 {'pool_layer':
