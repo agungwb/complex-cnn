@@ -46,8 +46,15 @@ def convole_loop(num_filters, act_length1d, z_values, input_neurons, width_in, w
             # log.debug("z_values[j][i].shape : %s", type(z_values[j][i]))
 
             # z_values[j][i] = np.add(np.sum(np.multiply(input_neurons[:, row:filter_size + row, slide:filter_size + slide], weights[j])), biases[j])
-            input_sum = np.sum(np.multiply(input_neurons[:, row:filter_size + row, slide:filter_size + slide], weights[j])) + biases[j]
+
+
+            sub_matrix = input_neurons[:, row:filter_size + row, slide:filter_size + slide][0]
+            weight = rot180(weights[j][0])
+            # rotated_weight = rot180(weights[j][0])
+
+            input_sum = np.sum(np.multiply(sub_matrix, weight)) + biases[j]
             z_values[j][i] = input_sum[0]
+
 
             # z_values[j][i] = f
             # log.debug("z_values[j][i].shape : %s", z_values[j][i])
@@ -138,7 +145,7 @@ def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices
 
 # BACKPROP
 @numba.njit()
-def backprop_pool_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):
+def backprop_conv_loop(num_filters, total_deltas_per_layer, output, z_vals, filter_size, delta, delta_w, delta_b, stride):
     for j in range(num_filters):
         slide = 0
         row = 0
@@ -152,7 +159,8 @@ def backprop_pool_to_conv_loop(num_filters, total_deltas_per_layer, output, filt
             #
             # sys.exit(0)
 
-            delta_w[j] += to_conv * delta[j][i]
+            # delta_w[j] += to_conv * delta[j][i]
+            delta_w[j] += to_conv * activation_prime(z_vals[j][i]) * delta[j][i] #versi sotoy awb
             delta_b[j] += delta[j][i]  # not fully sure, but im just summing up the bias deltas over the conv layer
             slide += stride
 
@@ -161,9 +169,19 @@ def backprop_pool_to_conv_loop(num_filters, total_deltas_per_layer, output, filt
                 row += stride
 
 @numba.njit()
-def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride):
+def backprop_pool_from_conv_loop(delta, weights, pool_output, stride, filter_size):
     # import time
     # start = time.time()
+    x, y, z = pool_output.shape
+    depth, dim1, dim2 = delta.shape
+
+    # h = ((dim1-1) * stride) + filter_size - (2*padding)
+    # w = ((dim2-1) * stride) + filter_size - (2*padding)
+
+    delta_new = np.zeros((x, y * z))
+
+    num_filters = x
+    act_length1d = y * z
 
     for d in numba.prange(depth):
         # h_gap = (h - dim1) / 2
@@ -177,67 +195,23 @@ def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_f
 
         # delta_padded_zero = np.zeros((height_in, width_in))
         # delta_padded_zero[h_gap:dim1 + h_gap, w_gap:dim2 + w_gap] = delta_temp[d]
-        delta_padded_zero = delta_padded_zeros(height_in, width_in, h_gap, w_gap, dim1, dim2, delta_temp[d])
+
+        old_delta_padded_zero = delta_padded_zeros(height_in, width_in, h_gap, w_gap, dim1, dim2, delta[d])
 
 
-
-        # print "delta_pedded_zero.shape : ",delta_padded_zero.shape
-        # print "h_gap : ",h_gap
-        # print "w_gap : ",w_gap
         for j in numba.prange(num_filters):
             column = 0
             row = 0
 
-            # print "d : ",d
-            # print "i : ",i
-            # print "j : ",j
-            # print "weights.shape : ",weights.shape
-            # print "weights[d,j] : ", weights[d,j].shape
-            # filter_rotated = np.rot90(np.rot90(weights[d, j]))
             filter_rotated = rot180(weights[d, j])
 
             for i in numba.prange(act_length1d):
 
-                # print "depth : ", depth
-                # print "dim1 : ", dim1
-                # print "dim2 : ", dim2
-                # print "h : ", h
-                # print "w : ", w
-                # print "delta_padded_zero.shape : ", delta_padded_zero.shape
-                # print "filter.shape : ", filter.shape
+                # z = pool_output[j, row, column]
+                # sigmoid = 1.0/(1.0 + np.exp(-z))
+                # sp = sigmoid * (1-sigmoid)
 
-                # ACTIVATIONS -> loop through each conv block horizontally
-                # sp = activation_prime(pool_output[i])
-                # print "---"
-                # print "i : ", i
-                # print "j : ", j
-                # print "row : ",row
-                # print "filter_size + row : ", filter_size + row
-                # print "filter_size : ",filter_size
-                # print "column : ",column
-                # print "filter_size + column", filter_size + column
-
-                #
-                # temp = delta_padded_zero[row:filter_size + row, column:filter_size + column]
-                # print "temp.shape : ",temp.shape
-
-                # sp = activation_prime(pool_output[j, row, column])
-                z = pool_output[j, row, column]
-                sigmoid = 1.0/(1.0 + np.exp(-z))
-
-                sp = sigmoid * (1-sigmoid)
-
-                # print "type(pool_output[j, row, column]) : ",type(pool_output[j, row, column])
-                # print "type(sp) : ",type(sp)
-
-                # if isinstance(pool_output[j, row, column], (list,)):
-                #     activation_prime_parallel = numba.jit("f8[:](f8[:])")(activation_prime())
-                # else:
-                #     activation_prime_parallel = numba.jit("f8(f8)")(activation_prime)
-                #
-                # sp = activation_prime_parallel(pool_output[j, row, column])
-
-                delta[j][i] += np.multiply(np.sum(np.multiply(delta_padded_zero[row:filter_size + row, column:filter_size + column], filter_rotated)),sp)
+                delta_new[j][i] += np.sum(np.multiply(old_delta_padded_zero[row:filter_size + row, column:filter_size + column], filter_rotated))
 
                 # print "delta[",j,"][",i,"] : ",delta[j][i]
 
@@ -245,22 +219,22 @@ def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_f
                 column += stride
 
                 if (filter_size + column) - stride >= width_in:  # wrap indices at the end of each row
-                    # print "-------"
-                    # print "i : ",i
-                    # print "filter_size : ",filter_size
-                    # print "row : ", row
-                    # print "column : ",column
-                    # print "stride : ",stride
-                    # print "act_length1d : ",act_length1d
+
                     column = 0
                     row += stride  # go to next row
+
+    return delta_new
 
     # end = time.time()
     # time = end - start
     # print "TIME : ", time
 
 @numba.njit()
-def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, pool_output, delta, width, delta_new):
+def backprop_pool_loop(input_from_conv, max_indices, poolsize, pool_output, delta):
+
+    depth, height, width = input_from_conv.shape
+    delta_new = np.zeros((depth, height, width))  # calc the delta on the conv layer
+
     for d in range(depth):    # depth is the same for conv + pool layer
         row = 0
         slide = 0
@@ -305,7 +279,7 @@ def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, p
             if slide >= width:
                 slide = 0
                 row+= poolsize[1]
-
+    return delta_new
 
 @numba.njit(parallel=True)
 def backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):

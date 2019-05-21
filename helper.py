@@ -25,12 +25,9 @@ def max_prime(res, delta, tile_to_pool):
 def cross_entropy(batch_size, output, expected_output):
     return (-1/batch_size) * np.sum(expected_output * np.log(output) + (1 - expected_output) * np.log(1-output))
 
+@numba.njit()
 def activation(z):
-    if sys.argv[1] == 'ccnn':
-        # return sigmoid_split_complex(z)
-        return tanh_split_complex(z)
-    else:
-        return sigmoid(z)
+    return sigmoid(z)
 
 # @numba.jit('f8(f8)', nopython=True, parallel=True)
 @numba.njit()

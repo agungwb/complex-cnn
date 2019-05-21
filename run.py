@@ -94,7 +94,7 @@ elif sys.argv[1] == 'mnist':
     WIDTH = 28
     HEIGHT = 28
     OUTPUT = 10
-    EPOCHS = 1
+    EPOCHS = 10
     training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
@@ -142,14 +142,13 @@ log.info('len(training_data) : %s', len(training_data))
 # print 'len(validation_data) : ', len(validation_data)
 log.info('len(test_data) : %s', len(test_data))
 
-
 net = Model(input_shape,
             layer_config = [
                 {'conv_layer':
                     {
                         'filter_size': 5,
                         'stride': 1,
-                        'num_filters': 32
+                        'num_filters': 20
                     }
                 },
                 {'pool_layer':
@@ -159,9 +158,9 @@ net = Model(input_shape,
                 },
                 {'conv_layer':
                     {
-                        'filter_size': 5,
+                        'filter_size': 3,
                         'stride': 1,
-                        'num_filters': 64
+                        'num_filters': 50
                     }
                 },
                 {'pool_layer':
@@ -171,7 +170,7 @@ net = Model(input_shape,
                 },
                 {'fc_layer':
                     {
-                        'num_output': 100
+                        'num_output': 30
                     }
                 },
                 {'final_layer':
@@ -181,19 +180,14 @@ net = Model(input_shape,
                 }
             ])
 
-
 # print(np.shape(training_data))
 # print(np.shape(validation_data))
 # print(np.shape(test_data))
 # print(training_data[0][0])
 # print(training_data[0][1].shape)
-
 # print(training_data[0][0])
-
 # sys.exit(0)
-
-
 
 # net.gradient_descent(training_data[0:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
 # net.gradient_descent(training_data[:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:100])
-net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, LMBDA, OUTPUT, test_data = test_data)
+net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, OUTPUT, LMBDA, test_data = test_data)

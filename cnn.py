@@ -58,7 +58,7 @@ class ConvLayer(object):
         # output convolution layer (after activation function) (num_filters, output_dim1, output_dim2)
         self.output = np.zeros((self.num_filters, self.output_dim1, self.output_dim2))
 
-    def convolve(self, input_neurons):
+    def convolve(self, input):
         '''
         Pass in the actual input data and do the convolution.
         Returns: sigmoid activation matrix after convolution
@@ -73,7 +73,8 @@ class ConvLayer(object):
 
         # import time
         # start = time.time()
-        convole_loop(self.num_filters, act_length1d, self.z_values, input_neurons, self.width_in, self.weights,self.filter_size, self.stride, self.biases, self.output)
+        convole_loop(self.num_filters, act_length1d, self.z_values, input, self.width_in, self.weights, self.filter_size, self.stride, self.biases, self.output)
+
         # end = time.time()
         # time = end - start
         # print "TIME convole_loop : ", time
@@ -103,7 +104,7 @@ class PoolingLayer(object):
         self.output = np.empty((self.depth, self.height_out, self.width_out))
         self.max_indices = np.empty((self.depth, self.height_out, self.width_out, 2))
 
-    def pool(self, input_image):
+    def pool(self, input):
         self.pool_length1d = self.height_out * self.width_out
 
         self.output = self.output.reshape((self.depth, self.pool_length1d))
@@ -112,7 +113,7 @@ class PoolingLayer(object):
 
         # import time
         # start = time.time()
-        pool_loop(self.depth, self.pool_length1d, input_image, self.width_in, self.poolsize, self.max_indices, self.output)
+        pool_loop(self.depth, self.pool_length1d, input, self.width_in, self.poolsize, self.max_indices, self.output)
         # end = time.time()
         # time = end - start
         # print "TIME pool_loop : ", time
@@ -142,16 +143,16 @@ class FullyConnectedLayer(Layer):
         self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in)
         self.biases = np.random.randn(self.num_output, 1)
 
-    def feedforward(self, a):
+    def feedforward(self, input):
         '''
         forwardpropagates through the FC layer to the final output layer
         '''
         # roll out the dimensions
         self.weights = self.weights.reshape((self.num_output, self.depth * self.height_in * self.width_in))
-        a = a.reshape((self.depth * self.height_in * self.width_in, 1))
+        input = input.reshape((self.depth * self.height_in * self.width_in, 1))
 
         # this is shape of (num_outputs, 1)
-        self.z_values = np.add(np.dot(self.weights, a), self.biases)
+        self.z_values = np.add(np.dot(self.weights, input), self.biases)
         self.output = activation(self.z_values)
 
         # print "self.z_values.shape : ", self.z_values.shape
@@ -168,12 +169,13 @@ class ClassifyLayer(Layer):
         super(ClassifyLayer, self).__init__(num_inputs, num_classes)
         num_inputs, col = num_inputs
         self.num_classes = num_classes
+
         self.weights = np.random.randn(self.num_classes, num_inputs)
         # print "self.weights.shape : ", self.weights.shape
         self.biases = np.random.randn(self.num_classes, 1)
 
-    def classify(self, x):
-        self.z_values = np.dot(self.weights, x) + self.biases
+    def classify(self, input):
+        self.z_values = np.dot(self.weights, input) + self.biases
         self.output = activation(self.z_values)
         # print "x : ", x
         # print "w : ", self.weights
@@ -331,7 +333,7 @@ class Model(object):
 
         # print "self.layer_weight_shapes : ", self.layer_weight_shapes
         # print "self.layer_biases_shapes : ", self.layer_biases_shapes
-
+        #
         # print "layer.shape : ", self.layer_weight_shapes
         #
         # for w in nabla_w:
@@ -347,7 +349,8 @@ class Model(object):
         # set first params on the final layer
         final_output = self.layers[-1].output
 
-        delta = loss_prime(final_output, label) * activation_prime(self.layers[-1].z_values)  # Error * activation_prime(z values layer before)
+        delta = loss_prime(final_output, label)   # Error * activation_prime(z values layer before)
+        # delta = loss_prime(final_output, label) * activation_prime(self.layers[-1].z_values)  # Error * activation_prime(z values layer before)
         last_weights = None
         final = True
 
@@ -355,6 +358,8 @@ class Model(object):
         # import ipdb;ipdb.set_trace()
 
         nabla_idx = len(nabla_w) - 1
+
+
 
         for l in range(num_layers - 1, -1, -1):
             # the "outer" layer is closer to classification
@@ -376,13 +381,18 @@ class Model(object):
                 inner_layer_ix, outer_layer_ix
             )
 
-            log.debug("-----------------")
-            log.debug("transition : "+transition)
+            # log.debug("-----------------")
+            # log.debug("transition : "+transition)
 
             # inputfc = poolfc
             # fc to fc = fc to final
             # conv to conv -> input to conv
             # conv to pool -> unique
+
+            # print("####### LAYER : ",l,"  #########")
+            # print("transition : ",transition)
+            # print("delta.shape in : ", delta.shape)
+            # print("prev_output : ", prev_output.shape)
 
             if transition == '1d_to_1d':  # final to fc, fc to fc
                 if final:
@@ -411,25 +421,37 @@ class Model(object):
             # pool to conv layer
             elif transition == 'conv_to_pool':
                 # no update for dw,db => only backprops the error
-                delta = backprop_conv_to_pool(
-                    delta=delta,
-                    weights=last_weights,
-                    input_from_conv=prev_output,
-                    max_indices=layer.max_indices,
-                    poolsize=layer.poolsize,
-                    pool_output=layer.output,
-                    from_conv=True if isinstance(layer_next, ConvLayer) else False)
+                if isinstance(layer_next, ConvLayer):
+                    delta = backprop_pool_from_conv(
+                        delta=delta,
+                        weights=last_weights,
+                        input_from_conv=prev_output,
+                        max_indices=layer.max_indices,
+                        poolsize=layer.poolsize,
+                        pool_output=layer.output,
+                        stride=layer_next.stride,
+                        filter_size=layer_next.filter_size,
+                        padding=layer_next.padding,
+                        )
+                else:
+                    delta = backprop_pool(
+                        delta=delta,
+                        weights=last_weights,
+                        input_from_conv=prev_output,
+                        max_indices=layer.max_indices,
+                        poolsize=layer.poolsize,
+                        pool_output=layer.output)
 
             elif transition == 'pool_to_conv':
                 # prev_output = image
                 # next_weights = layer.weights
                 weights_shape = layer.weights.shape
-                db, dw = backprop_pool_to_conv(
+                db, dw = backprop_conv(
                     delta=delta,
                     weights_shape=weights_shape,
                     stride=layer.stride,
                     output=prev_output,
-                    prev_z_vals=layer.z_values)
+                    z_vals=layer.z_values)
 
             # conv to conv layer
             elif transition == 'to_conv':
@@ -461,13 +483,15 @@ class Model(object):
                 last_weights = layer.weights
                 nabla_idx -= 1
 
-        # sys.exit(0)
+            # print("delta.shape out : ", delta.shape)
+            # print("dw.shape out : ", dw.shape)
 
         return self.layers[-1].output, nabla_b, nabla_w
 
 
     def gradient_descent(self, training_data, batch_size, eta, num_epochs, num_output, lmbda=None, test_data=None):
         training_size = len(training_data)
+
 
         if test_data:
             n_test = len(test_data)
@@ -507,10 +531,11 @@ class Model(object):
 
             if test_data:
                 log.info( "################## VALIDATE #################")
-                log.info( "Epoch {0} complete %s", format(epoch))
+                log.info( "Epoch : ", format(epoch))
                 # res = self.validate(test_data)
+
                 if num_output >= 2:
-                    res = self.validate_multiclass(test_data)
+                    res = self.validate_multiclass(test_data, num_output)
                 else:
                     res = self.validate(test_data)
                 correct_res.append(res)
