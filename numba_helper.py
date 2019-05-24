@@ -18,8 +18,11 @@ from helper import *
 
 
 #FEED FORWARD
-@numba.njit(parallel=True)
-def convole_loop(num_filters, act_length1d, z_values, input_neurons, width_in, weights, filter_size, stride, biases, output):
+# @numba.njit(parallel=True)
+@numba.njit()
+def convole_loop(num_filters, z_values, input_neurons, width_in, weights, filter_size, stride, biases, output):
+    act_length1d = output.shape[1]  # dim1 * dim2
+
     for j in numba.prange(num_filters):
         slide = 0
         row = 0
@@ -28,54 +31,30 @@ def convole_loop(num_filters, act_length1d, z_values, input_neurons, width_in, w
 
             # ACTIVATIONS -> loop through each conv block horizontally
 
-            # a = input_neurons[:, row:filter_size + row, slide:filter_size + slide]
-            # b = weights[j]
-            # c = biases[j]
-            # log.debug("a : %s", a.shape)
-            # log.debug("b : %s", b.shape)
-            # log.debug("c : %s", c.shape)
-            #
-            # d = np.multiply(a,b)
-            # e = np.sum(d)
-            # log.debug("d : %s", d.shape)
-            # log.debug("e : %s", e.shape)
-            #
-            # f = np.add(e,c)
-            # log.debug("f : %s", type(f))
-            # log.debug("f : %s", f)
             # log.debug("z_values[j][i].shape : %s", type(z_values[j][i]))
 
             # z_values[j][i] = np.add(np.sum(np.multiply(input_neurons[:, row:filter_size + row, slide:filter_size + slide], weights[j])), biases[j])
 
 
             sub_matrix = input_neurons[:, row:filter_size + row, slide:filter_size + slide][0]
-            weight = rot180(weights[j][0])
-            # rotated_weight = rot180(weights[j][0])
+            weight = weights[j][0]
+            # weight = rot180(weights[j][0]) #rotated
 
             input_sum = np.sum(np.multiply(sub_matrix, weight)) + biases[j]
             z_values[j][i] = input_sum[0]
 
-
-            # z_values[j][i] = f
-            # log.debug("z_values[j][i].shape : %s", z_values[j][i])
-            # log.debug("z_values[j][i].shape : %s", type(z_values[j][i]))
-
-            # output[j][i] = activation(z_values[j][i])  # activation function
             z = z_values[j][i]
-            output[j][i] = 1.0/(1.0 + np.exp(-z)) # activation function
+            # output[j][i] = 1.0/(1.0 + np.exp(-z)) # activation function
+            output[j][i] = activation(z) # activation function
 
-            # sys.exit(0)
-
-            # print "input_neurons sub : ",input_neurons[:, row:filter_size + row, slide:filter_size + slide].shape
-            # print "weights[j].shape : ",weights[j].shape
-            # print "z_values[j][i] : ",z_values[j][i]
-            # print "output[j][i] : ",output[j][i]
-            # sys.exit(0)
             slide += stride
 
             if (filter_size + slide) - stride >= width_in:  # wrap indices at the end of each row
                 slide = 0
                 row += stride  # go to next row
+
+    return z_values, output
+
 
 @numba.njit()
 def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices, output):
@@ -85,30 +64,6 @@ def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices
         slide = 0
         for i in numba.prange(pool_length1d):
             toPool = input_image[j][row:poolsize[0] + row, slide:poolsize[0] + slide]
-
-            # output[j][i] = np.amax(toPool)  # calculate the max activation
-            # print ("toPool : ", toPool)
-            # print ("np.max(toPool) : ", np.max(toPool))
-            # print ("np.amax(toPool) : ", np.amax(toPool))
-            # print ("p.where(np.max(toPool) == toPool) : ", np.where(np.max(toPool) == toPool))
-            # index = zip(*np.where(np.max(toPool) == toPool))  # HERE IT IS save the index of the max, np.where return index of array if condition meets
-            # print "index before : ", index
-            # print "index : ",type(index)
-            # print "index : ",index
-            # print "index : ",len(index)
-            # sys.exit(0)
-
-            # if len(index) > 1:  # if there is more than one maximum value
-            #     index = [index[0]]
-
-            # print "index after : ", index
-            # index = index[0][0] + row, index[0][1] + slide
-            # print "index : ", type(index)
-            # print "index : ", index
-            # print "max_indices[j][i] : ", type(max_indices[j][i])
-            # print "max_indices[j][i] : ", max_indices[j][i].shape
-            # print "max_indices[j][i] : ", max_indices[j][i]
-            # max_indices[j][i] = index
 
 
             #new algo
@@ -125,10 +80,8 @@ def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices
             # print "---------------"
             # print "output[j][i] : ", output[j][i]
             # print "max : ", max
-            # print "index : ", index
             # print "pos : ", pos
             #new algo end
-
 
             max_indices[j][i][0] = index[0]
             max_indices[j][i][1] = index[1]
@@ -160,13 +113,16 @@ def backprop_conv_loop(num_filters, total_deltas_per_layer, output, z_vals, filt
             # sys.exit(0)
 
             # delta_w[j] += to_conv * delta[j][i]
-            delta_w[j] += to_conv * activation_prime(z_vals[j][i]) * delta[j][i] #versi sotoy awb
+
+            delta_w[j] += to_conv * delta[j][i] #versi sotoy awb
             delta_b[j] += delta[j][i]  # not fully sure, but im just summing up the bias deltas over the conv layer
             slide += stride
 
             if (slide + filter_size) - stride >= output.shape[2]:  # wrap indices at the end of each row
                 slide = 0
                 row += stride
+
+    return delta, delta_b, delta_w
 
 @numba.njit()
 def backprop_pool_from_conv_loop(delta, weights, pool_output, stride, filter_size):
@@ -301,3 +257,4 @@ def backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_si
             if (slide + filter_size)-stride >= output.shape[2]:    # wrap indices at the end of each row
                 slide = 0
                 row+=stride
+

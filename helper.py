@@ -2,6 +2,7 @@ import sys
 
 import numpy as np
 import numba
+import math
 
 # try:
 #     import cupy as np
@@ -70,6 +71,7 @@ def loss(desired,final):
 
 # @numba.njit()
 def loss_prime(desired, final):
+    # return final-desired
     return desired-final
 
 def loss_complex(desired,final):
@@ -99,6 +101,41 @@ def relu(z):
 def relu_prime(z):
     # print "z : ", z
     return np.where(z>=0, 1, 0)
+
+@numba.njit
+def initiate_weights_conv(num_filters, depth, filter_size):
+    weights = np.random.randn(num_filters, depth, filter_size, filter_size)  # filter * depth * filter_size * filter_size
+    biases = np.random.rand(num_filters, 1)  # filter * 1
+
+    # weights = np.random.randint(3, size=(num_filters, depth, filter_size, filter_size))
+    # biases = np.random.randint(3, size=(num_filters, 1))
+
+    # weights = np.ones((num_filters, depth, filter_size, filter_size))
+    # biases = np.ones((num_filters, 1))
+
+    return weights, biases
+
+@numba.njit
+def initiate_weights_fc(num_output, depth, height_in, width_in):
+    weights = np.random.randn(num_output, depth, height_in, width_in)
+    biases = np.random.randn(num_output, 1)
+
+    # weights = np.random.randint(3, size=(num_output, depth, height_in, width_in))
+    # biases = np.random.randint(3, size=(num_output, 1))
+
+    # weights = np.ones((num_output, depth, height_in, width_in)) * 2
+    # biases = np.ones((num_output, 1))
+    return weights, biases
+
+@numba.njit
+def initiate_weights_classify(num_classes, num_inputs):
+    weights = np.random.randn(num_classes, num_inputs)
+    biases = np.random.randn(num_classes, 1)
+    # weights = np.random.randint(3, size=(num_classes, num_inputs))
+    # biases = np.random.randint(3, size=(num_classes, 1))
+    # weights = np.ones((num_classes, num_inputs))*3
+    # biases = np.ones((num_classes, 1))
+    return weights, biases
 
 @numba.njit('f8[:,:](f8[:,:])')
 def rot180(a):

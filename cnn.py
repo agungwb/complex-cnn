@@ -11,6 +11,7 @@ from scipy import ndimage, misc
 import matplotlib.pyplot as plt
 from helper import *
 from numba_helper import *
+from util import *
 
 from backprop import *
 import logging
@@ -40,8 +41,12 @@ class ConvLayer(object):
         self.num_filters = num_filters
         # self.num_filters = num_filters * self.depth
 
-        self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size)  # filter * depth * filter_size * filter_size
-        self.biases = np.random.rand(self.num_filters, 1)  # filter * 1
+        # self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size)  # filter * depth * filter_size * filter_size
+        # self.biases = np.random.rand(self.num_filters, 1)  # filter * 1
+
+        self.weights, self.biases = initiate_weights_conv(num_filters=self.num_filters,
+                                                           depth=self.depth,
+                                                           filter_size=self.filter_size)
 
         # np.random.randn generate random from normal distribution
         # np.random.rand generate random from [0..1]
@@ -69,19 +74,17 @@ class ConvLayer(object):
         self.z_values = self.z_values.reshape((self.num_filters, self.output_dim1 * self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1 * self.output_dim2))
 
-        act_length1d = self.output.shape[1]  # dim1 * dim2
 
         # import time
         # start = time.time()
-        convole_loop(self.num_filters, act_length1d, self.z_values, input, self.width_in, self.weights, self.filter_size, self.stride, self.biases, self.output)
+        self.z_values, self.output = convole_loop(self.num_filters, self.z_values, input, self.width_in, self.weights, self.filter_size, self.stride, self.biases, self.output)
 
         # end = time.time()
         # time = end - start
         # print "TIME convole_loop : ", time
 
-        self.z_values = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
+        self.z_values = self.z_values.reshape((self.num_filters, self.output_dim1, self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
-
 
 class PoolingLayer(object):
 
@@ -108,8 +111,7 @@ class PoolingLayer(object):
         self.pool_length1d = self.height_out * self.width_out
 
         self.output = self.output.reshape((self.depth, self.pool_length1d))
-        self.max_indices = self.max_indices.reshape(
-            (self.depth, self.pool_length1d, 2))  # store index of max output come from
+        self.max_indices = self.max_indices.reshape((self.depth, self.pool_length1d, 2))  # store index of max output come from
 
         # import time
         # start = time.time()
@@ -140,8 +142,13 @@ class FullyConnectedLayer(Layer):
         self.depth, self.height_in, self.width_in = input_shape
         self.num_output = num_output
 
-        self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in)
-        self.biases = np.random.randn(self.num_output, 1)
+        # self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in)
+        # self.biases = np.random.randn(self.num_output, 1)
+
+        self.weights, self.biases = initiate_weights_fc(num_output= self.num_output,
+                                                        depth= self.depth,
+                                                        height_in=self.height_in,
+                                                        width_in=self.width_in)
 
     def feedforward(self, input):
         '''
@@ -170,9 +177,12 @@ class ClassifyLayer(Layer):
         num_inputs, col = num_inputs
         self.num_classes = num_classes
 
-        self.weights = np.random.randn(self.num_classes, num_inputs)
-        # print "self.weights.shape : ", self.weights.shape
-        self.biases = np.random.randn(self.num_classes, 1)
+        # self.weights = np.random.randn(self.num_classes, num_inputs)
+        # # print "self.weights.shape : ", self.weights.shape
+        # self.biases = np.random.randn(self.num_classes, 1)
+
+        self.weights, self.biases = initiate_weights_classify(num_classes = self.num_classes,
+                                                              num_inputs = num_inputs)
 
     def classify(self, input):
         self.z_values = np.dot(self.weights, input) + self.biases
@@ -260,23 +270,27 @@ class Model(object):
             return '1d_to_1d'
 
         if (isinstance(inner, ConvLayer) and isinstance(outer, PoolingLayer)):
-            return 'conv_to_pool'
+            return 'pool'
 
         if (isinstance(inner, PoolingLayer) and isinstance(outer, ConvLayer)):
-            return 'pool_to_conv'
+            return 'conv'
 
         raise NotImplementedError
 
     def feedforward(self, image):
-        prev_activation = image
+        log.debug("FEED FORWARD")
 
+        prev_activation = image
+        save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
 
         # forwardpass
+        i = 1
         for layer in self.layers:
 
             input_to_feed = prev_activation
 
             if isinstance(layer, FullyConnectedLayer):
+                layer_name = "fully_connected_layer"
                 # z values are huge, while the fc_output is tiny! large negative vals get penalized to 0!
                 # start = time.time()
                 layer.feedforward(input_to_feed)
@@ -285,7 +299,13 @@ class Model(object):
                 # print "Time FullyConnectedLayer : ", ex_time
                 # print "FullyConnectedLayer : ", layer.output
 
+                # save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "w"), delimiter="; ")
+                # save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "b"), delimiter="; ")
+                # save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "z"), delimiter="; ")
+                # save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "a"), delimiter="; ")
+
             elif isinstance(layer, ConvLayer):
+                layer_name = "convolutional_layer"
                 # start = time.time()
                 layer.convolve(input_to_feed)
                 # end = time.time()
@@ -295,8 +315,13 @@ class Model(object):
                 #     plt.imsave('images/cat_conv%d.png'%i, layer.output[i])
                 # for i in range(layer.weights.shape[0]):
                 #     plt.imsave('images/filter_conv%s.png'%i, layer.weights[i].reshape((5,5)))
+                # save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "w"), delimiter="; ")
+                # save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "conv", "b"), delimiter="; ")
+                # save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "z"), delimiter="; ")
+                # save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "a"), delimiter="; ")
 
             elif isinstance(layer, PoolingLayer):
+                layer_name = "pooling_layer"
                 # start = time.time()
                 layer.pool(input_to_feed)
                 # end = time.time()
@@ -304,30 +329,39 @@ class Model(object):
                 # print "Time PoolingLayer : ", ex_time
                 # for i in range(layer.output.shape[0]):
                 #     plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
+                # save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "a"), delimiter="; ")
+                # save_matrix(layer.max_indices, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "max"), delimiter="; ", mode='1d')
 
             elif isinstance(layer, ClassifyLayer):
+                layer_name = "classify_layer"
                 # start = time.time()
                 layer.classify(input_to_feed)
                 # end = time.time()
                 # ex_time = end - start
                 # print "Time ClassifyLayer : ", ex_time
                 # print "Classify : ", layer.output
+                # save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "w"), delimiter="; ")
+                # save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "classify", "b"), delimiter="; ")
+                # save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "z"), delimiter="; ")
+                # save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "a"), delimiter="; ")
 
             else:
                 raise NotImplementedError
 
             prev_activation = layer.output
+            log.debug("###### LAYER: %s ######", str(i))
+            log.debug("name: %s", layer_name)
+            log.debug("input: %s", input_to_feed.shape)
+            log.debug("output: %s", layer.output.shape)
 
-        # for layer in self.layers:
-        #     print "output : ",layer.output.shape,", type(layer) : ",type(layer)
-        #
-        # sys.exit(0)
+            i = i+1
 
         final_activation = prev_activation
         return final_activation
 
 
     def backprop(self, image, label):
+        log.debug("---BACKPROP---")
         nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]  # create nabla_weight for every layer with same shape
         nabla_b = [np.zeros(s) for s in self.layer_biases_shapes]  # create nabla_biases for every layer with same shape
 
@@ -349,7 +383,7 @@ class Model(object):
         # set first params on the final layer
         final_output = self.layers[-1].output
 
-        delta = loss_prime(final_output, label)   # Error * activation_prime(z values layer before)
+        delta = loss_prime(label, final_output)   # Error * activation_prime(z values layer before)
         # delta = loss_prime(final_output, label) * activation_prime(self.layers[-1].z_values)  # Error * activation_prime(z values layer before)
         last_weights = None
         final = True
@@ -359,7 +393,7 @@ class Model(object):
 
         nabla_idx = len(nabla_w) - 1
 
-
+        log.debug("loss prime : {0}".format(delta))
 
         for l in range(num_layers - 1, -1, -1):
             # the "outer" layer is closer to classification
@@ -389,15 +423,10 @@ class Model(object):
             # conv to conv -> input to conv
             # conv to pool -> unique
 
-            # print("####### LAYER : ",l,"  #########")
-            # print("transition : ",transition)
-            # print("delta.shape in : ", delta.shape)
-            # print("prev_output : ", prev_output.shape)
-
             if transition == '1d_to_1d':  # final to fc, fc to fc
                 if final:
                     db, dw, delta = backprop_1d_to_1d_final(
-                        delta=delta,
+                        loss_prime=delta,
                         output=prev_output,
                         z_vals=layer.z_values)
                     final = False
@@ -408,6 +437,10 @@ class Model(object):
                         output=prev_output,
                         z_vals=layer.z_values)
 
+                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "d"),delimiter="; ")
+                # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "dw"),delimiter="; ")
+                # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "db"),delimiter="; ")
+
             elif transition == '3d_to_1d':
                 if l == 0:
                     prev_output = image
@@ -417,9 +450,12 @@ class Model(object):
                     output=prev_output,  # (28,28)
                     z_vals=layer.z_values)  # (100,1)
                 # layer.weights = layer.weights.reshape((layer.num_output, layer.depth, layer.height_in, layer.width_in))
+                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "d"), delimiter="; ")
+                # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "dw"), delimiter="; ")
+                # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "db"), delimiter="; ")
 
             # pool to conv layer
-            elif transition == 'conv_to_pool':
+            elif transition == 'pool':
                 # no update for dw,db => only backprops the error
                 if isinstance(layer_next, ConvLayer):
                     delta = backprop_pool_from_conv(
@@ -442,16 +478,20 @@ class Model(object):
                         poolsize=layer.poolsize,
                         pool_output=layer.output)
 
-            elif transition == 'pool_to_conv':
+                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "pool", "d"), delimiter="; ")
+
+            elif transition == 'conv':
                 # prev_output = image
                 # next_weights = layer.weights
-                weights_shape = layer.weights.shape
-                db, dw = backprop_conv(
+                delta, db, dw = backprop_conv(
                     delta=delta,
-                    weights_shape=weights_shape,
+                    weights_shape=layer.weights.shape,
                     stride=layer.stride,
                     output=prev_output,
                     z_vals=layer.z_values)
+                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "d"), delimiter="; ")
+                # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "dw"), delimiter="; ")
+                # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "db"), delimiter="; ")
 
             # conv to conv layer
             elif transition == 'to_conv':
@@ -460,17 +500,26 @@ class Model(object):
                 # prev_output = image
                 # last_weights = layer.weights
                 weights_shape = layer.weights.shape
-                db, dw = backprop_to_conv(
+                # db, dw = backprop_to_conv(
+                #     delta=delta,
+                #     weights_shape=layer.weights.shape,
+                #     stride=layer.stride,
+                #     output=image,
+                #     prev_z_vals=layer.z_values)
+                delta, db, dw = backprop_conv(
                     delta=delta,
                     weights_shape=layer.weights.shape,
                     stride=layer.stride,
                     output=image,
-                    prev_z_vals=layer.z_values)
+                    z_vals=layer.z_values)
+                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "d"), delimiter="; ")
+                # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "dw"), delimiter="; ")
+                # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "db"), delimiter="; ")
 
             else:
                 pass
 
-            if transition != 'conv_to_pool':
+            if transition != 'pool':
                 # print 'nablasb, db,nabldw, dw, DELTA', nabla_b[inner_layer_ix].shape, db.shape, nabla_w[inner_layer_ix].shape, dw.shape, last_delta.shape
                 # print 'outer_layer_ix : ',outer_layer_ix
                 # print 'inner_layer_ix : ',inner_layer_ix
@@ -483,8 +532,13 @@ class Model(object):
                 last_weights = layer.weights
                 nabla_idx -= 1
 
-            # print("delta.shape out : ", delta.shape)
-            # print("dw.shape out : ", dw.shape)
+            log.debug("####### LAYER : {0}  #########".format(l + 1))
+            log.debug("delta.shape : %s", delta.shape)
+            log.debug("dw.shape : %s", dw.shape)
+            log.debug("db.shape : %s", db.shape)
+
+            # if l+1 == 2:
+            #     sys.exit(0)
 
         return self.layers[-1].output, nabla_b, nabla_w
 
@@ -546,7 +600,7 @@ class Model(object):
                 # print "Accuracy: %.2f" % accuracy
                 # time
                 timer = time.time() - start
-                log.info("Estimated time: %s", timer)
+                log.info("Estimated testing time: %s", timer)
             else:
                 log.info("NO TEST DATA")
 

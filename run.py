@@ -5,6 +5,7 @@ import logging
 from backprop import *
 import mammogram_loader
 import hanacaraka_loader
+import dummy_loader
 import numba
 
 import numpy as np
@@ -22,7 +23,12 @@ if len(sys.argv) < 2:
     print("system terminated")
     print(0)
 
-if sys.argv[1] != 'cnn' and sys.argv[1] != 'ccnn' and sys.argv[1] != 'mnist' and sys.argv[1] != 'hanacaraka' and sys.argv[1] != 'hanacaraka-complex':
+if sys.argv[1] != 'cnn' \
+        and sys.argv[1] != 'ccnn' \
+        and sys.argv[1] != 'mnist' \
+        and sys.argv[1] != 'hanacaraka' \
+        and sys.argv[1] != 'hanacaraka-complex' \
+        and sys.argv[1] != 'dummy':
     print("wrong argument: cnn [test] | ccnn [test]")
     print("system terminated")
     print(0)
@@ -90,6 +96,7 @@ elif sys.argv[1] == 'cnn':
     else:
         logging.basicConfig(level=logging.INFO)
         log = logging.getLogger("__run__")
+
 elif sys.argv[1] == 'mnist':
     WIDTH = 28
     HEIGHT = 28
@@ -115,6 +122,15 @@ elif sys.argv[1] == 'hanacaraka-complex':
     training_data, test_data = hanacaraka_loader.load_data_dtcwt()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
+elif sys.argv[1] == 'dummy':
+    WIDTH = 14
+    HEIGHT = 14
+    OUTPUT = 1
+    EPOCHS = 1
+    BATCH_SIZE = 1
+    training_data, test_data = dummy_loader.load_data(max_range=5, dimension=(HEIGHT, WIDTH))
+    logging.basicConfig(level=logging.DEBUG)
+    log = logging.getLogger("__run__")
 else:
     print("no matched mode")
     print("system terminated")
@@ -133,8 +149,8 @@ Args:
 # training_data = cat.reshape((1,43,64))
 # input_shape = training_data.shape
 # label = np.asarray(([1,0])).reshape((2,1))
-# training_data = (training_data, label)
-log.info("training_data[0][0] : %s",training_data[0][0].shape)
+
+log.info("training_data[0][0] : %s",training_data[0][0].shape) #training_data = (n_data, label(input, output))
 x,y = training_data[0][0].shape
 input_shape = (1,x,y)
 log.info('shape of input data: %s', input_shape)
@@ -190,4 +206,8 @@ net = Model(input_shape,
 
 # net.gradient_descent(training_data[0:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
 # net.gradient_descent(training_data[:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:100])
+start = time.time()
 net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, OUTPUT, LMBDA, test_data = test_data)
+end = time.time()
+time = end - start
+log.info("Time : {0}".format(time))
