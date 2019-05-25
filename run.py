@@ -158,13 +158,16 @@ log.info('len(training_data) : %s', len(training_data))
 # print 'len(validation_data) : ', len(validation_data)
 log.info('len(test_data) : %s', len(test_data))
 
+#activation: 1. sigmoid, 2.tanh, 3.relu
+
 net = Model(input_shape,
             layer_config = [
                 {'conv_layer':
                     {
                         'filter_size': 5,
                         'stride': 1,
-                        'num_filters': 20
+                        'num_filters': 20,
+                        'activation': 2
                     }
                 },
                 {'pool_layer':
@@ -176,7 +179,8 @@ net = Model(input_shape,
                     {
                         'filter_size': 3,
                         'stride': 1,
-                        'num_filters': 50
+                        'num_filters': 50,
+                        'activation': 2
                     }
                 },
                 {'pool_layer':
@@ -186,12 +190,14 @@ net = Model(input_shape,
                 },
                 {'fc_layer':
                     {
-                        'num_output': 30
+                        'num_output': 30,
+                        'activation': 2
                     }
                 },
                 {'final_layer':
                     {
-                        'num_classes': OUTPUT
+                        'num_classes': OUTPUT,
+                        'activation': 1
                     }
                 }
             ])

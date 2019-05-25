@@ -27,13 +27,27 @@ def cross_entropy(batch_size, output, expected_output):
     return (-1/batch_size) * np.sum(expected_output * np.log(output) + (1 - expected_output) * np.log(1-output))
 
 @numba.njit()
-def activation(z):
-    return sigmoid(z)
+def activate(z, activation):
+    if activation == 1:
+        return sigmoid(z)
+    elif activation == 2:
+        return tanh(z)
+    elif activation == 3:
+        return relu(z)
+    else:
+        return sigmoid(z)
 
 # @numba.jit('f8(f8)', nopython=True, parallel=True)
 @numba.njit()
-def activation_prime(z):
-    return sigmoid_prime(z)
+def activate_prime(z, activation):
+    if activation == 1:
+        return sigmoid_prime(z)
+    elif activation == 2:
+        return tanh_prime(z)
+    elif activation == 3:
+        return relu_prime(z)
+    else:
+        return sigmoid_prime(z)
 
 def csigmoid(z):
     np.exp(1j * sigmoid(np.angle(z)))
@@ -65,24 +79,26 @@ def sigmoid_split_complex(z):
 def sigmoid_split_complex_prime(z):
     return sigmoid_prime(z.real) + (1j * sigmoid_prime(z.imag))
 
-# @numba.njit()
+@numba.njit()
 def loss(desired,final):
     return 0.5*np.sum(desired-final)**2
 
-# @numba.njit()
+@numba.njit()
 def loss_prime(desired, final):
-    # return final-desired
-    return desired-final
+    return final-desired
+    # return desired-final
 
 def loss_complex(desired,final):
     return 0.5*np.sum(desired.real-final.real)**2
 
+@numba.njit()
 def tanh(z):
     a = np.exp(z)
     b = np.exp(-z)
     return (a-b)/(a+b)
 
 # @numba.jit("f8[:](f8[:])", parallel=True)
+@numba.njit()
 def tanh_prime(z):
     return 1 - (tanh(z)**2)
 
@@ -93,48 +109,99 @@ def tanh_split_complex(z):
 def tanh_split_complex_prime(z):
     return tanh_prime(z.real) + (1j * tanh_prime(z.imag))
 
+@numba.njit()
 def relu(z):
-    # print "z : ",z
-    # return z if z >= 0 else 0
     return np.maximum(z, 0)
 
+@numba.njit()
 def relu_prime(z):
-    # print "z : ", z
-    return np.where(z>=0, 1, 0)
+    # return np.ones(z.shape)
+    # z[z>=0] = 1
+    # z[z<0] = 0
+    # np.maximum(z,0)
+    # np.minimum(z,1)
+
+    return (z>=0).astype(z.dtype)
+
+    # return np.where(z>=0, 1, 0)
+
+    # dim = len(z.shape)
+    #
+    # if dim == 1:
+    #     return relu_prime_1d(z)
+    #     # return z
+    # elif dim == 2:
+    #     # m = z.shape[0]
+    #     # n = z.shape[1]
+    #     return z
+    # elif dim == 3:
+    #     # m = z.shape[0]
+    #     # n = z.shape[1]
+    #     # o = z.shape[2]
+    #     return z
+    # else:
+    #     return z
+    # elif dim == 2:
+    #     x = 10
+        # for i in range(x):
+        #     if z[i] > 0:
+        #         z[i] = 1
+        #     else:
+        #         z[i] = 0
+    # elif len(dim) == 2:
+    #     x = 10
+        # x, y = z.shape
+    #     for i in range(x):
+    #         for j in range(y):
+    #             if z[i][j] > 0:
+    #                 z[i][j] = 1
+    #             else:
+    #                 z[i][j] = 0
+    # elif len(z.shape) == 3:
+    #     x, y, z = z.shape
+    #     for i in range(x):
+    #         for j in range(y):
+    #             for k in range(z):
+    #                 if z[i][j][k] > 0:
+    #                     z[i][j][k] = 1
+    #                 else:
+    #                     z[i][j][k] = 0
+
+    # return z
 
 @numba.njit
 def initiate_weights_conv(num_filters, depth, filter_size):
-    weights = np.random.randn(num_filters, depth, filter_size, filter_size)  # filter * depth * filter_size * filter_size
-    biases = np.random.rand(num_filters, 1)  # filter * 1
+    # weights = np.random.randn(num_filters, depth, filter_size, filter_size)  # filter * depth * filter_size * filter_size
+    # biases = np.random.randn(num_filters, 1)  # filter * 1
 
     # weights = np.random.randint(3, size=(num_filters, depth, filter_size, filter_size))
     # biases = np.random.randint(3, size=(num_filters, 1))
 
-    # weights = np.ones((num_filters, depth, filter_size, filter_size))
-    # biases = np.ones((num_filters, 1))
+    weights = np.ones((num_filters, depth, filter_size, filter_size))
+    biases = np.ones((num_filters, 1))
 
     return weights, biases
 
 @numba.njit
 def initiate_weights_fc(num_output, depth, height_in, width_in):
-    weights = np.random.randn(num_output, depth, height_in, width_in)
-    biases = np.random.randn(num_output, 1)
+    # weights = np.random.randn(num_output, depth, height_in, width_in)
+    # biases = np.random.randn(num_output, 1)
 
     # weights = np.random.randint(3, size=(num_output, depth, height_in, width_in))
     # biases = np.random.randint(3, size=(num_output, 1))
 
-    # weights = np.ones((num_output, depth, height_in, width_in)) * 2
-    # biases = np.ones((num_output, 1))
+    weights = np.ones((num_output, depth, height_in, width_in)) * 2
+    biases = np.ones((num_output, 1))
     return weights, biases
 
 @numba.njit
 def initiate_weights_classify(num_classes, num_inputs):
-    weights = np.random.randn(num_classes, num_inputs)
-    biases = np.random.randn(num_classes, 1)
+    # weights = np.random.randn(num_classes, num_inputs)
+    # biases = np.random.randn(num_classes, 1)
     # weights = np.random.randint(3, size=(num_classes, num_inputs))
     # biases = np.random.randint(3, size=(num_classes, 1))
-    # weights = np.ones((num_classes, num_inputs))*3
-    # biases = np.ones((num_classes, 1))
+    weights = np.ones((num_classes, num_inputs))*3
+    biases = np.ones((num_classes, 1))
     return weights, biases
 
 @numba.njit('f8[:,:](f8[:,:])')

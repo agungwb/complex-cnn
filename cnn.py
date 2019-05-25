@@ -33,12 +33,13 @@ PARAMETERS you'll need: NUM_FILTERS (num of filters), STRIDE (slide filter by), 
 
 class ConvLayer(object):
 
-    def __init__(self, input_shape, filter_size, stride, num_filters, padding=0):
+    def __init__(self, input_shape, filter_size, stride, num_filters, activation, padding=0):
         self.depth, self.height_in, self.width_in = input_shape
         self.filter_size = filter_size
         self.stride = stride
         self.padding = padding
         self.num_filters = num_filters
+        self.activation = activation
         # self.num_filters = num_filters * self.depth
 
         # self.weights = np.random.randn(self.num_filters, self.depth, self.filter_size, self.filter_size)  # filter * depth * filter_size * filter_size
@@ -77,7 +78,7 @@ class ConvLayer(object):
 
         # import time
         # start = time.time()
-        self.z_values, self.output = convole_loop(self.num_filters, self.z_values, input, self.width_in, self.weights, self.filter_size, self.stride, self.biases, self.output)
+        self.z_values, self.output = convole_loop(self.num_filters, self.z_values, self.activation, input, self.width_in, self.weights, self.filter_size, self.stride, self.biases, self.output)
 
         # end = time.time()
         # time = end - start
@@ -137,10 +138,11 @@ class FullyConnectedLayer(Layer):
     Calculates outputs on the fully connected layer then forwardpasses to the final output -> classes
     '''
 
-    def __init__(self, input_shape, num_output):
+    def __init__(self, input_shape, num_output, activation):
         super(FullyConnectedLayer, self).__init__(input_shape, num_output)
         self.depth, self.height_in, self.width_in = input_shape
         self.num_output = num_output
+        self.activation = activation
 
         # self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in)
         # self.biases = np.random.randn(self.num_output, 1)
@@ -160,7 +162,7 @@ class FullyConnectedLayer(Layer):
 
         # this is shape of (num_outputs, 1)
         self.z_values = np.add(np.dot(self.weights, input), self.biases)
-        self.output = activation(self.z_values)
+        self.output = activate(self.z_values, self.activation)
 
         # print "self.z_values.shape : ", self.z_values.shape
         # print "self.output.shape : ", self.output.shape
@@ -172,10 +174,11 @@ class FullyConnectedLayer(Layer):
 
 
 class ClassifyLayer(Layer):
-    def __init__(self, num_inputs, num_classes):
+    def __init__(self, num_inputs, num_classes, activation):
         super(ClassifyLayer, self).__init__(num_inputs, num_classes)
         num_inputs, col = num_inputs
         self.num_classes = num_classes
+        self.activation = activation
 
         # self.weights = np.random.randn(self.num_classes, num_inputs)
         # # print "self.weights.shape : ", self.weights.shape
@@ -186,7 +189,7 @@ class ClassifyLayer(Layer):
 
     def classify(self, input):
         self.z_values = np.dot(self.weights, input) + self.biases
-        self.output = activation(self.z_values)
+        self.output = activate(self.z_values, self.activation)
         # print "x : ", x
         # print "w : ", self.weights
         # print "z : ", self.z_values
@@ -281,7 +284,7 @@ class Model(object):
         log.debug("FEED FORWARD")
 
         prev_activation = image
-        save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
+        # save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
 
         # forwardpass
         i = 1
@@ -354,6 +357,9 @@ class Model(object):
             log.debug("input: %s", input_to_feed.shape)
             log.debug("output: %s", layer.output.shape)
 
+            # if i == 6:
+            #     sys.exit(0)
+
             i = i+1
 
         final_activation = prev_activation
@@ -393,7 +399,7 @@ class Model(object):
 
         nabla_idx = len(nabla_w) - 1
 
-        log.debug("loss prime : {0}".format(delta))
+        # save_matrix(delta, "csv/back/prop/{0}_{1}.csv".format(str(7), "loss_prime"), delimiter="; ")
 
         for l in range(num_layers - 1, -1, -1):
             # the "outer" layer is closer to classification
@@ -428,15 +434,17 @@ class Model(object):
                     db, dw, delta = backprop_1d_to_1d_final(
                         loss_prime=delta,
                         output=prev_output,
-                        z_vals=layer.z_values)
+                        z_vals=layer.z_values,
+                        activation=layer.activation)
                     final = False
                 else:
                     db, dw, delta = backprop_1d_to_1d(
                         delta=delta,
                         weights=last_weights,
                         output=prev_output,
-                        z_vals=layer.z_values)
-
+                        z_vals=layer.z_values,
+                        activation=layer.activation)
+                #
                 # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "d"),delimiter="; ")
                 # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "dw"),delimiter="; ")
                 # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "db"),delimiter="; ")
@@ -448,7 +456,8 @@ class Model(object):
                     delta=delta,
                     weights=last_weights,  # shape (10,100) this is the weights from the next layer
                     output=prev_output,  # (28,28)
-                    z_vals=layer.z_values)  # (100,1)
+                    z_vals=layer.z_values,
+                    activation=layer.activation)  # (100,1)
                 # layer.weights = layer.weights.reshape((layer.num_output, layer.depth, layer.height_in, layer.width_in))
                 # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "d"), delimiter="; ")
                 # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "dw"), delimiter="; ")
@@ -488,7 +497,8 @@ class Model(object):
                     weights_shape=layer.weights.shape,
                     stride=layer.stride,
                     output=prev_output,
-                    z_vals=layer.z_values)
+                    z_vals=layer.z_values,
+                    activation=layer.activation)
                 # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "d"), delimiter="; ")
                 # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "dw"), delimiter="; ")
                 # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "db"), delimiter="; ")
@@ -511,7 +521,8 @@ class Model(object):
                     weights_shape=layer.weights.shape,
                     stride=layer.stride,
                     output=image,
-                    z_vals=layer.z_values)
+                    z_vals=layer.z_values,
+                    activation=layer.activation)
                 # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "d"), delimiter="; ")
                 # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "dw"), delimiter="; ")
                 # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "db"), delimiter="; ")
@@ -537,7 +548,7 @@ class Model(object):
             log.debug("dw.shape : %s", dw.shape)
             log.debug("db.shape : %s", db.shape)
 
-            # if l+1 == 2:
+            # if l+1 == 5:
             #     sys.exit(0)
 
         return self.layers[-1].output, nabla_b, nabla_w
@@ -634,6 +645,7 @@ class Model(object):
             # ex_feedforward += execution_feedforward
 
             final_res, delta_b, delta_w = self.backprop(image, label)
+
             # end2 = time.time()
             # execution_backprop = end2 - end1
             # ex_backprop += execution_backprop
@@ -667,11 +679,25 @@ class Model(object):
 
         for ix, (layer_nabla_w, layer_nabla_b) in enumerate(zip(nabla_w, nabla_b)):
             layer = self.layers[weight_index[ix]]
-            # print "type(layer_nabla_w) : ",layer_nabla_w
-            # print "type(layer_nabla_b) : ",layer_nabla_b
-            # print "type(layer_nabla_b) : ",layer_nabla_b
+            # print "idx : ",str(ix)
+            # print "type(layer type) : ",type(layer)
+            # print "type(layer.weights) : ",layer.weights.shape
+            # print "type(layer_nabla_w) : ",layer_nabla_w.shape
+            # save_matrix(layer_nabla_w, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "nw"), delimiter="; ")
+
+            # print "type(layer.biases) : ",layer.biases.shape
+            # print "type(layer_nabla_b) : ",layer_nabla_b.shape
+            # save_matrix(layer_nabla_b, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "nb"), delimiter="; ")
+
+            # save_matrix(layer.weights, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "w"),delimiter="; ")
+            # save_matrix(layer.biases, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "b"),delimiter="; ")
+
             layer.weights -= eta * layer_nabla_w / batch_size
             layer.biases -= eta * layer_nabla_b / batch_size
+
+            # save_matrix(layer.weights, "csv/backprop/test/{0}_{1}_{2}.csv".format(str(ix), "w", "after"), delimiter="; ")
+            # save_matrix(layer.biases, "csv/backprop/test/{0}_{1}_{2}.csv".format(str(ix), "b", "after"), delimiter="; ")
+
 
         return error
 

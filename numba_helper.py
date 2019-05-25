@@ -20,7 +20,7 @@ from helper import *
 #FEED FORWARD
 # @numba.njit(parallel=True)
 @numba.njit()
-def convole_loop(num_filters, z_values, input_neurons, width_in, weights, filter_size, stride, biases, output):
+def convole_loop(num_filters, z_values, activation, input_neurons, width_in, weights, filter_size, stride, biases, output):
     act_length1d = output.shape[1]  # dim1 * dim2
 
     for j in numba.prange(num_filters):
@@ -45,7 +45,8 @@ def convole_loop(num_filters, z_values, input_neurons, width_in, weights, filter
 
             z = z_values[j][i]
             # output[j][i] = 1.0/(1.0 + np.exp(-z)) # activation function
-            output[j][i] = activation(z) # activation function
+            output[j][i] = activate(z, activation)# activation function
+            # output[j][i] = sigmoid(z)# activation function
 
             slide += stride
 
@@ -98,23 +99,22 @@ def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices
 
 # BACKPROP
 @numba.njit()
-def backprop_conv_loop(num_filters, total_deltas_per_layer, output, z_vals, filter_size, delta, delta_w, delta_b, stride):
+def backprop_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):
     for j in range(num_filters):
         slide = 0
         row = 0
 
         for i in range(total_deltas_per_layer):
             to_conv = output[:, row:filter_size + row, slide:filter_size + slide]
-            # print "## slide : ", slide
-            # print "## filter_size : ", filter_size
-            # print "## to_conv.shape : ", to_conv.shape
-            # print "## delta_w[j].shape  : ", delta_w[j].shape
+            # print "############################"
+            # print "## delta[j][i] : ", delta[j][i]
+            # print "## to_conv : ", to_conv
             #
             # sys.exit(0)
-
-            # delta_w[j] += to_conv * delta[j][i]
-
+            # temp = to_conv * delta[j][i]
+            # print "## to_conv * delta[j][i]  : ", temp
             delta_w[j] += to_conv * delta[j][i] #versi sotoy awb
+            # print "## delta_w[j]  : ", delta_w[j]
             delta_b[j] += delta[j][i]  # not fully sure, but im just summing up the bias deltas over the conv layer
             slide += stride
 
