@@ -87,6 +87,7 @@ class ConvLayer(object):
         self.z_values = self.z_values.reshape((self.num_filters, self.output_dim1, self.output_dim2))
         self.output = self.output.reshape((self.num_filters, self.output_dim1, self.output_dim2))
 
+
 class PoolingLayer(object):
 
     def __init__(self, input_shape, poolsize=(2, 2)):
@@ -504,6 +505,7 @@ class Model(object):
                     output=prev_output,
                     z_vals=layer.z_values,
                     activation=layer.activation)
+
                 # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "d"), delimiter="; ")
                 # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "dw"), delimiter="; ")
                 # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "db"), delimiter="; ")
@@ -596,6 +598,7 @@ class Model(object):
 
                 losses += loss
                 # log.info( "losses : %s", losses)
+
             mean_error.append(round(losses / batch_size, 2))
             log.info( "mean error : %s", mean_error)
 

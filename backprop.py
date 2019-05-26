@@ -91,6 +91,33 @@ def backprop_3d_to_1d(delta, weights, output, z_vals, activation):
 
     return delta_b, delta_w, delta
 
+@numba.njit()
+def backprop_3d_to_3d(delta, weights, output, z_vals, activation):
+    # log.debug("## delta.shape : %s", delta.shape)
+    # log.debug("## weights.shape : %s", weights.shape)
+    # log.debug("## z_vals.shape : %s", z_vals.shape)
+
+    # sp = activation_prime(z_vals)
+
+    sp = activate_prime(z_vals, activation)
+
+    # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
+    delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
+
+    delta_b = delta
+    depth, dim1, dim2 = output.shape
+    output = output.reshape((1, depth * dim1 * dim2))
+    delta_w = np.dot(delta, output)
+    delta_w = delta_w.reshape((delta.shape[0], depth,dim1,dim2))
+
+    # print "backprop_1d_to_1d next_weights : ", next_weights.shape
+    # print "backprop_1d_to_3d delta : ", delta.shape
+    # print "backprop_1d_to_3d delta_w : ", delta_w.shape
+    # print "backprop_1d_to_3d delta_b : ", delta_b.shape
+    # log.debug("-> [backprop_3d_to_1d]  delta %s, delta_w : %s, delta_b : %s ", delta.shape, delta_w.shape,delta_b.shape)
+
+    return delta_b, delta_w, delta
+
 #test(
 @numba.njit()
 def backprop_conv(delta, weights_shape, stride, output, z_vals, activation):

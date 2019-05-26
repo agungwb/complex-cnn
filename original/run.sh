@@ -1,3 +1,3 @@
 #!/bin/bash
 
-nohup python run.py &> logs/run.out &
+nohup python -u run.py &> logs/run.out &
