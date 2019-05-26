@@ -391,7 +391,6 @@ class Model(object):
         final_output = self.layers[-1].output
 
         loss_function = self.layers[-1].lost_function
-        print "loss_function : ",loss_function
 
         delta = loss_prime(label, final_output, loss_function)   # Error * activation_prime(z values layer before)
 

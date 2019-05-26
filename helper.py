@@ -79,15 +79,19 @@ def sigmoid_split_complex(z):
 def sigmoid_split_complex_prime(z):
     return sigmoid_prime(z.real) + (1j * sigmoid_prime(z.imag))
 
-@numba.njit()
+# @numba.njit()
 def loss(desired,final, loss_function):
     if loss_function == 1:
         return quadratic_loss(desired, final)
+    elif loss_function == 2:
+        return binary_cross_entropy_loss(desired, final)
 
-@numba.njit()
+# @numba.njit()
 def loss_prime(desired, final, loss_function):
     if loss_function == 1:
         return quadratic_loss_prime(desired, final)
+    elif loss_function == 2:
+        return binary_cross_entropy_loss_prime(desired, final)
 
     # return desired-final
 
@@ -99,19 +103,19 @@ def quadratic_loss(desired, final):
 def quadratic_loss_prime(desired, final):
     return final - desired
 
-@numba.njit()
+# @numba.njit()
 def binary_cross_entropy_loss(desired, final):
     if final == 1:
         return -np.log(desired)
     else:
         return -np.log(1 - desired)
 
-@numba.njit()
+# @numba.njit()
 def binary_cross_entropy_loss_prime(desired, final):
     if final == 1:
-        return -np.log(desired)
+        return desired-1
     else:
-        return -np.log(1 - desired)
+        return desired
 
 def loss_complex(desired,final):
     return 0.5*np.sum(desired.real-final.real)**2

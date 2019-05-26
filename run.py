@@ -199,7 +199,7 @@ net = Model(input_shape,
                     {
                         'num_classes': OUTPUT,
                         'activation': 1,
-                        'loss_function': 1
+                        'loss_function': 2
                     }
                 }
             ])
