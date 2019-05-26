@@ -105,14 +105,14 @@ def quadratic_loss_prime(desired, final):
 
 # @numba.njit()
 def binary_cross_entropy_loss(desired, final):
-    if final == 1:
+    if final[0] == 1:
         return -np.log(desired)
     else:
         return -np.log(1 - desired)
 
 # @numba.njit()
 def binary_cross_entropy_loss_prime(desired, final):
-    if final == 1:
+    if final[0] == 1:
         return desired-1
     else:
         return desired
