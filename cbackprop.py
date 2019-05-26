@@ -35,7 +35,7 @@ def backprop_1d_to_1d(delta, weights, output, z_vals):
 
     return delta_b, delta_w, delta
 
-@numba.njit()
+@numba.njit(parallel=True)
 def backprop_1d_to_1d_final(delta, output, z_vals):
 
     sp = tanh_split_complex_prime(z_vals)

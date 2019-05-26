@@ -159,6 +159,7 @@ log.info('len(training_data) : %s', len(training_data))
 log.info('len(test_data) : %s', len(test_data))
 
 #activation: 1. sigmoid, 2.tanh, 3.relu
+#loss_function: 1. quadratic, 2. binary_cross_entropy
 
 net = Model(input_shape,
             layer_config = [
@@ -167,7 +168,7 @@ net = Model(input_shape,
                         'filter_size': 5,
                         'stride': 1,
                         'num_filters': 20,
-                        'activation': 2
+                        'activation': 3
                     }
                 },
                 {'pool_layer':
@@ -180,7 +181,7 @@ net = Model(input_shape,
                         'filter_size': 3,
                         'stride': 1,
                         'num_filters': 50,
-                        'activation': 2
+                        'activation': 3
                     }
                 },
                 {'pool_layer':
@@ -191,13 +192,14 @@ net = Model(input_shape,
                 {'fc_layer':
                     {
                         'num_output': 30,
-                        'activation': 2
+                        'activation': 3
                     }
                 },
                 {'final_layer':
                     {
                         'num_classes': OUTPUT,
-                        'activation': 1
+                        'activation': 1,
+                        'loss_function': 1
                     }
                 }
             ])

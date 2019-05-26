@@ -66,6 +66,7 @@ def sigmoid_split_complex_prime(z):
 def loss(desired, final):
     return quadratic_loss(desired, final)
 
+@numba.njit()
 def loss_prime(desired, final):
     return quadratic_loss_prime(desired, final)
 

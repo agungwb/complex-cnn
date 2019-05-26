@@ -80,13 +80,38 @@ def sigmoid_split_complex_prime(z):
     return sigmoid_prime(z.real) + (1j * sigmoid_prime(z.imag))
 
 @numba.njit()
-def loss(desired,final):
+def loss(desired,final, loss_function):
+    if loss_function == 1:
+        return quadratic_loss(desired, final)
+
+@numba.njit()
+def loss_prime(desired, final, loss_function):
+    if loss_function == 1:
+        return quadratic_loss_prime(desired, final)
+
+    # return desired-final
+
+@numba.njit()
+def quadratic_loss(desired, final):
     return 0.5*np.sum(desired-final)**2
 
 @numba.njit()
-def loss_prime(desired, final):
-    return final-desired
-    # return desired-final
+def quadratic_loss_prime(desired, final):
+    return final - desired
+
+@numba.njit()
+def binary_cross_entropy_loss(desired, final):
+    if final == 1:
+        return -np.log(desired)
+    else:
+        return -np.log(1 - desired)
+
+@numba.njit()
+def binary_cross_entropy_loss_prime(desired, final):
+    if final == 1:
+        return -np.log(desired)
+    else:
+        return -np.log(1 - desired)
 
 def loss_complex(desired,final):
     return 0.5*np.sum(desired.real-final.real)**2
@@ -115,59 +140,13 @@ def relu(z):
 
 @numba.njit()
 def relu_prime(z):
-    # return np.ones(z.shape)
-    # z[z>=0] = 1
-    # z[z<0] = 0
-    # np.maximum(z,0)
-    # np.minimum(z,1)
-
     return (z>=0).astype(z.dtype)
 
-    # return np.where(z>=0, 1, 0)
+def softmax(z):
+    return np.exp(z) / np.sum(np.exp(z))
 
-    # dim = len(z.shape)
-    #
-    # if dim == 1:
-    #     return relu_prime_1d(z)
-    #     # return z
-    # elif dim == 2:
-    #     # m = z.shape[0]
-    #     # n = z.shape[1]
-    #     return z
-    # elif dim == 3:
-    #     # m = z.shape[0]
-    #     # n = z.shape[1]
-    #     # o = z.shape[2]
-    #     return z
-    # else:
-    #     return z
-    # elif dim == 2:
-    #     x = 10
-        # for i in range(x):
-        #     if z[i] > 0:
-        #         z[i] = 1
-        #     else:
-        #         z[i] = 0
-    # elif len(dim) == 2:
-    #     x = 10
-        # x, y = z.shape
-    #     for i in range(x):
-    #         for j in range(y):
-    #             if z[i][j] > 0:
-    #                 z[i][j] = 1
-    #             else:
-    #                 z[i][j] = 0
-    # elif len(z.shape) == 3:
-    #     x, y, z = z.shape
-    #     for i in range(x):
-    #         for j in range(y):
-    #             for k in range(z):
-    #                 if z[i][j][k] > 0:
-    #                     z[i][j][k] = 1
-    #                 else:
-    #                     z[i][j][k] = 0
-
-    # return z
+# def softmax_prime(z):
+#     return np.exp(z) / np.sum(np.exp(z))
 
 @numba.njit
 def initiate_weights_conv(num_filters, depth, filter_size):

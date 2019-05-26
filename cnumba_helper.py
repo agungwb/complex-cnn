@@ -24,7 +24,7 @@ def convole_loop(num_filters, act_length1d, z_values, input_neurons, width_in, w
                 slide = 0
                 row += stride  # go to next row
 
-@numba.njit()
+@numba.njit(parallel=True)
 def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices, output):
     # for each filter map
     for j in numba.prange(depth):
@@ -57,13 +57,13 @@ def pool_loop(depth, pool_length1d, input_image, width_in, poolsize, max_indices
 
 
 # BACKPROP
-@numba.njit()
+@numba.njit(parallel=True)
 def backprop_pool_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):
-    for j in range(num_filters):
+    for j in numba.prange(num_filters):
         slide = 0
         row = 0
 
-        for i in range(total_deltas_per_layer):
+        for i in numba.prange(total_deltas_per_layer):
             to_conv = output[:, row:filter_size + row, slide:filter_size + slide]
 
             delta_w[j] += np.multiply(to_conv, delta[j][i])
@@ -74,7 +74,7 @@ def backprop_pool_to_conv_loop(num_filters, total_deltas_per_layer, output, filt
                 slide = 0
                 row += stride
 
-@numba.njit()
+@numba.njit(parallel=True)
 def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d, pool_output, delta, stride):
 
     for d in numba.prange(depth):
@@ -108,12 +108,12 @@ def backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_f
     # time = end - start
     # print "TIME : ", time
 
-@numba.njit()
+@numba.njit(parallel=True)
 def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, pool_output, delta, width, delta_new):
     for d in range(depth):    # depth is the same for conv + pool layer
         row = 0
         slide = 0
-        for i in range(max_indices.shape[1]):
+        for i in numba.prange(max_indices.shape[1]):
             toPool = input_from_conv[d][row:poolsize[0] + row, slide:poolsize[0] + slide]
 
             # calculate the new delta for the conv layer based on the max result + pooling input
@@ -130,13 +130,13 @@ def backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, p
             # tile_to_pool = toPool.reshape((dim1 * dim2))
             tile_to_pool = np.zeros((dim1 * dim2)) + 0j
 
-            for r in range(dim1):
-                for c in range(dim2):
+            for r in numba.prange(dim1):
+                for c in numba.prange(dim2):
                     tile_to_pool[r*dim1 + c] = toPool[r][c]
 
             new_delta = np.zeros((tile_to_pool.shape)) + 0j
 
-            for i in range(len(tile_to_pool)):
+            for i in numba.prange(len(tile_to_pool)):
                 num = tile_to_pool[i]
                 m_num = np.abs(num)
                 m_res = np.abs(res)

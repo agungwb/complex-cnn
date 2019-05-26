@@ -174,11 +174,12 @@ class FullyConnectedLayer(Layer):
 
 
 class ClassifyLayer(Layer):
-    def __init__(self, num_inputs, num_classes, activation):
+    def __init__(self, num_inputs, num_classes, activation, loss_function):
         super(ClassifyLayer, self).__init__(num_inputs, num_classes)
         num_inputs, col = num_inputs
         self.num_classes = num_classes
         self.activation = activation
+        self.lost_function = loss_function
 
         # self.weights = np.random.randn(self.num_classes, num_inputs)
         # # print "self.weights.shape : ", self.weights.shape
@@ -389,7 +390,12 @@ class Model(object):
         # set first params on the final layer
         final_output = self.layers[-1].output
 
-        delta = loss_prime(label, final_output)   # Error * activation_prime(z values layer before)
+        loss_function = self.layers[-1].lost_function
+        print "loss_function : ",loss_function
+
+        delta = loss_prime(label, final_output, loss_function)   # Error * activation_prime(z values layer before)
+
+
         # delta = loss_prime(final_output, label) * activation_prime(self.layers[-1].z_values)  # Error * activation_prime(z values layer before)
         last_weights = None
         final = True
@@ -666,7 +672,8 @@ class Model(object):
         # print "TIME total : ", ex_total
 
         ################## print LOSS ############
-        error = loss(label, final_res)
+        loss_function = self.layers[-1].lost_function
+        error = loss(label, final_res, loss_function)
         log.info("error : %s", error)
 
 

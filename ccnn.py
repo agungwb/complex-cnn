@@ -338,6 +338,7 @@ class Model(object):
         return final_activation
 
 
+    @numba.njit()
     def backprop(self, image, label):
         nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]  # create nabla_weight for every layer with same shape
         nabla_b = [np.zeros(s) for s in self.layer_biases_shapes]  # create nabla_biases for every layer with same shape
