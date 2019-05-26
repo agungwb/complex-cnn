@@ -55,13 +55,13 @@ import matplotlib.pyplot as plt
 ######################### TEST IMAGE ##########################
 
 
-ETA = 0.001 #learning-rate (maybe)
+ETA = 1.5 #learning-rate (maybe)
 EPOCHS = 10 #default 5
 WIDTH = 36
 HEIGHT = 36
 CHANNEL = 1
 INPUT_SHAPE = (HEIGHT*WIDTH)     # for mnist
-BATCH_SIZE = 100  #defalut 10
+BATCH_SIZE = 32  #defalut 10
 LMBDA = 0.1
 OUTPUT = 1
 
@@ -168,7 +168,7 @@ net = Model(input_shape,
                         'filter_size': 5,
                         'stride': 1,
                         'num_filters': 20,
-                        'activation': 3
+                        'activation': 1
                     }
                 },
                 {'pool_layer':
@@ -181,7 +181,7 @@ net = Model(input_shape,
                         'filter_size': 3,
                         'stride': 1,
                         'num_filters': 50,
-                        'activation': 3
+                        'activation': 1
                     }
                 },
                 {'pool_layer':
@@ -192,14 +192,14 @@ net = Model(input_shape,
                 {'fc_layer':
                     {
                         'num_output': 30,
-                        'activation': 3
+                        'activation': 1
                     }
                 },
                 {'final_layer':
                     {
                         'num_classes': OUTPUT,
                         'activation': 1,
-                        'loss_function': 2
+                        'loss_function': 1
                     }
                 }
             ])
