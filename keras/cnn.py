@@ -18,8 +18,8 @@ epochs = 100
 # the data, split between train and test sets
 # (x_train, y_train), (x_test, y_test) = mnist.load_data()
 # (x_train, y_train), (x_test, y_test) = number_loader.load_data()
-# img_rows, img_cols , (x_train, y_train), (x_test, y_test) = hanacaraka_loader.load_data()
-img_rows, img_cols , (x_train, y_train), (x_test, y_test) = mammogram_loader.load_data("real")
+img_rows, img_cols , (x_train, y_train), (x_test, y_test) = hanacaraka_loader.load_data()
+# img_rows, img_cols , (x_train, y_train), (x_test, y_test) = mammogram_loader.load_data("real")
 
 
 if K.image_data_format() == 'channels_first':
@@ -51,9 +51,9 @@ print "y_test.shape : ",y_test.shape
 
 
 model = Sequential()
-model.add(Conv2D(50, kernel_size=(5, 5), activation='relu', input_shape=input_shape))
+model.add(Conv2D(20, kernel_size=(5, 5), activation='relu', input_shape=input_shape))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(100, (3, 3), activation='relu'))
+model.add(Conv2D(50, (3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 # model.add(Dropout(0.25))
 model.add(Flatten())

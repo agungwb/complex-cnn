@@ -178,7 +178,7 @@ net = Model(input_shape,
                     {
                         'filter_size': 5,
                         'stride': 1,
-                        'num_filters': 50,
+                        'num_filters': 20,
                         'activation': 1
                     }
                 },
@@ -191,7 +191,7 @@ net = Model(input_shape,
                     {
                         'filter_size': 3,
                         'stride': 1,
-                        'num_filters': 100,
+                        'num_filters': 50,
                         'activation': 1
                     }
                 },
