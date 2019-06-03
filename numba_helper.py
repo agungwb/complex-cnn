@@ -44,9 +44,7 @@ def convole_loop(num_filters, z_values, activation, input_neurons, width_in, wei
             z_values[j][i] = input_sum[0]
 
             z = z_values[j][i]
-            # output[j][i] = 1.0/(1.0 + np.exp(-z)) # activation function
             output[j][i] = activate(z, activation)# activation function
-            # output[j][i] = sigmoid(z)# activation function
 
             slide += stride
 

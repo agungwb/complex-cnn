@@ -6,6 +6,7 @@ from backprop import *
 import mammogram_loader
 import hanacaraka_loader
 import dummy_loader
+import number_loader
 import numba
 
 import numpy as np
@@ -28,6 +29,8 @@ if sys.argv[1] != 'cnn' \
         and sys.argv[1] != 'mnist' \
         and sys.argv[1] != 'hanacaraka' \
         and sys.argv[1] != 'hanacaraka-complex' \
+        and sys.argv[1] != 'number' \
+        and sys.argv[1] != 'number-complex' \
         and sys.argv[1] != 'dummy':
     print("wrong argument: cnn [test] | ccnn [test]")
     print("system terminated")
@@ -55,7 +58,7 @@ import matplotlib.pyplot as plt
 ######################### TEST IMAGE ##########################
 
 
-ETA = 1.5 #learning-rate (maybe)
+ETA = 0.1 #learning-rate (maybe)
 EPOCHS = 10 #default 5
 WIDTH = 36
 HEIGHT = 36
@@ -122,14 +125,22 @@ elif sys.argv[1] == 'hanacaraka-complex':
     training_data, test_data = hanacaraka_loader.load_data_dtcwt()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
+elif sys.argv[1] == 'number':
+    WIDTH = 28
+    HEIGHT = 28
+    OUTPUT = 1
+    EPOCHS = 50
+    training_data, test_data = number_loader.load_data()
+    logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger("__run__")
 elif sys.argv[1] == 'dummy':
     WIDTH = 14
     HEIGHT = 14
     OUTPUT = 1
-    EPOCHS = 1
+    EPOCHS = 10
     BATCH_SIZE = 1
     training_data, test_data = dummy_loader.load_data(max_range=5, dimension=(HEIGHT, WIDTH))
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 else:
     print("no matched mode")
@@ -167,7 +178,7 @@ net = Model(input_shape,
                     {
                         'filter_size': 5,
                         'stride': 1,
-                        'num_filters': 20,
+                        'num_filters': 50,
                         'activation': 1
                     }
                 },
@@ -180,7 +191,7 @@ net = Model(input_shape,
                     {
                         'filter_size': 3,
                         'stride': 1,
-                        'num_filters': 50,
+                        'num_filters': 100,
                         'activation': 1
                     }
                 },

@@ -15,6 +15,7 @@ import numpy as np
 PATH_CANCER = "dataset/hanacaraka/ga";
 PATH_NORMAL = "dataset/hanacaraka/ra";
 
+
 FILE_TIPE = ".jpg"
 
 def load_data():
@@ -39,13 +40,13 @@ def load_data():
     n = len(dataset_cancer)
 
     # training_data.extend(dataset_cancer[:int(0.9*n)])
-    dataset_cancer = dataset_cancer[0:int(n/10)]
     training_data.extend(dataset_cancer)
+    print "dataset cancer : ", str(n)
 
     # validation_data.extend(dataset_cancer[int(0.8*n):int(0.9*n)])
 
     # test_data.extend(dataset_cancer[int(0.9*n):])
-    test_data.extend(dataset_cancer[:200])
+    test_data.extend(dataset_cancer[:30])
 
     # load data normal
     dataset_normal = list()
@@ -59,15 +60,19 @@ def load_data():
             dataset_normal.append(tuple((input_normal, output_normal)))
     random.shuffle(dataset_normal)
     n = len(dataset_normal)
+    print "dataset normal : ", str(n)
 
-    training_data.extend(dataset_normal[:int(0.9 * n)])
+    # training_data.extend(dataset_normal[:int(0.9 * n)])
+    training_data.extend(dataset_normal)
+
+    print "dataset total : ", len(training_data)
     # dataset_normal = dataset_normal[0:int(n / 10)]
     # training_data.extend(dataset_normal)
 
     # validation_data.extend(dataset_normal[int(0.8 * n):int(0.9 * n)])
 
-    test_data.extend(dataset_normal[int(0.9 * n):])
-    # test_data.extend(dataset_normal[:200])
+    # test_data.extend(dataset_normal[int(0.9 * n):])
+    test_data.extend(dataset_normal[:30])
 
     # return (training_data, validation_data, test_data)
     return (training_data, test_data)

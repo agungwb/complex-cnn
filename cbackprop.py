@@ -23,11 +23,8 @@ log = logging.getLogger("__backprop__")
 
 
 @numba.njit()
-def backprop_1d_to_1d(delta, weights, output, z_vals):
-
-
-    sp = activation_prime(z_vals)
-    # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
+def backprop_1d_to_1d(delta, weights, output, z_vals, activation):
+    sp = activate_prime(z_vals, activation)
     delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
 
     delta_b = delta
@@ -35,11 +32,10 @@ def backprop_1d_to_1d(delta, weights, output, z_vals):
 
     return delta_b, delta_w, delta
 
-@numba.njit(parallel=True)
-def backprop_1d_to_1d_final(delta, output, z_vals):
-
-    sp = tanh_split_complex_prime(z_vals)
-    delta = delta * sp
+@numba.njit()
+def backprop_1d_to_1d_final(loss_prime, output, z_vals, activation):
+    sp = activate_prime(z_vals, activation)
+    delta = loss_prime * sp
 
     delta_b = delta
     delta_w = np.dot(delta, output.transpose())
@@ -47,12 +43,10 @@ def backprop_1d_to_1d_final(delta, output, z_vals):
     return delta_b, delta_w, delta
 
 
-# fc to pool
 @numba.njit()
-def backprop_3d_to_1d(delta, weights, output, z_vals):
-    sp = activation_prime(z_vals)
+def backprop_3d_to_1d(delta, weights, output, z_vals, activation):
+    sp = activate_prime(z_vals, activation)
 
-    # print 'w,d,z_vals: ', prev_weights.shape, delta.shape, sp.shape, prev_activations.shape
     delta = np.dot(weights.transpose(), delta) * sp  # backprop to calculate error (delta) at layer - 1
 
     delta_b = delta
@@ -63,82 +57,89 @@ def backprop_3d_to_1d(delta, weights, output, z_vals):
 
     return delta_b, delta_w, delta
 
-
-# test(
 @numba.njit()
-def backprop_pool_to_conv(delta, weights_shape, stride, output, prev_z_vals):
+def backprop_3d_to_3d(delta, weights, output, z_vals, activation):
+
+    sp = activate_prime(z_vals, activation)
+
+    delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
+
+    delta_b = delta
+    depth, dim1, dim2 = output.shape
+    output = output.reshape((1, depth * dim1 * dim2))
+    delta_w = np.dot(delta, output)
+    delta_w = delta_w.reshape((delta.shape[0], depth,dim1,dim2))
+
+    return delta_b, delta_w, delta
+
+@numba.njit()
+def backprop_conv(delta, weights_shape, stride, output, z_vals, activation):
     '''weights passed in are the ones between pooling and fc layer'''
 
     num_filters, depth, filter_size, filter_size = weights_shape
 
+    delta = activate_prime(z_vals, activation) * delta
+
     delta_b = np.zeros((num_filters, 1)) + 0j
-    delta_w = np.zeros((weights_shape)) + 0j  # you need to change the dims of weights
+    delta_w = np.zeros((weights_shape))  + 0j # you need to change the dims of weights
 
-    # print delta_w.shape, delta_b.shape, delta.shape
-    total_deltas_per_layer = (delta.shape[1]) * (delta.shape[2])
-    # print 'total_deltas_per_layer', total_deltas_per_layer
-    delta = delta.reshape((delta.shape[0], delta.shape[1] * delta.shape[2]))
-    backprop_pool_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b,
-                               stride)
+    x, y, z = delta.shape
 
-    return delta_b, delta_w
+    total_deltas_per_layer = y * z  # print delta_w.shape, delta_b.shape, delta.shape
+    delta = delta.reshape((x, y * z))  # print 'total_deltas_per_layer', total_deltas_per_layer
+    delta, delta_b, delta_w = backprop_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b,stride)
+
+    delta = delta.reshape((x, y, z))
+
+    return delta, delta_b, delta_w
 
 
-# @numba.njit()
-def backprop_conv_to_pool(delta, weights, input_from_conv, max_indices, poolsize, pool_output, from_conv=False):
+@numba.njit()
+def backprop_pool(delta, weights, input_from_conv, max_indices, poolsize, pool_output):
 
-    x, y, z = pool_output.shape
-    a, b, c, d = weights.shape
+    x,y,z = pool_output.shape
+    a,b,c,d = weights.shape
 
     # same for the max index matrix
     max_indices = max_indices.reshape((x, y * z, 2))
 
-    # backprop delta from fc to pool layer
 
-    if not from_conv:
-        weights = weights.reshape((a, b * c * d))
-        pool_output = pool_output.reshape((x * y * z, 1))
+    weights = weights.reshape((a, b * c * d))
+    pool_output = pool_output.reshape((x * y * z, 1))
 
-        # sp = pool_output #versi awb sotoy, pooling gak pake activation
-        sp = activation_prime(pool_output)  # versi old
-        # log.debug("## sp.shape : %s", sp.shape)
-        # log.debug("## weights.transpose().shape : %s", weights.transpose().shape)
-        delta = np.dot(weights.transpose(), delta) * sp  # backprop to calc delta on pooling layer
-        # log.debug("## delta.shape (after) : %s", delta.shape)
-        delta = delta.reshape((x, y * z))
-    else:
-        stride = 1
-        filter_size = c
-        padding = 0
-
-        delta_temp = delta
-        depth, dim1, dim2 = delta_temp.shape
-
-        h = ((dim1 - 1) * stride) + filter_size - (2 * padding)
-        w = ((dim2 - 1) * stride) + filter_size - (2 * padding)
-
-        delta = np.zeros((x, y * z)) + 0j
-
-        num_filters = x
-        act_length1d = y * z
-
-        ##PARALLEL
-        # import time
-        # start = time.time()
-        backprop_conv_to_pool_loop(depth, filter_size, dim1, dim2, delta_temp, num_filters, weights, act_length1d,
-                                   pool_output, delta, stride)
-        # end = time.time()
-        # time = end - start
-        # print "TIME backprop_conv_to_pool_loop: ",time
-        ##endfunction
+    # sp = pool_output #versi awb sotoy, pooling gak pake activation
+    # sp = activation_prime(pool_output) #versi old
+    # delta = np.dot(weights.transpose(), delta) * sp         # backprop to calc delta on pooling layer
+    delta = np.dot(weights.transpose(), delta)         # versi awb without sp because there's no activation function
+    delta = delta.reshape((x, y * z))
 
     pool_output = pool_output.reshape((x, y * z))
+    #
+    # depth, height, width = input_from_conv.shape
+    # delta_new = np.zeros((depth, height, width)) # calc the delta on the conv layer
 
-    depth, height, width = input_from_conv.shape
-    delta_new = np.zeros((depth, height, width)) + 0j # calc the delta on the conv layer
+    delta_new = backprop_pool_loop(input_from_conv, max_indices, poolsize, pool_output, delta)
 
-    backprop_conv_to_pool_loop1(depth, max_indices, input_from_conv, poolsize, pool_output, delta, width, delta_new)
     return delta_new
+
+@numba.njit()
+def backprop_pool_from_conv(delta, weights, input_from_conv, max_indices, poolsize, pool_output, stride, filter_size, padding):
+
+    x,y,z = pool_output.shape
+
+    # same for the max index matrix
+    max_indices = max_indices.reshape((x, y * z, 2))
+
+    delta_new = backprop_pool_from_conv_loop(delta, weights, pool_output, stride, filter_size)
+
+    pool_output = pool_output.reshape((x, y * z))
+    #
+    # depth, height, width = input_from_conv.shape
+    # delta_new = np.zeros((depth, height, width)) # calc the delta on the conv layer
+
+    delta_new_expanded = backprop_pool_loop(input_from_conv, max_indices, poolsize, pool_output, delta_new)
+
+    return delta_new_expanded
 
 
 @numba.njit()
@@ -159,13 +160,7 @@ def backprop_to_conv(delta, weights_shape, stride, output, prev_z_vals):
     # print 'total_deltas_per_layer', total_deltas_per_layer
     delta = delta.reshape((delta.shape[0], delta.shape[1] * delta.shape[2]))
 
-    # PARALLEL
-    # import time
-    # start = time.time()
     backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride)
-    # end = time.time()
-    # time = end - start
-    # print "TIME backprop_to_conv_loop: ",time
 
     return delta_b, delta_w
 

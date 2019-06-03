@@ -286,7 +286,7 @@ class Model(object):
         log.debug("FEED FORWARD")
 
         prev_activation = image
-        # save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
+        save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
 
         # forwardpass
         i = 1
@@ -354,12 +354,12 @@ class Model(object):
                 raise NotImplementedError
 
             prev_activation = layer.output
-            log.debug("###### LAYER: %s ######", str(i))
-            log.debug("name: %s", layer_name)
-            log.debug("input: %s", input_to_feed.shape)
-            log.debug("output: %s", layer.output.shape)
+            # log.debug("###### LAYER: %s ######", str(i))
+            # log.debug("name: %s", layer_name)
+            # log.debug("input: %s", input_to_feed.shape)
+            # log.debug("output: %s", layer.output.shape)
 
-            # if i == 6:
+            # if i == 1:
             #     sys.exit(0)
 
             i = i+1
@@ -550,10 +550,10 @@ class Model(object):
                 last_weights = layer.weights
                 nabla_idx -= 1
 
-            log.debug("####### LAYER : {0}  #########".format(l + 1))
-            log.debug("delta.shape : %s", delta.shape)
-            log.debug("dw.shape : %s", dw.shape)
-            log.debug("db.shape : %s", db.shape)
+            # log.debug("####### LAYER : {0}  #########".format(l + 1))
+            # log.debug("delta.shape : %s", delta.shape)
+            # log.debug("dw.shape : %s", dw.shape)
+            # log.debug("db.shape : %s", db.shape)
 
             # if l+1 == 5:
             #     sys.exit(0)
@@ -562,6 +562,7 @@ class Model(object):
 
 
     def gradient_descent(self, training_data, batch_size, eta, num_epochs, num_output, lmbda=None, test_data=None):
+        random.shuffle(training_data)
         training_size = len(training_data)
 
 
@@ -587,7 +588,6 @@ class Model(object):
 
             for batch in batches:
                 # print '---batch : {}', batch
-                log.info( '------- %d', batch_index)
                 batch_index += 1
 
                 start = time.time()
@@ -598,9 +598,11 @@ class Model(object):
 
                 losses += loss
                 # log.info( "losses : %s", losses)
+                log.info("[Epoch {0}][Iteration {1}] loss : {2}, losses : {3}".format(epoch, batch_index, loss, losses))
 
             mean_error.append(round(losses / batch_size, 2))
-            log.info( "mean error : %s", mean_error)
+            log.info("mean error : %s", mean_error)
+
 
             if test_data:
                 log.info( "################## VALIDATE #################")
@@ -676,8 +678,6 @@ class Model(object):
         ################## print LOSS ############
         loss_function = self.layers[-1].lost_function
         error = loss(label, final_res, loss_function)
-        log.info("error : %s", error)
-
 
         num = 0
         weight_index = []

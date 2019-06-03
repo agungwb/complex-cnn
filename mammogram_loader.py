@@ -52,7 +52,10 @@ def load_data(env):
     # validation_data.extend(dataset_cancer[int(0.8*n):int(0.9*n)])
 
     # test_data.extend(dataset_cancer[int(0.9*n):])
-    test_data.extend(dataset_cancer[:200])
+    if env == 'test':
+        test_data.extend(dataset_cancer[:30])
+    else:
+        test_data.extend(dataset_cancer[:200])
 
     # load data normal
     dataset_normal = list()
@@ -74,7 +77,10 @@ def load_data(env):
     # validation_data.extend(dataset_normal[int(0.8 * n):int(0.9 * n)])
 
     # test_data.extend(dataset_normal[int(0.9 * n):])
-    test_data.extend(dataset_normal[:200])
+    if env == 'test':
+        test_data.extend(dataset_normal[:30])
+    else:
+        test_data.extend(dataset_normal[:200])
 
     # return (training_data, validation_data, test_data)
     return (training_data, test_data)
@@ -115,8 +121,10 @@ def load_data_dtcwt(env):
     # validation_data.extend(dataset_cancer[int(0.8 * n):int(0.9 * n)])
 
     # test_data.extend(dataset_cancer[int(0.9 * n):])
-    test_data.extend(dataset_cancer[:300])
-    test_data.extend(dataset_cancer)
+    if env == 'test':
+        test_data.extend(dataset_cancer[:30])
+    else:
+        test_data.extend(dataset_cancer[:200])
 
     # load data normal
     dataset_normal = list()
@@ -142,7 +150,10 @@ def load_data_dtcwt(env):
 
     # test_data.extend(dataset_normal[int(0.9 * n):])
     # test_data.extend(dataset_normal[:300])
-    test_data.extend(dataset_normal)
+    if env == 'test':
+        test_data.extend(dataset_normal[:30])
+    else:
+        test_data.extend(dataset_normal[:200])
 
     # return (training_data, validation_data, test_data)
     return (training_data, test_data)
