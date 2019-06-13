@@ -12,8 +12,8 @@ import numpy as np
 # except ImportError:
 #     import numpy as np
 
-PATH_CANCER = "dataset/hanacaraka/ga";
-PATH_NORMAL = "dataset/hanacaraka/ra";
+PATH_CANCER = "dataset/hanacaraka-resized/ga";
+PATH_NORMAL = "dataset/hanacaraka-resized/ra";
 
 
 FILE_TIPE = ".jpg"
@@ -34,7 +34,7 @@ def load_data():
         # print "cancer_file : ",cancer_file
         if (cancer_file.endswith(FILE_TIPE)):
             input_cancer = np.asarray(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
-            input_cancer = input_cancer/255.0 #normalize value
+            input_cancer = 1 - (input_cancer/255.0) #normalize value
             dataset_cancer.append(tuple((input_cancer, output_cancer)))
     random.shuffle(dataset_cancer)
     n = len(dataset_cancer)
@@ -56,7 +56,7 @@ def load_data():
         # print "normal_file : ",normal_file
         if (normal_file.endswith(FILE_TIPE)):
             input_normal = np.asarray(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
-            input_normal = input_normal / 255.0  # normalize value
+            input_normal = 1 - (input_normal / 255.0)  # normalize value
             dataset_normal.append(tuple((input_normal, output_normal)))
     random.shuffle(dataset_normal)
     n = len(dataset_normal)
@@ -75,6 +75,11 @@ def load_data():
     test_data.extend(dataset_normal[:30])
 
     # return (training_data, validation_data, test_data)
+
+    # shuffle
+    random.shuffle(training_data)  # randomize training dataset
+    # random.shuffle(test_data)  # randomize training dataset
+
     return (training_data, test_data)
 
 def load_data_dtcwt():
@@ -139,6 +144,9 @@ def load_data_dtcwt():
     test_data.extend(dataset_normal)
 
     # return (training_data, validation_data, test_data)
+    random.shuffle(training_data)  # randomize training dataset
+    # random.shuffle(test_data)  # randomize training dataset
+
     return (training_data, test_data)
 
 

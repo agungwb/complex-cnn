@@ -31,12 +31,14 @@ if sys.argv[1] != 'cnn' \
         and sys.argv[1] != 'hanacaraka-complex' \
         and sys.argv[1] != 'number' \
         and sys.argv[1] != 'number-complex' \
-        and sys.argv[1] != 'dummy':
+        and sys.argv[1] != 'dummy' \
+        and sys.argv[1] != 'dummy-complex':
     print("wrong argument: cnn [test] | ccnn [test]")
     print("system terminated")
     print(0)
 
-if sys.argv[1] == 'ccnn':
+if sys.argv[1] == 'ccnn'\
+        or sys.argv[1].endswith('complex'):
     from ccnn import *
 else:
     from cnn import *
@@ -58,8 +60,8 @@ import matplotlib.pyplot as plt
 ######################### TEST IMAGE ##########################
 
 
-ETA = 0.1 #learning-rate (maybe)
-EPOCHS = 10 #default 5
+ETA = 0.01 #learning-rate (maybe)
+EPOCHS = 20 #default 5
 WIDTH = 36
 HEIGHT = 36
 CHANNEL = 1
@@ -86,6 +88,7 @@ if sys.argv[1] == 'ccnn':
         logging.basicConfig(level=logging.INFO)
         log = logging.getLogger("__run__")
 elif sys.argv[1] == 'cnn':
+    EPOCHS = 30
     WIDTH = 36
     HEIGHT = 36
     OUTPUT = 1
@@ -110,10 +113,10 @@ elif sys.argv[1] == 'mnist':
     log = logging.getLogger("__run__")
 
 elif sys.argv[1] == 'hanacaraka':
-    WIDTH = 78
-    HEIGHT = 60
+    WIDTH = 32
+    HEIGHT = 24
     OUTPUT = 1
-    EPOCHS = 10
+    EPOCHS = 50
     training_data, test_data = hanacaraka_loader.load_data()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
@@ -129,8 +132,16 @@ elif sys.argv[1] == 'number':
     WIDTH = 28
     HEIGHT = 28
     OUTPUT = 1
-    EPOCHS = 50
+    EPOCHS = 10
     training_data, test_data = number_loader.load_data()
+    logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger("__run__")
+elif sys.argv[1] == 'number-complex':
+    WIDTH = 14
+    HEIGHT = 14
+    OUTPUT = 1
+    EPOCHS = 10
+    training_data, test_data = number_loader.load_data_dtcwt()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 elif sys.argv[1] == 'dummy':
@@ -142,12 +153,19 @@ elif sys.argv[1] == 'dummy':
     training_data, test_data = dummy_loader.load_data(max_range=5, dimension=(HEIGHT, WIDTH))
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
+elif sys.argv[1] == 'dummy-complex':
+    WIDTH = 14
+    HEIGHT = 14
+    OUTPUT = 1
+    EPOCHS = 10
+    BATCH_SIZE = 1
+    training_data, test_data = dummy_loader.load_data_complex(max_range=5, dimension=(HEIGHT, WIDTH))
+    logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger("__run__")
 else:
     print("no matched mode")
     print("system terminated")
     sys.exit(0)
-
-
 
 '''
 Args:
@@ -172,29 +190,31 @@ log.info('len(test_data) : %s', len(test_data))
 #activation: 1. sigmoid, 2.tanh, 3.relu
 #loss_function: 1. quadratic, 2. binary_cross_entropy
 
+
+
 net = Model(input_shape,
             layer_config = [
                 {'conv_layer':
                     {
-                        'filter_size': 5,
-                        'stride': 1,
-                        'num_filters': 20,
-                        'activation': 1
-                    }
-                },
-                {'pool_layer':
-                    {
-                        'poolsize': (2,2)
-                    }
-                },
-                {'conv_layer':
-                    {
                         'filter_size': 3,
                         'stride': 1,
-                        'num_filters': 50,
-                        'activation': 1
+                        'num_filters': 20,
+                        'activation': 3
                     }
                 },
+                # {'pool_layer':
+                #     {
+                #         'poolsize': (2,2)
+                #     }
+                # },
+                # {'conv_layer':
+                #     {
+                #         'filter_size': 3,
+                #         'stride': 1,
+                #         'num_filters': 50,
+                #         'activation': 1
+                #     }
+                # },
                 {'pool_layer':
                     {
                         'poolsize': (2,2)
@@ -203,13 +223,13 @@ net = Model(input_shape,
                 {'fc_layer':
                     {
                         'num_output': 30,
-                        'activation': 1
+                        'activation': 3
                     }
                 },
                 {'final_layer':
                     {
                         'num_classes': OUTPUT,
-                        'activation': 1,
+                        'activation': 3,
                         'loss_function': 1
                     }
                 }

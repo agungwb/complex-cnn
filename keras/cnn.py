@@ -11,13 +11,13 @@ import sys
 
 batch_size = 32
 num_classes = 2
-epochs = 100
+epochs = 50
 
 # input image dimensions
 
 # the data, split between train and test sets
 # (x_train, y_train), (x_test, y_test) = mnist.load_data()
-# (x_train, y_train), (x_test, y_test) = number_loader.load_data()
+# img_rows, img_cols , (x_train, y_train), (x_test, y_test) = number_loader.load_data()
 img_rows, img_cols , (x_train, y_train), (x_test, y_test) = hanacaraka_loader.load_data()
 # img_rows, img_cols , (x_train, y_train), (x_test, y_test) = mammogram_loader.load_data("real")
 
@@ -50,17 +50,22 @@ print "y_test.shape : ",y_test.shape
 
 
 
+
 model = Sequential()
 model.add(Conv2D(20, kernel_size=(5, 5), activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(50, (3, 3), activation='relu'))
+# model.add(MaxPooling2D(pool_size=(2, 2)))
+# model.add(Conv2D(50, (3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 # model.add(Dropout(0.25))
 model.add(Flatten())
 model.add(Dense(30, activation='relu'))
 # model.add(Dropout(0.5))
 model.add(Dense(num_classes, activation='sigmoid'))
-model.compile(loss=keras.losses.binary_crossentropy, optimizer=keras.optimizers.Adadelta(), metrics=['accuracy'])
+
+optimizer = keras.optimizers.SGD(lr=0.01, momentum=0.0, decay=0.0, nesterov=False)
+# optimizer = keras.optimizers.Adadelta()
+
+model.compile(loss=keras.losses.binary_crossentropy, optimizer=optimizer, metrics=['accuracy'])
 
 model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1, validation_data=(x_test, y_test))
 score = model.evaluate(x_test, y_test, verbose=1)

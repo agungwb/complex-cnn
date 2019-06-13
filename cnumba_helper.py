@@ -139,8 +139,30 @@ def backprop_pool_from_conv_loop(delta, weights, pool_output, stride, filter_siz
 
     return delta_new
 
+
 @numba.njit()
 def backprop_pool_loop(input_from_conv, max_indices, poolsize, pool_output, delta):
+
+    depth, height, width = input_from_conv.shape
+    delta_new_expanded = np.zeros((depth, height, width)) + 0j  # calc the delta on the conv layer
+
+    # print "delta : ", delta
+
+    for d in range(depth):    # depth is the same for conv + pool layer
+        row = 0
+        for i in range(max_indices.shape[1]):
+
+            x = int(max_indices[d][row][0])
+            y = int(max_indices[d][row][1])
+
+            delta_new_expanded[d][x][y] = delta[d][row]
+
+            row += 1
+
+    return delta_new_expanded
+
+@numba.njit()
+def backprop_pool_loop_OLD(input_from_conv, max_indices, poolsize, pool_output, delta):
 
     depth, height, width = input_from_conv.shape
     delta_new = np.zeros((depth, height, width)) + 0j # calc the delta on the conv layer

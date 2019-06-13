@@ -12,25 +12,18 @@ import numpy as np
 # except ImportError:
 #     import numpy as np
 
-PATH_CANCER = "dataset/mammogram/cancer";
-PATH_NORMAL = "dataset/mammogram/normal";
+PATH_CANCER = "dataset/test/nol";
+PATH_NORMAL = "dataset/test/satu";
 
-PATH_CANCER_TEST = "dataset/mammogram-test/cancer";
-PATH_NORMAL_TEST = "dataset/mammogram-test/normal";
+FILE_TIPE = ".jpg"
 
-FILE_TIPE = ".png"
-
-def load_data(env):
+def load_data():
     training_data = list()
     validation_data = list()
     test_data = list()
 
     path_cancer = PATH_CANCER
     path_normal = PATH_NORMAL
-
-    if env == 'test':
-        path_cancer = PATH_CANCER_TEST
-        path_normal = PATH_NORMAL_TEST
 
     #load data cancer
     dataset_cancer = list()
@@ -40,22 +33,19 @@ def load_data(env):
         # print "cancer_file : ",cancer_file
         if (cancer_file.endswith(FILE_TIPE)):
             input_cancer = np.asarray(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
-            input_cancer = 1 - (input_cancer/255.0) #normalize value
+            input_cancer = input_cancer/255.0 #normalize value
             dataset_cancer.append(tuple((input_cancer, output_cancer)))
     random.shuffle(dataset_cancer)
     n = len(dataset_cancer)
 
     # training_data.extend(dataset_cancer[:int(0.9*n)])
-    # dataset_cancer = dataset_cancer[0:int(n/10)]
     training_data.extend(dataset_cancer)
+    print "dataset nol : ", str(n)
 
     # validation_data.extend(dataset_cancer[int(0.8*n):int(0.9*n)])
 
     # test_data.extend(dataset_cancer[int(0.9*n):])
-    if env == 'test':
-        test_data.extend(dataset_cancer[:30])
-    else:
-        test_data.extend(dataset_cancer[:100])
+    test_data.extend(dataset_cancer[:30])
 
     # load data normal
     dataset_normal = list()
@@ -65,29 +55,30 @@ def load_data(env):
         # print "normal_file : ",normal_file
         if (normal_file.endswith(FILE_TIPE)):
             input_normal = np.asarray(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
-            input_normal = 1 - (input_normal / 255.0)  # normalize value
+            input_normal = input_normal / 255.0  # normalize value
             dataset_normal.append(tuple((input_normal, output_normal)))
     random.shuffle(dataset_normal)
     n = len(dataset_normal)
+    print "dataset satu : ", str(n)
 
     # training_data.extend(dataset_normal[:int(0.9 * n)])
-    # dataset_normal = dataset_normal[0:int(n / 10)]
     training_data.extend(dataset_normal)
+
+    print "dataset total : ", len(training_data)
+    # dataset_normal = dataset_normal[0:int(n / 10)]
+    # training_data.extend(dataset_normal)
 
     # validation_data.extend(dataset_normal[int(0.8 * n):int(0.9 * n)])
 
     # test_data.extend(dataset_normal[int(0.9 * n):])
-    if env == 'test':
-        test_data.extend(dataset_normal[:30])
-    else:
-        test_data.extend(dataset_normal[:100])
+    test_data.extend(dataset_normal[:30])
 
     # return (training_data, validation_data, test_data)
     random.shuffle(training_data)  # randomize training dataset
     # random.shuffle(test_data)  # randomize training dataset
     return (training_data, test_data)
 
-def load_data_dtcwt(env):
+def load_data_dtcwt():
     transform = dtcwt.Transform2d()
     training_data = list()
     validation_data = list()
@@ -95,10 +86,6 @@ def load_data_dtcwt(env):
 
     path_cancer = PATH_CANCER
     path_normal = PATH_NORMAL
-
-    if env == 'test':
-        path_cancer = PATH_CANCER_TEST
-        path_normal = PATH_NORMAL_TEST
 
         #load data cancer
     dataset_cancer = list()
@@ -116,17 +103,15 @@ def load_data_dtcwt(env):
 
     n = len(dataset_cancer)
     # training_data.extend(dataset_cancer[:int(0.9 * n)])
-    # dataset_cancer = dataset_cancer[:int(n/10)]
-    dataset_cancer = dataset_cancer
     training_data.extend(dataset_cancer)
+    # dataset_cancer = dataset_cancer
+    # training_data.extend(dataset_cancer)
 
     # validation_data.extend(dataset_cancer[int(0.8 * n):int(0.9 * n)])
 
-    # test_data.extend(dataset_cancer[int(0.9 * n):])
-    if env == 'test':
-        test_data.extend(dataset_cancer[:30])
-    else:
-        test_data.extend(dataset_cancer[:200])
+    # test_data.extend(dataset_cancer[:int(0.9 * n)])
+    test_data.extend(dataset_cancer[:100])
+    # test_data.extend(dataset_cancer)
 
     # load data normal
     dataset_normal = list()
@@ -145,21 +130,17 @@ def load_data_dtcwt(env):
     n = len(dataset_normal)
     # training_data.extend(dataset_normal[:int(0.9 * n)])
     # dataset_normal = dataset_normal[:n/10]
-    dataset_normal = dataset_normal
     training_data.extend(dataset_normal)
 
     # validation_data.extend(dataset_normal[int(0.8 * n):int(0.9 * n)])
 
     # test_data.extend(dataset_normal[int(0.9 * n):])
-    # test_data.extend(dataset_normal[:300])
-    if env == 'test':
-        test_data.extend(dataset_normal[:30])
-    else:
-        test_data.extend(dataset_normal[:200])
+    test_data.extend(dataset_normal[:100])
 
     # return (training_data, validation_data, test_data)
     random.shuffle(training_data)  # randomize training dataset
     # random.shuffle(test_data)  # randomize training dataset
+
     return (training_data, test_data)
 
 

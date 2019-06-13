@@ -108,17 +108,17 @@ def backprop_pool(delta, weights, input_from_conv, max_indices, poolsize, pool_o
     # sp = pool_output #versi awb sotoy, pooling gak pake activation
     # sp = activation_prime(pool_output) #versi old
     # delta = np.dot(weights.transpose(), delta) * sp         # backprop to calc delta on pooling layer
-    delta = np.dot(weights.transpose(), delta)         # versi awb without sp because there's no activation function
-    delta = delta.reshape((x, y * z))
+    delta_new = np.dot(weights.transpose(), delta)         # versi awb without sp because there's no activation function
+    delta_new = delta_new.reshape((x, y * z))
 
     pool_output = pool_output.reshape((x, y * z))
     #
     # depth, height, width = input_from_conv.shape
     # delta_new = np.zeros((depth, height, width)) # calc the delta on the conv layer
 
-    delta_new = backprop_pool_loop(input_from_conv, max_indices, poolsize, pool_output, delta)
+    delta_new_expanded = backprop_pool_loop(input_from_conv, max_indices, poolsize, pool_output, delta_new)
 
-    return delta_new
+    return delta_new_expanded
 
 @numba.njit()
 def backprop_pool_from_conv(delta, weights, input_from_conv, max_indices, poolsize, pool_output, stride, filter_size, padding):

@@ -9,11 +9,11 @@ import sys
 import scipy
 from scipy import ndimage, misc
 import matplotlib.pyplot as plt
-from helper import *
-from numba_helper import *
+from chelper import *
+from cnumba_helper import *
 from util import *
 
-from backprop import *
+from cbackprop import *
 import logging
 
 import numpy as np
@@ -59,10 +59,10 @@ class ConvLayer(object):
         self.output_dim2 = (self.width_in - self.filter_size + 2 * self.padding) / self.stride + 1
 
         # output convolution layer (before activation function) (num_filters, output_dim1, output_dim2)
-        self.z_values = np.zeros((self.num_filters, self.output_dim1, self.output_dim2))
+        self.z_values = np.zeros((self.num_filters, self.output_dim1, self.output_dim2)) + 0j
 
         # output convolution layer (after activation function) (num_filters, output_dim1, output_dim2)
-        self.output = np.zeros((self.num_filters, self.output_dim1, self.output_dim2))
+        self.output = np.zeros((self.num_filters, self.output_dim1, self.output_dim2)) + 0j
 
     def convolve(self, input):
         '''
@@ -106,7 +106,7 @@ class PoolingLayer(object):
         # print "self.height_out : ",self.height_out
         # print "self.width_out : ",self.width_out
 
-        self.output = np.empty((self.depth, self.height_out, self.width_out))
+        self.output = np.empty((self.depth, self.height_out, self.width_out)) + 0j
         self.max_indices = np.empty((self.depth, self.height_out, self.width_out, 2))
 
     def pool(self, input):
@@ -283,7 +283,7 @@ class Model(object):
         raise NotImplementedError
 
     def feedforward(self, image):
-        log.debug("FEED FORWARD")
+        # log.debug("FEED FORWARD")
 
         prev_activation = image
         save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
@@ -333,7 +333,7 @@ class Model(object):
                 # ex_time = end - start
                 # print "Time PoolingLayer : ", ex_time
                 # for i in range(layer.output.shape[0]):
-                # #     plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
+                #     plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
                 save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "a"), delimiter="; ")
                 save_matrix(layer.max_indices, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "max"), delimiter="; ", mode='1d')
 
@@ -359,7 +359,7 @@ class Model(object):
             # log.debug("input: %s", input_to_feed.shape)
             # log.debug("output: %s", layer.output.shape)
 
-            # if i == 1:
+            # if i == 6:
             #     sys.exit(0)
 
             i = i+1
@@ -369,7 +369,7 @@ class Model(object):
 
 
     def backprop(self, image, label):
-        log.debug("---BACKPROP---")
+        # log.debug("---BACKPROP---")
         nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]  # create nabla_weight for every layer with same shape
         nabla_b = [np.zeros(s) for s in self.layer_biases_shapes]  # create nabla_biases for every layer with same shape
 
@@ -389,14 +389,11 @@ class Model(object):
         # print "layer biases shapes : ", self.layer_biases_shapes
 
         # set first params on the final layer
-        predicted = self.layers[-1].output
-        final = label
+        final_output = self.layers[-1].output
 
         loss_function = self.layers[-1].lost_function
 
-
-
-        delta = loss_prime(predicted, final, loss_function)   # Error * activation_prime(z values layer before)
+        delta = loss_prime(label, final_output.real, loss_function)   # Error * activation_prime(z values layer before)
 
 
         # delta = loss_prime(final_output, label) * activation_prime(self.layers[-1].z_values)  # Error * activation_prime(z values layer before)
@@ -468,6 +465,7 @@ class Model(object):
                     z_vals=layer.z_values,
                     activation=layer.activation)  # (100,1)
                 # layer.weights = layer.weights.reshape((layer.num_output, layer.depth, layer.height_in, layer.width_in))
+
                 save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "d"), delimiter="; ")
                 save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "dw"), delimiter="; ")
                 save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "db"), delimiter="; ")
@@ -565,7 +563,6 @@ class Model(object):
 
 
     def gradient_descent(self, training_data, batch_size, eta, num_epochs, num_output, lmbda=None, test_data=None):
-        random.shuffle(training_data)
         training_size = len(training_data)
 
 
@@ -581,17 +578,18 @@ class Model(object):
         log.info('eta : %s', eta)
 
         for epoch in xrange(num_epochs):
-            log.info("Starting epochs : {0}/{1}".format(epoch,num_epochs))
+            log.info("STARTING EPOCH {0}".format(epoch))
             start = time.time()
             batches = [training_data[k:k + batch_size] for k in xrange(0, training_size, batch_size)]
             losses = 0
 
             batch_index = 0
 
-            n_iteration = int(training_size/batch_size)
+            n_iteration = int(training_size / batch_size)
 
             for batch in batches:
                 # print '---batch : {}', batch
+                # log.info( '------- %d', batch_index)
                 batch_index += 1
 
                 start = time.time()
@@ -607,7 +605,6 @@ class Model(object):
 
             mean_error.append(float(losses) / float(batch_size))
             log.info("Average Loss : {0}".format(mean_error))
-
 
             if test_data:
                 log.info( "################## VALIDATE #################")
@@ -667,8 +664,8 @@ class Model(object):
             # execution_backprop = end2 - end1
             # ex_backprop += execution_backprop
 
-            # print 'predicted.shape : ', predicted.shape
-            # print 'predicted : ', predicted
+            # print 'final_res.shape : ', final_res.shape
+            # print 'final_res : ', final_res
             # print 'delta_b.shape : ', delta_b[0].shape
             # print 'len(delta_b) : ', len(delta_b)
             # print 'delta_w.shape : ', delta_w[0].shape
@@ -688,6 +685,13 @@ class Model(object):
         final = label
 
         error = loss(predicted, final, loss_function)
+
+
+        # print "predicted : ",final_res
+        # print "actual : ",label
+        # print "weights : ", self.layers[-1].weights
+
+
 
         num = 0
         weight_index = []
@@ -714,9 +718,6 @@ class Model(object):
             layer.weights -= eta * layer_nabla_w / batch_size
             layer.biases -= eta * layer_nabla_b / batch_size
 
-            # layer.weights -= eta * layer_nabla_w
-            # layer.biases -= eta * layer_nabla_b
-
             # save_matrix(layer.weights, "csv/backprop/test/{0}_{1}_{2}.csv".format(str(ix), "w", "after"), delimiter="; ")
             # save_matrix(layer.biases, "csv/backprop/test/{0}_{1}_{2}.csv".format(str(ix), "b", "after"), delimiter="; ")
 
@@ -733,23 +734,43 @@ class Model(object):
         test_results = list()
         for d in data:
             result = self.feedforward(d[0])
-            predicted = np.where(result > 0.5, 1, 0)
+            predicted = np.where(result > 0, 1, -1)
             actual = d[1]
 
             log.info("result : %s | predicted : %s | actual : %s", result, predicted, actual)
-
-
             test_results.append((predicted[0][0], actual[0][0]))
 
         # print "test_results : ", test_results
         # print "len(test_results) : ", len(test_results)
         # output_n = len(test_results) if len(test_results) > 1 else 2
 
+        # Confusion Matrix Index
+        # TP 1,1
+        # FP 0,1
+        # FN 1,0
+        # TN 0,0
+
         confusion_matrix = np.zeros([2, 2])
         for test_result in test_results:
+            predicted = int(test_result[0])
+            actual = int(test_result[1])
             # print "test_results[0] : ", test_results[0]
             # print "test_results[1] : ", test_results[1]
-            confusion_matrix[test_result[0]][test_result[1]] += 1
+
+
+            if actual == 1 and predicted == 1:
+                #TRUE POSITIVE
+                confusion_matrix[0][0] += 1
+            elif actual == 1 and predicted == -1:
+                # FALSE NEGATIVE
+                confusion_matrix[1][0] += 1
+            elif actual == -1 and predicted == 1:
+                # FALSE POSITIF
+                confusion_matrix[0][1] += 1
+            elif actual == -1 and predicted == -1:
+                # TRUE NEGATIVE
+                confusion_matrix[1][1] += 1
+
         # print confusion_matrix
 
         n_test = len(data)

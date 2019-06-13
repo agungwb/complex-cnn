@@ -187,7 +187,34 @@ def backprop_pool_from_conv_loop(delta, weights, pool_output, stride, filter_siz
 def backprop_pool_loop(input_from_conv, max_indices, poolsize, pool_output, delta):
 
     depth, height, width = input_from_conv.shape
-    delta_new = np.zeros((depth, height, width))  # calc the delta on the conv layer
+    delta_new_expanded = np.zeros((depth, height, width))  # calc the delta on the conv layer
+
+    # print "delta : ", delta
+
+    for d in range(depth):    # depth is the same for conv + pool layer
+        row = 0
+        for i in range(max_indices.shape[1]):
+            # print "############"
+            # print "max_indices.shape : ",max_indices.shape
+            # print "row : ",row
+            # # print "slide : ",slide
+            # print "int(max_indices[{0}][{1}][0]) : {2}".format(d, row, int(max_indices[d][row][0]))
+            # print "int(max_indices[{0}][{1}][1]) : {2}".format(d, row, int(max_indices[d][row][1]))
+            # print "delta[{0}][{1}] : {2}".format(d,row, delta[d][row])
+
+            x = int(max_indices[d][row][0])
+            y = int(max_indices[d][row][1])
+
+            delta_new_expanded[d][x][y] = delta[d][row]
+            row += 1
+
+    return delta_new_expanded
+
+@numba.njit()
+def backprop_pool_loop_OLD(input_from_conv, max_indices, poolsize, pool_output, delta):
+
+    depth, height, width = input_from_conv.shape
+    delta_new_expanded = np.zeros((depth, height, width))  # calc the delta on the conv layer
 
     for d in range(depth):    # depth is the same for conv + pool layer
         row = 0
@@ -227,13 +254,14 @@ def backprop_pool_loop(input_from_conv, max_indices, poolsize, pool_output, delt
             # print "deltas_from_pooling_old : ",deltas_from_pooling_old
             # print "deltas_from_pooling : ",deltas_from_pooling
 
-            delta_new[d][row:poolsize[0] + row, slide:poolsize[0] + slide] = deltas_from_pooling
+            delta_new_expanded[d][row:poolsize[0] + row, slide:poolsize[0] + slide] = deltas_from_pooling
 
             slide += poolsize[1]
             if slide >= width:
                 slide = 0
                 row+= poolsize[1]
-    return delta_new
+
+    return delta_new_expanded
 
 @numba.njit(parallel=True)
 def backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):
