@@ -113,19 +113,19 @@ elif sys.argv[1] == 'mnist':
     log = logging.getLogger("__run__")
 
 elif sys.argv[1] == 'hanacaraka':
-    WIDTH = 32
-    HEIGHT = 24
+    WIDTH = 78
+    HEIGHT = 60
     OUTPUT = 1
     EPOCHS = 50
     training_data, test_data = hanacaraka_loader.load_data()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 elif sys.argv[1] == 'hanacaraka-complex':
-    WIDTH = 78
-    HEIGHT = 60
+    WIDTH = 32
+    HEIGHT = 24
     OUTPUT = 1
-    EPOCHS = 1
-    training_data, test_data = hanacaraka_loader.load_data_dtcwt()
+    EPOCHS = 20
+    training_data, test_data = hanacaraka_loader.load_data_dtcwt2()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 elif sys.argv[1] == 'number':
@@ -141,7 +141,7 @@ elif sys.argv[1] == 'number-complex':
     HEIGHT = 14
     OUTPUT = 1
     EPOCHS = 10
-    training_data, test_data = number_loader.load_data_dtcwt()
+    training_data, test_data = number_loader.load_data_dtcwt2()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 elif sys.argv[1] == 'dummy':
@@ -180,12 +180,20 @@ Args:
 # label = np.asarray(([1,0])).reshape((2,1))
 
 log.info("training_data[0][0] : %s",training_data[0][0].shape) #training_data = (n_data, label(input, output))
-x,y = training_data[0][0].shape
-input_shape = (1,x,y)
+
+if len(training_data[0][0].shape) == 3:
+    d, x, y = training_data[0][0].shape
+else:
+    d = 1
+    x, y = training_data[0][0].shape
+
+input_shape = (d,x,y)
 log.info('shape of input data: %s', input_shape)
 log.info('len(training_data) : %s', len(training_data))
 # print 'len(validation_data) : ', len(validation_data)
 log.info('len(test_data) : %s', len(test_data))
+
+# sys.exit(0)
 
 #activation: 1. sigmoid, 2.tanh, 3.relu
 #loss_function: 1. quadratic, 2. binary_cross_entropy
@@ -198,7 +206,7 @@ net = Model(input_shape,
                     {
                         'filter_size': 3,
                         'stride': 1,
-                        'num_filters': 20,
+                        'num_filters': 30,
                         'activation': 3
                     }
                 },
@@ -229,8 +237,8 @@ net = Model(input_shape,
                 {'final_layer':
                     {
                         'num_classes': OUTPUT,
-                        'activation': 3,
-                        'loss_function': 1
+                        'activation': 1,
+                        'loss_function': 2
                     }
                 }
             ])

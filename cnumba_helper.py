@@ -87,10 +87,16 @@ def backprop_conv_loop(num_filters, total_deltas_per_layer, output, filter_size,
         row = 0
 
         for i in range(total_deltas_per_layer):
-            to_conv = output[:, row:filter_size + row, slide:filter_size + slide]
-            delta_w[j] += np.multiply(to_conv, delta[j][i]) #versi sotoy awb
+            sub_output = output[:, row:filter_size + row, slide:filter_size + slide]
+
+            # delta_w[j] += (sub_output * delta[j][i]) #versi sotoy awb
+
+            temp_delta_w = (delta[j][i] * sub_output.conj())
+            delta_w[j] += temp_delta_w #versi sotoy awb
+
             # print "## delta_w[j]  : ", delta_w[j]
-            delta_b[j] += delta[j][i]  # not fully sure, but im just summing up the bias deltas over the conv layer
+            temp_delta_b = delta[j][i]
+            delta_b[j] += temp_delta_b  # not fully sure, but im just summing up the bias deltas over the conv layer
             slide += stride
 
             if (slide + filter_size) - stride >= output.shape[2]:  # wrap indices at the end of each row

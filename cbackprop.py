@@ -25,20 +25,29 @@ log = logging.getLogger("__backprop__")
 @numba.njit()
 def backprop_1d_to_1d(delta, weights, output, z_vals, activation):
     sp = activate_prime(z_vals, activation)
-    delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
 
+    # delta = np.dot(weights.transpose(), delta) * sp
+    delta = ((np.dot(weights.real.transpose(), delta.real) + np.dot(weights.imag.transpose(), delta.imag)) * sp.real) \
+            + (1j * ((np.dot(weights.real.transpose(), delta.imag) - np.dot(weights.imag.transpose(), delta.real))) * sp.imag )
+
+    delta_w = np.dot(delta, output.transpose().conj())
     delta_b = delta
-    delta_w = np.dot(delta, output.transpose())
 
     return delta_b, delta_w, delta
 
 @numba.njit()
 def backprop_1d_to_1d_final(loss_prime, output, z_vals, activation):
     sp = activate_prime(z_vals, activation)
-    delta = loss_prime * sp
 
+    # delta = loss_prime * sp
+
+    delta = (loss_prime.real * sp.real) + (1j * loss_prime.imag * sp.imag)
+
+
+    delta_w = np.dot(delta, output.transpose().conj())
     delta_b = delta
-    delta_w = np.dot(delta, output.transpose())
+
+
 
     return delta_b, delta_w, delta
 
@@ -47,13 +56,16 @@ def backprop_1d_to_1d_final(loss_prime, output, z_vals, activation):
 def backprop_3d_to_1d(delta, weights, output, z_vals, activation):
     sp = activate_prime(z_vals, activation)
 
-    delta = np.dot(weights.transpose(), delta) * sp  # backprop to calculate error (delta) at layer - 1
+    # delta = np.dot(weights.transpose(), delta) * sp
+    delta = ((np.dot(weights.real.transpose(), delta.real) + np.dot(weights.imag.transpose(), delta.imag)) * sp.real) \
+            + (1j * ((np.dot(weights.real.transpose(), delta.imag) - np.dot(weights.imag.transpose(), delta.real))) * sp.imag)
 
-    delta_b = delta
     depth, dim1, dim2 = output.shape
     output = output.reshape((1, depth * dim1 * dim2))
-    delta_w = np.dot(delta, output)
+    delta_w = np.dot(delta, output.conj())
     delta_w = delta_w.reshape((delta.shape[0], depth, dim1, dim2))
+
+    delta_b = delta
 
     return delta_b, delta_w, delta
 
@@ -62,13 +74,17 @@ def backprop_3d_to_3d(delta, weights, output, z_vals, activation):
 
     sp = activate_prime(z_vals, activation)
 
-    delta = np.dot(weights.transpose(), delta) * sp         # backprop to calculate error (delta) at layer - 1
+    # delta = np.dot(weights.transpose(), delta) * sp
+    delta = ((np.dot(weights.real.transpose(), delta.real) + np.dot(weights.imag.transpose(), delta.imag)) * sp.real) \
+            + (1j * ((np.dot(weights.real.transpose(), delta.imag) - np.dot(weights.imag.transpose(), delta.real))) * sp.imag)
 
-    delta_b = delta
+
     depth, dim1, dim2 = output.shape
     output = output.reshape((1, depth * dim1 * dim2))
-    delta_w = np.dot(delta, output)
+    delta_w = np.dot(delta, output.conj())
     delta_w = delta_w.reshape((delta.shape[0], depth,dim1,dim2))
+
+    delta_b = delta
 
     return delta_b, delta_w, delta
 
@@ -77,8 +93,10 @@ def backprop_conv(delta, weights_shape, stride, output, z_vals, activation):
     '''weights passed in are the ones between pooling and fc layer'''
 
     num_filters, depth, filter_size, filter_size = weights_shape
+    sp = activate_prime(z_vals, activation)
 
-    delta = activate_prime(z_vals, activation) * delta
+    # delta =  sp * delta
+    delta = (delta.real * sp.real) + (1j * delta.imag * sp.imag)
 
     delta_b = np.zeros((num_filters, 1)) + 0j
     delta_w = np.zeros((weights_shape))  + 0j # you need to change the dims of weights
@@ -110,7 +128,11 @@ def backprop_pool(delta, weights, input_from_conv, max_indices, poolsize, pool_o
     # sp = pool_output #versi awb sotoy, pooling gak pake activation
     # sp = activation_prime(pool_output) #versi old
     # delta = np.dot(weights.transpose(), delta) * sp         # backprop to calc delta on pooling layer
-    delta = np.dot(weights.transpose(), delta)         # versi awb without sp because there's no activation function
+
+    # delta = np.dot(weights.transpose(), delta)         # versi awb without sp because there's no activation function
+    delta = ((np.dot(weights.real.transpose(), delta.real) + np.dot(weights.imag.transpose(), delta.imag))) \
+            + (1j * ((np.dot(weights.real.transpose(), delta.imag) - np.dot(weights.imag.transpose(), delta.real))))
+
     delta = delta.reshape((x, y * z))
 
     pool_output = pool_output.reshape((x, y * z))

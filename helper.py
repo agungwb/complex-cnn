@@ -155,8 +155,8 @@ def initiate_weights_conv(num_filters, depth, filter_size):
     # weights = np.random.randn(num_filters, depth, filter_size, filter_size)  # filter * depth * filter_size * filter_size
     # biases = np.random.randn(num_filters, 1)  # filter * 1
 
-    # weights = np.random.randn(num_filters, depth, filter_size, filter_size) * np.sqrt(2 / (depth))
-    # biases = np.random.randn(num_filters, 1)  # filter * 1
+    weights = np.random.randn(num_filters, depth, filter_size, filter_size) * np.sqrt(2 / (depth))
+    biases = np.random.randn(num_filters, 1)  # filter * 1
 
     # weights = np.random.randn(num_filters, depth, filter_size, filter_size) * np.sqrt(2 / (depth * filter_size * filter_size))
     # biases = np.random.randn(num_filters, 1)  # filter * 1
@@ -167,8 +167,8 @@ def initiate_weights_conv(num_filters, depth, filter_size):
     # weights = np.random.randint(3, size=(num_filters, depth, filter_size, filter_size))
     # biases = np.random.randint(3, size=(num_filters, 1))
 
-    weights = np.ones((num_filters, depth, filter_size, filter_size))
-    biases = np.ones((num_filters, 1))
+    # weights = np.ones((num_filters, depth, filter_size, filter_size))
+    # biases = np.ones((num_filters, 1))
 
     return weights, biases
 
@@ -177,8 +177,8 @@ def initiate_weights_fc(num_output, depth, height_in, width_in):
     # weights = np.random.randn(num_output, depth, height_in, width_in)
     # biases = np.random.randn(num_output, 1)
 
-    # weights = np.random.randn(num_output, depth, height_in, width_in) * np.sqrt(2 / (depth))
-    # biases = np.random.randn(num_output, 1)
+    weights = np.random.randn(num_output, depth, height_in, width_in) * np.sqrt(2 / (depth))
+    biases = np.random.randn(num_output, 1)
 
     # weights = np.random.randn(num_output, depth, height_in, width_in) * np.sqrt(2 / (depth * height_in * width_in))
     # biases = np.random.randn(num_output, 1)
@@ -189,8 +189,8 @@ def initiate_weights_fc(num_output, depth, height_in, width_in):
     # weights = np.random.randint(3, size=(num_output, depth, height_in, width_in))
     # biases = np.random.randint(3, size=(num_output, 1))
     #
-    weights = np.ones((num_output, depth, height_in, width_in)) * 2
-    biases = np.ones((num_output, 1))
+    # weights = np.ones((num_output, depth, height_in, width_in)) * 2
+    # biases = np.ones((num_output, 1))
     return weights, biases
 
 @numba.njit
@@ -199,8 +199,8 @@ def initiate_weights_classify(num_classes, num_inputs):
     # biases = np.random.randn(num_classes, 1)
 
     # HE Initialization
-    # weights = np.random.randn(num_classes, num_inputs) * np.sqrt(2 / num_inputs)
-    # biases = np.random.randn(num_classes, 1)
+    weights = np.random.randn(num_classes, num_inputs) * np.sqrt(2 / num_inputs)
+    biases = np.random.randn(num_classes, 1)
 
     # HE Initialization
     # weights = np.random.randn(num_classes, num_inputs) * np.sqrt(1 / num_inputs)
@@ -213,6 +213,6 @@ def initiate_weights_classify(num_classes, num_inputs):
     # weights = np.random.randint(3, size=(num_classes, num_inputs))
     # biases = np.random.randint(3, size=(num_classes, 1))
 
-    weights = np.ones((num_classes, num_inputs))*3
-    biases = np.ones((num_classes, 1))
+    # weights = np.ones((num_classes, num_inputs))*3
+    # biases = np.ones((num_classes, 1))
     return weights, biases

@@ -244,7 +244,7 @@ class Model(object):
         self.layers = layers
 
         for layer in layers:
-            log.debug("type : %s | output.shape : %s | weights.shape : %s | biases.shape : %s ",
+            log.info("type : %s | output.shape : %s | weights.shape : %s | biases.shape : %s ",
                       type(layer), layer.output.shape,
                     layer.weights.shape if not isinstance(layer, PoolingLayer) else "None",
                     layer.biases.shape if not isinstance(layer, PoolingLayer) else "None")
@@ -286,7 +286,7 @@ class Model(object):
         # log.debug("FEED FORWARD")
 
         prev_activation = image
-        save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
+        #save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
 
         # forwardpass
         i = 1
@@ -304,10 +304,10 @@ class Model(object):
                 # print "Time FullyConnectedLayer : ", ex_time
                 # print "FullyConnectedLayer : ", layer.output
 
-                save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "w"), delimiter="; ")
-                save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "b"), delimiter="; ")
-                save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "z"), delimiter="; ")
-                save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "a"), delimiter="; ")
+                #save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "w"), delimiter="; ")
+                #save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "b"), delimiter="; ")
+                #save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "z"), delimiter="; ")
+                #save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "a"), delimiter="; ")
 
             elif isinstance(layer, ConvLayer):
                 layer_name = "convolutional_layer"
@@ -320,10 +320,10 @@ class Model(object):
                 #     plt.imsave('images/cat_conv%d.png'%i, layer.output[i])
                 # for i in range(layer.weights.shape[0]):
                 #     plt.imsave('images/filter_conv%s.png'%i, layer.weights[i].reshape((5,5)))
-                save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "w"), delimiter="; ")
-                save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "conv", "b"), delimiter="; ")
-                save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "z"), delimiter="; ")
-                save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "a"), delimiter="; ")
+                #save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "w"), delimiter="; ")
+                #save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "conv", "b"), delimiter="; ")
+                #save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "z"), delimiter="; ")
+                #save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "a"), delimiter="; ")
 
             elif isinstance(layer, PoolingLayer):
                 layer_name = "pooling_layer"
@@ -334,8 +334,8 @@ class Model(object):
                 # print "Time PoolingLayer : ", ex_time
                 # for i in range(layer.output.shape[0]):
                 #     plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
-                save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "a"), delimiter="; ")
-                save_matrix(layer.max_indices, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "max"), delimiter="; ", mode='1d')
+                #save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "a"), delimiter="; ")
+                #save_matrix(layer.max_indices, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "max"), delimiter="; ", mode='1d')
 
             elif isinstance(layer, ClassifyLayer):
                 layer_name = "classify_layer"
@@ -344,11 +344,11 @@ class Model(object):
                 # end = time.time()
                 # ex_time = end - start
                 # print "Time ClassifyLayer : ", ex_time
-                # print "Classify : ", layer.output
-                save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "w"), delimiter="; ")
-                save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "classify", "b"), delimiter="; ")
-                save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "z"), delimiter="; ")
-                save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "a"), delimiter="; ")
+                # # print "Classify : ", layer.output
+                #save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "w"), delimiter="; ")
+                #save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "classify", "b"), delimiter="; ")
+                #save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "z"), delimiter="; ")
+                #save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "a"), delimiter="; ")
 
             else:
                 raise NotImplementedError
@@ -389,11 +389,14 @@ class Model(object):
         # print "layer biases shapes : ", self.layer_biases_shapes
 
         # set first params on the final layer
-        final_output = self.layers[-1].output
+        predicted = self.layers[-1].output
+        final = label
 
         loss_function = self.layers[-1].lost_function
 
-        delta = loss_prime(label, final_output.real, loss_function)   # Error * activation_prime(z values layer before)
+
+
+        delta = loss_prime(predicted=predicted, final=final, loss_function=loss_function)   # Error * activation_prime(z values layer before)
 
 
         # delta = loss_prime(final_output, label) * activation_prime(self.layers[-1].z_values)  # Error * activation_prime(z values layer before)
@@ -405,7 +408,7 @@ class Model(object):
 
         nabla_idx = len(nabla_w) - 1
 
-        save_matrix(delta, "csv/backprop/{0}_{1}.csv".format(str(num_layers), "loss_prime"), delimiter="; ")
+        #save_matrix(delta, "csv/backprop/{0}_{1}.csv".format(str(num_layers), "loss_prime"), delimiter="; ")
 
         for l in range(num_layers - 1, -1, -1):
             # the "outer" layer is closer to classification
@@ -451,9 +454,9 @@ class Model(object):
                         z_vals=layer.z_values,
                         activation=layer.activation)
 
-                save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "d"),delimiter="; ")
-                save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "dw"),delimiter="; ")
-                save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "db"),delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "d"),delimiter="; ")
+                #save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "dw"),delimiter="; ")
+                #save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "db"),delimiter="; ")
 
             elif transition == '3d_to_1d':
                 if l == 0:
@@ -466,9 +469,9 @@ class Model(object):
                     activation=layer.activation)  # (100,1)
                 # layer.weights = layer.weights.reshape((layer.num_output, layer.depth, layer.height_in, layer.width_in))
 
-                save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "d"), delimiter="; ")
-                save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "dw"), delimiter="; ")
-                save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "db"), delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "d"), delimiter="; ")
+                #save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "dw"), delimiter="; ")
+                #save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "db"), delimiter="; ")
 
             # pool to conv layer
             elif transition == 'pool':
@@ -494,7 +497,7 @@ class Model(object):
                         poolsize=layer.poolsize,
                         pool_output=layer.output)
 
-                save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "pool", "d"), delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "pool", "d"), delimiter="; ")
 
             elif transition == 'conv':
                 # prev_output = image
@@ -507,9 +510,9 @@ class Model(object):
                     z_vals=layer.z_values,
                     activation=layer.activation)
 
-                save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "d"), delimiter="; ")
-                save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "dw"), delimiter="; ")
-                save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "db"), delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "d"), delimiter="; ")
+                #save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "dw"), delimiter="; ")
+                #save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "db"), delimiter="; ")
 
             # conv to conv layer
             elif transition == 'to_conv':
@@ -531,9 +534,9 @@ class Model(object):
                     output=image,
                     z_vals=layer.z_values,
                     activation=layer.activation)
-                save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "d"), delimiter="; ")
-                save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "dw"), delimiter="; ")
-                save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "db"), delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "d"), delimiter="; ")
+                #save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "dw"), delimiter="; ")
+                #save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "db"), delimiter="; ")
 
             else:
                 pass
@@ -603,7 +606,7 @@ class Model(object):
                 # log.info( "losses : %s", losses)
                 log.info("[Epoch {0}/{1}][Iteration {2}/{3}] Loss : {4}, Avg.Loss : {5}, Time : {6}".format(epoch, num_epochs, batch_index, n_iteration, loss, average_losses, execution_time))
 
-            mean_error.append(float(losses) / float(batch_size))
+            mean_error.append(float((losses * np.conj(losses)).real) / float(batch_size))
             log.info("Average Loss : {0}".format(mean_error))
 
             if test_data:
@@ -658,7 +661,7 @@ class Model(object):
 
             predicted, delta_b, delta_w = self.backprop(image, label)
 
-            sys.exit(0)
+            # sys.exit(0)
 
             # end2 = time.time()
             # execution_backprop = end2 - end1
@@ -684,7 +687,7 @@ class Model(object):
 
         final = label
 
-        error = loss(predicted, final, loss_function)
+        error = loss(predicted=predicted, final=final, loss_function=loss_function)
 
 
         # print "predicted : ",final_res
@@ -706,21 +709,13 @@ class Model(object):
             # print "type(layer type) : ",type(layer)
             # print "type(layer.weights) : ",layer.weights.shape
             # print "type(layer_nabla_w) : ",layer_nabla_w.shape
-            # save_matrix(layer_nabla_w, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "nw"), delimiter="; ")
 
             # print "type(layer.biases) : ",layer.biases.shape
             # print "type(layer_nabla_b) : ",layer_nabla_b.shape
-            # save_matrix(layer_nabla_b, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "nb"), delimiter="; ")
 
-            # save_matrix(layer.weights, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "w"),delimiter="; ")
-            # save_matrix(layer.biases, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "b"),delimiter="; ")
 
             layer.weights -= eta * layer_nabla_w / batch_size
             layer.biases -= eta * layer_nabla_b / batch_size
-
-            # save_matrix(layer.weights, "csv/backprop/test/{0}_{1}_{2}.csv".format(str(ix), "w", "after"), delimiter="; ")
-            # save_matrix(layer.biases, "csv/backprop/test/{0}_{1}_{2}.csv".format(str(ix), "b", "after"), delimiter="; ")
-
 
         return error
 
@@ -734,7 +729,7 @@ class Model(object):
         test_results = list()
         for d in data:
             result = self.feedforward(d[0])
-            predicted = np.where(result > 0, 1, -1)
+            predicted = np.where(result.real > 0.5, 1, 0)
             actual = d[1]
 
             log.info("result : %s | predicted : %s | actual : %s", result, predicted, actual)
@@ -757,17 +752,19 @@ class Model(object):
             # print "test_results[0] : ", test_results[0]
             # print "test_results[1] : ", test_results[1]
 
+            t = 1
+            f = 0
 
-            if actual == 1 and predicted == 1:
+            if actual == t and predicted == t:
                 #TRUE POSITIVE
                 confusion_matrix[0][0] += 1
-            elif actual == 1 and predicted == -1:
+            elif actual == t and predicted == f:
                 # FALSE NEGATIVE
                 confusion_matrix[1][0] += 1
-            elif actual == -1 and predicted == 1:
+            elif actual == f and predicted == t:
                 # FALSE POSITIF
                 confusion_matrix[0][1] += 1
-            elif actual == -1 and predicted == -1:
+            elif actual == f and predicted == f:
                 # TRUE NEGATIVE
                 confusion_matrix[1][1] += 1
 

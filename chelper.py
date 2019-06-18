@@ -101,32 +101,38 @@ def relu_split_prime(z):
 def loss(predicted, final, loss_function):
     if loss_function == 1:
         return quadratic_loss(predicted, final)
+    elif loss_function == 2:
+        return binary_cross_entropy_loss(predicted, final)
 
 # @numba.njit()
 def loss_prime(predicted, final, loss_function):
     if loss_function == 1:
-        return quadratic_loss_prime(predicted.real, final)
+        return quadratic_loss_prime(predicted, final)
+    elif loss_function == 2:
+        return binary_cross_entropy_loss_prime(predicted, final)
 
+@numba.njit()
 def quadratic_loss(predicted,final):
-    return 0.5*np.sum(predicted.real-final.real)**2
+    return 0.5 * (np.sum(predicted.real-final)**2 + np.sum(predicted.imag)**2)
 
+@numba.njit()
 def quadratic_loss_prime(predicted, final):
-    return predicted.real-final
+    return predicted-final
+    # return (predicted.real-final) + (1j *predicted.imag)
 
-
-@numba.njit()
+# @numba.njit()
 def binary_cross_entropy_loss(predicted, final):
-    if final[0] == 1:
-        return -np.log(predicted.real)
+    if final[0] == 1+1j:
+        return -(np.log(predicted.real) + (1j * np.log(predicted.imag)))
     else:
-        return -np.log(1 - predicted.real)
+        return -(np.log(1 - predicted.real) + (1j * np.log(1 - predicted.imag)))
 
-@numba.njit()
+# @numba.njit()
 def binary_cross_entropy_loss_prime(predicted, final):
-    if final[0] == 1:
-        return -(1/predicted)
+    if final[0] == 1+1j:
+        return -((float(1)/predicted.real) + (1j * (float(1)/predicted.imag)))
     else:
-        return 1/(1-predicted)
+        return (float(1)/(1-predicted).real) + (1j * float(1)/(1-predicted.imag))
 
 def loss_complex_prime(desired, final):
     return desired.real - final.real
@@ -178,14 +184,22 @@ def initiate_weights_conv(num_filters, depth, filter_size):
     #                                                                         self.filter_size)  # filter * depth * filter_size * filter_size
     # self.biases = np.random.rand(self.num_filters, 1) + 1j * np.random.rand(self.num_filters, 1)  # filter * 1
 
-    # weights = np.random.randn(num_filters, depth, filter_size, filter_size * 2).view(np.complex128)  # filter * depth * filter_size * filter_size
+    weights = (np.random.randn(num_filters, depth, filter_size, filter_size * 2).view(np.complex128) * np.sqrt(2)) / np.sqrt(depth) # filter * depth * filter_size * filter_size
+    biases = np.random.rand(num_filters, 1 * 2).view(np.complex128)  # filter * 1
+
+    # weights = np.random.randn(num_filters, depth, filter_size, filter_size) * np.sqrt(2 / (depth)) + \
+    #           (1j * np.random.randn(num_filters, depth, filter_size, filter_size) * np.sqrt(2 / (depth)))
+    # biases = np.random.randn(num_filters, 1)  + \
+    #          (1j * np.random.randn(num_filters, 1))
+
+    # weights = np.random.randn(num_filters, depth, filter_size, filter_size * 2).view(np.complex128) * np.sqrt(2 / (depth))  # filter * depth * filter_size * filter_size
     # biases = np.random.rand(num_filters, 1 * 2).view(np.complex128)  # filter * 1
 
     # weights = np.random.randint(3, size=(num_filters, depth, filter_size, filter_size))
     # biases = np.random.randint(3, size=(num_filters, 1))
 
-    weights = np.ones((num_filters, depth, filter_size, filter_size)) + 1j
-    biases = np.ones((num_filters, 1)) + 1j
+    # weights = np.ones((num_filters, depth, filter_size, filter_size)) + 1j
+    # biases = np.ones((num_filters, 1)) + 1j
 
     return weights, biases
 
@@ -194,14 +208,22 @@ def initiate_weights_fc(num_output, depth, height_in, width_in):
     # self.weights = np.random.randn(self.num_output, self.depth, self.height_in, self.width_in) + 1j * np.random.randn(self.num_output, self.depth, self.height_in, self.width_in)
     # self.biases = np.random.randn(self.num_output, 1) + 1j * np.random.randn(self.num_output, 1)
 
-    # weights = np.random.randn(num_output, depth, height_in, width_in * 2).view(np.complex128)
+    weights = (np.random.randn(num_output, depth, height_in, width_in * 2).view(np.complex128) * np.sqrt(2)) / np.sqrt(depth)
+    biases = np.random.randn(num_output, 1 * 2).view(np.complex128)
+
+    # weights = np.random.randn(num_output, depth, height_in, width_in) * np.sqrt(2 / (depth)) + \
+    #           (1j * np.random.randn(num_output, depth, height_in, width_in) * np.sqrt(2 / (depth)))
+    # biases = np.random.randn(num_output, 1) + \
+    #          (1j * np.random.randn(num_output, 1))
+
+    # weights = np.random.randn(num_output, depth, height_in, width_in * 2).view(np.complex128) * np.sqrt(2 / (depth))
     # biases = np.random.randn(num_output, 1 * 2).view(np.complex128)
 
     # weights = np.random.randint(3, size=(num_output, depth, height_in, width_in))
     # biases = np.random.randint(3, size=(num_output, 1))
 
-    weights = np.ones((num_output, depth, height_in, width_in)) + 1j
-    biases = np.ones((num_output, 1)) + 1j
+    # weights = np.ones((num_output, depth, height_in, width_in)) + 1j
+    # biases = np.ones((num_output, 1)) + 1j
     return weights, biases
 
 @numba.njit
@@ -209,14 +231,22 @@ def initiate_weights_classify(num_classes, num_inputs):
     # self.weights = np.random.randn(self.num_classes, num_inputs) + 1j * np.random.randn(self.num_classes, num_inputs)
     # self.biases = np.random.randn(self.num_classes, 1) + 1j * np.random.randn(self.num_classes, 1)
 
-    # weights = np.random.randn(num_classes, num_inputs * 2).view(np.complex128)
+    weights = (np.random.randn(num_classes, num_inputs * 2).view(np.complex128) * np.sqrt(2)) / np.sqrt(num_inputs)
+    biases = np.random.randn(num_classes, 1 * 2).view(np.complex128)
+
+    # weights = np.random.randn(num_classes, num_inputs) * np.sqrt(2 / num_inputs) + \
+    #           (1j * np.random.randn(num_classes, num_inputs) * np.sqrt(2 / num_inputs))
+    # biases = np.random.randn(num_classes, 1) + \
+    #          (1j * np.random.randn(num_classes, 1))
+
+    # weights = np.random.randn(num_classes, num_inputs * 2).view(np.complex128) * np.sqrt(2 / (num_inputs))
     # biases = np.random.randn(num_classes, 1 * 2).view(np.complex128)
 
     # weights = np.random.randint(3, size=(num_classes, num_inputs))
     # biases = np.random.randint(3, size=(num_classes, 1))
 
-    weights = np.ones((num_classes, num_inputs)) + 1j
-    biases = np.ones((num_classes, 1)) + 1j
+    # weights = np.ones((num_classes, num_inputs)) + 1j
+    # biases = np.ones((num_classes, 1)) + 1j
     return weights, biases
 
 
