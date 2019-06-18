@@ -115,9 +115,7 @@ def load_data_dtcwt(env):
     random.shuffle(dataset_cancer)
 
     n = len(dataset_cancer)
-    # training_data.extend(dataset_cancer[:int(0.9 * n)])
-    # dataset_cancer = dataset_cancer[:int(n/10)]
-    dataset_cancer = dataset_cancer
+    print "dataset cancer : ", str(n)
     training_data.extend(dataset_cancer)
 
     # validation_data.extend(dataset_cancer[int(0.8 * n):int(0.9 * n)])
@@ -126,7 +124,7 @@ def load_data_dtcwt(env):
     if env == 'test':
         test_data.extend(dataset_cancer[:30])
     else:
-        test_data.extend(dataset_cancer[:200])
+        test_data.extend(dataset_cancer[:int(n/10)])
 
     # load data normal
     dataset_normal = list()
@@ -143,21 +141,15 @@ def load_data_dtcwt(env):
     random.shuffle(dataset_normal)
 
     n = len(dataset_normal)
-    # training_data.extend(dataset_normal[:int(0.9 * n)])
-    # dataset_normal = dataset_normal[:n/10]
-    dataset_normal = dataset_normal
+    print "dataset normal : ", str(n)
     training_data.extend(dataset_normal)
-
-    # validation_data.extend(dataset_normal[int(0.8 * n):int(0.9 * n)])
-
-    # test_data.extend(dataset_normal[int(0.9 * n):])
-    # test_data.extend(dataset_normal[:300])
+    test_data.extend(dataset_normal[:50])
     if env == 'test':
         test_data.extend(dataset_normal[:30])
     else:
-        test_data.extend(dataset_normal[:200])
+        test_data.extend(dataset_normal[:int(n/10)])
 
-    # return (training_data, validation_data, test_data)
+    print "dataset total : ", len(training_data)
     random.shuffle(training_data)  # randomize training dataset
     # random.shuffle(test_data)  # randomize training dataset
     return (training_data, test_data)
