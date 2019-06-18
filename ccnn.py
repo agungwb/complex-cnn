@@ -606,7 +606,7 @@ class Model(object):
                 # log.info( "losses : %s", losses)
                 log.info("[Epoch {0}/{1}][Iteration {2}/{3}] Loss : {4}, Avg.Loss : {5}, Time : {6}".format(epoch, num_epochs, batch_index, n_iteration, loss, average_losses, execution_time))
 
-            mean_error.append(float((losses * np.conj(losses)).real) / float(batch_size))
+            mean_error.append( (np.absolute(losses)) / float(batch_size))
             log.info("Average Loss : {0}".format(mean_error))
 
             if test_data:
@@ -727,6 +727,9 @@ class Model(object):
         test_results = list()
         for d in data:
             result = self.feedforward(d[0])
+
+            result = np.absolute(result)
+
             predicted = np.where(result.real > 0.5, 1, 0)
             actual = d[1]
 
