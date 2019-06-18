@@ -694,8 +694,6 @@ class Model(object):
         # print "actual : ",label
         # print "weights : ", self.layers[-1].weights
 
-
-
         num = 0
         weight_index = []
         for layer in self.layers:

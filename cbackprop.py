@@ -31,6 +31,7 @@ def backprop_1d_to_1d(delta, weights, output, z_vals, activation):
             + (1j * ((np.dot(weights.real.transpose(), delta.imag) - np.dot(weights.imag.transpose(), delta.real))) * sp.imag )
 
     delta_w = np.dot(delta, output.transpose().conj())
+    # delta_w = np.dot(delta, output.transpose())
     delta_b = delta
 
     return delta_b, delta_w, delta
@@ -45,6 +46,7 @@ def backprop_1d_to_1d_final(loss_prime, output, z_vals, activation):
 
 
     delta_w = np.dot(delta, output.transpose().conj())
+    # delta_w = np.dot(delta, output.transpose())
     delta_b = delta
 
 
@@ -62,7 +64,8 @@ def backprop_3d_to_1d(delta, weights, output, z_vals, activation):
 
     depth, dim1, dim2 = output.shape
     output = output.reshape((1, depth * dim1 * dim2))
-    delta_w = np.dot(delta, output.conj())
+    # delta_w = np.dot(delta, output.conj())
+    delta_w = np.dot(delta, output)
     delta_w = delta_w.reshape((delta.shape[0], depth, dim1, dim2))
 
     delta_b = delta
@@ -82,6 +85,7 @@ def backprop_3d_to_3d(delta, weights, output, z_vals, activation):
     depth, dim1, dim2 = output.shape
     output = output.reshape((1, depth * dim1 * dim2))
     delta_w = np.dot(delta, output.conj())
+    # delta_w = np.dot(delta, output)
     delta_w = delta_w.reshape((delta.shape[0], depth,dim1,dim2))
 
     delta_b = delta

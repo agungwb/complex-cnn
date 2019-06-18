@@ -125,7 +125,7 @@ elif sys.argv[1] == 'hanacaraka-complex':
     HEIGHT = 24
     OUTPUT = 1
     EPOCHS = 20
-    training_data, test_data = hanacaraka_loader.load_data_dtcwt2()
+    training_data, test_data = hanacaraka_loader.load_data_dtcwt()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 elif sys.argv[1] == 'number':
@@ -206,7 +206,7 @@ net = Model(input_shape,
                     {
                         'filter_size': 3,
                         'stride': 1,
-                        'num_filters': 30,
+                        'num_filters': 20,
                         'activation': 3
                     }
                 },
