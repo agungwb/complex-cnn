@@ -730,7 +730,8 @@ class Model(object):
 
             result = np.absolute(result)
 
-            predicted = np.where(result.real > 0.5, 1, 0)
+            threshold = 0.70710678
+            predicted = np.where(result.real > 0.70710678, 1, 0)
             actual = d[1]
 
             log.info("result : %s | predicted : %s | actual : %s", result, predicted, actual)
@@ -780,8 +781,7 @@ class Model(object):
         recall = np.diag(confusion_matrix) / np.sum(confusion_matrix, 1)
         recall = [((r, 0)[math.isnan(r)]) for r in recall]
 
-        log.info("Confusion Matrix : ")
-        log.info(confusion_matrix)
+        log.info("Confusion Matrix : ", confusion_matrix)
         log.info("Accuracy : %s", accuracy)
 
         # for multiclass
