@@ -61,7 +61,7 @@ import matplotlib.pyplot as plt
 
 
 ETA = 0.01 #learning-rate (maybe)
-EPOCHS = 20 #default 5
+EPOCHS = 30 #default 5
 WIDTH = 36
 HEIGHT = 36
 CHANNEL = 1
@@ -78,7 +78,7 @@ if sys.argv[1] == 'ccnn':
     HEIGHT = 18
     OUTPUT = 1
     # training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[2] if len(sys.argv) > 2 else 'main')
-    training_data, test_data = mammogram_loader.load_data_dtcwt2(sys.argv[2] if len(sys.argv) > 2 else 'main')
+    training_data, test_data = mammogram_loader.load_data_dtcwt3(sys.argv[2] if len(sys.argv) > 2 else 'main')
     if (len(sys.argv) > 2 and sys.argv[2] == 'test'):
         BATCH_SIZE = 10  # defalut 10
         EPOCH = 1
@@ -125,7 +125,7 @@ elif sys.argv[1] == 'hanacaraka-complex':
     HEIGHT = 24
     OUTPUT = 1
     EPOCHS = 20
-    training_data, test_data = hanacaraka_loader.load_data_dtcwt2()
+    training_data, test_data = hanacaraka_loader.load_data_dtcwt3()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 elif sys.argv[1] == 'number':
@@ -141,7 +141,7 @@ elif sys.argv[1] == 'number-complex':
     HEIGHT = 14
     OUTPUT = 1
     EPOCHS = 10
-    training_data, test_data = number_loader.load_data_dtcwt2()
+    training_data, test_data = number_loader.load_data_fft()
     # training_data, test_data = number_loader.load_data_complex()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")

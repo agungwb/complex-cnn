@@ -588,7 +588,7 @@ class Model(object):
         log.info('eta : %s', eta)
 
         for epoch in xrange(num_epochs):
-            log.info("STARTING EPOCH {0}".format(epoch))
+            log.info("STARTING EPOCH {0}".format(int(epoch+1)))
             start = time.time()
             batches = [training_data[k:k + batch_size] for k in xrange(0, training_size, batch_size)]
             losses = 0
@@ -670,6 +670,8 @@ class Model(object):
             # ex_feedforward += execution_feedforward
 
             predicted, delta_b, delta_w = self.backprop(image, label)
+
+            # sys.exit(0)
 
             # end2 = time.time()
             # execution_backprop = end2 - end1
