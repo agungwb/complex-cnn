@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-nohup python -u ./run.py ccnn > ccnn.log &
+nohup python -u ./run.py ccnn > logs/ccnn.log &
