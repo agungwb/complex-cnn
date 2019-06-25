@@ -271,8 +271,8 @@ def load_data_dtcwt3(env):
         training_data.extend(dataset_cancer)
         test_data.extend(dataset_cancer[:30])
     else:
-        training_data.extend(dataset_cancer[:int(n / 6)])
-        test_data.extend(dataset_cancer[:int(n/60)])
+        training_data.extend(dataset_cancer[:int(n)])
+        test_data.extend(dataset_cancer[:int(n/10)])
 
     # load data normal
     dataset_normal = list()
@@ -294,8 +294,8 @@ def load_data_dtcwt3(env):
         training_data.extend(dataset_normal)
         test_data.extend(dataset_normal[:30])
     else:
-        training_data.extend(dataset_normal[:int(n / 6)])
-        test_data.extend(dataset_normal[:int(n/60)])
+        training_data.extend(dataset_normal[:int(n)])
+        test_data.extend(dataset_normal[:int(n/10)])
 
     print "dataset total : ", len(training_data)
     random.shuffle(training_data)  # randomize training dataset
