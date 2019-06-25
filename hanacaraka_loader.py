@@ -40,8 +40,8 @@ def load_data():
 
     n = len(dataset_cancer)
     print "dataset cancer : ", str(n)
-    training_data.extend(dataset_cancer)
-    test_data.extend(dataset_cancer[:50])
+    training_data.extend(dataset_cancer[:int(0.9*n)])
+    test_data.extend(dataset_cancer[int(0.9*n):])
 
     # load data normal
     dataset_normal = list()
@@ -57,8 +57,8 @@ def load_data():
     n = len(dataset_normal)
 
     print "dataset normal : ", str(n)
-    training_data.extend(dataset_normal)
-    test_data.extend(dataset_normal[:50])
+    training_data.extend(dataset_normal[:int(0.9*n)])
+    test_data.extend(dataset_normal[int(0.9*n):])
 
     print "dataset total : ", len(training_data)
     random.shuffle(training_data)  # randomize training dataset

@@ -91,8 +91,9 @@ def backprop_conv_loop(num_filters, total_deltas_per_layer, output, filter_size,
 
             # delta_w[j] += (sub_output * delta[j][i]) #versi sotoy awb
 
-            temp_delta_w = (delta[j][i] * sub_output.conj())
-            # temp_delta_w = (delta[j][i] * sub_output)
+            # temp_delta_w = (delta[j][i] * sub_output.conj())
+            temp_delta_w = (delta[j][i] * sub_output)
+
             delta_w[j] += temp_delta_w #versi sotoy awb
 
             # print "## delta_w[j]  : ", delta_w[j]
@@ -222,7 +223,7 @@ def backprop_pool_loop_OLD(input_from_conv, max_indices, poolsize, pool_output, 
 
 
 
-@numba.njit(parallel=True)
+@numba.njit()
 def backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):
     for j in numba.prange(num_filters):
         slide = 0

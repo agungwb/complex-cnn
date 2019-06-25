@@ -263,7 +263,7 @@ def backprop_pool_loop_OLD(input_from_conv, max_indices, poolsize, pool_output, 
 
     return delta_new_expanded
 
-@numba.njit(parallel=True)
+@numba.njit()
 def backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_size, delta, delta_w, delta_b, stride):
     for j in numba.prange(num_filters):
         slide = 0

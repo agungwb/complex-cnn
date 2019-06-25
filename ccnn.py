@@ -78,6 +78,8 @@ class ConvLayer(object):
 
         # import time
         # start = time.time()
+        # weights_conjugate = np.conj(self.weights)
+        # biases_conjugate = np.conj(self.biases)
         self.z_values, self.output = convole_loop(self.num_filters, self.z_values, self.activation, input, self.width_in, self.weights, self.filter_size, self.stride, self.biases, self.output)
 
         # end = time.time()
@@ -162,6 +164,9 @@ class FullyConnectedLayer(Layer):
         input = input.reshape((self.depth * self.height_in * self.width_in, 1))
 
         # this is shape of (num_outputs, 1)
+        # weights_conjugate = np.conj(self.weights)
+        # biases_conjugate = np.conj(self.biases)
+
         self.z_values = np.add(np.dot(self.weights, input), self.biases)
         self.output = activate(self.z_values, self.activation)
 
@@ -190,6 +195,8 @@ class ClassifyLayer(Layer):
                                                               num_inputs = num_inputs)
 
     def classify(self, input):
+        # weights_conjugate = np.conj(self.weights)
+        # biases_conjugate = np.conj(self.biases)
         self.z_values = np.dot(self.weights, input) + self.biases
         self.output = activate(self.z_values, self.activation)
         # print "x : ", x
@@ -588,7 +595,7 @@ class Model(object):
 
             batch_index = 0
 
-            n_iteration = int(training_size / batch_size)
+            n_iteration = int(math.ceil(float(training_size)/batch_size))
 
             for batch in batches:
                 # print '---batch : {}', batch
@@ -604,7 +611,10 @@ class Model(object):
                 losses += loss
                 average_losses = losses / batch_index
                 # log.info( "losses : %s", losses)
-                log.info("[Epoch {0}/{1}][Iteration {2}/{3}] Loss : {4}, Avg.Loss : {5}, Time : {6}".format(epoch, num_epochs, batch_index, n_iteration, loss, average_losses, execution_time))
+
+                log.info("[Epoch {0}/{1}][Iteration {2}/{3}] Loss : {4}, Avg.Loss : {5}, Time : {6}".format(int(epoch+1), num_epochs, batch_index, n_iteration, loss, average_losses, execution_time))
+
+                # sys.exit(0)
 
             mean_error.append( (np.absolute(losses)) / float(batch_size))
             log.info("Average Loss : {0}".format(mean_error))
@@ -661,8 +671,6 @@ class Model(object):
 
             predicted, delta_b, delta_w = self.backprop(image, label)
 
-            # sys.exit(0)
-
             # end2 = time.time()
             # execution_backprop = end2 - end1
             # ex_backprop += execution_backprop
@@ -712,8 +720,8 @@ class Model(object):
             # print "type(layer_nabla_b) : ",layer_nabla_b.shape
 
 
-            layer.weights -= eta * layer_nabla_w / batch_size
-            layer.biases -= eta * layer_nabla_b / batch_size
+            layer.weights -= (eta * (layer_nabla_w / batch_size))
+            layer.biases -= (eta * (layer_nabla_b / batch_size))
 
         return error
 
@@ -781,7 +789,8 @@ class Model(object):
         recall = np.diag(confusion_matrix) / np.sum(confusion_matrix, 1)
         recall = [((r, 0)[math.isnan(r)]) for r in recall]
 
-        log.info("Confusion Matrix : ", confusion_matrix)
+        log.info("Confusion Matrix : ")
+        log.info(confusion_matrix)
         log.info("Accuracy : %s", accuracy)
 
         # for multiclass

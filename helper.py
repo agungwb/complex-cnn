@@ -97,14 +97,14 @@ def quadratic_loss_prime(predicted, final):
 def cross_entropy(batch_size, output, expected_output):
     return (-1/batch_size) * np.sum(expected_output * np.log(output) + (1 - expected_output) * np.log(1-output))
 
-@numba.njit()
+# @numba.njit()
 def binary_cross_entropy_loss(predicted, final):
     if final[0] == 1:
         return -np.log(predicted)
     else:
         return -np.log(1 - predicted)
 
-@numba.njit()
+# @numba.njit()
 def binary_cross_entropy_loss_prime(predicted, final):
     if final[0] == 1:
         return -(1/predicted)

@@ -113,7 +113,7 @@ def loss_prime(predicted, final, loss_function):
 
 @numba.njit()
 def quadratic_loss(predicted,final):
-    return 0.5 * (np.sum(predicted.real-final)**2 + np.sum(predicted.imag)**2)
+    return 0.5 * (np.sum(predicted.real-final.real)**2 + np.sum(predicted.imag-final.imag)**2)
 
 @numba.njit()
 def quadratic_loss_prime(predicted, final):
