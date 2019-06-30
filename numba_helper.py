@@ -18,7 +18,6 @@ from helper import *
 
 
 #FEED FORWARD
-# @numba.njit(parallel=True)
 @numba.njit()
 def convole_loop(num_filters, z_values, activation, input_neurons, width_in, weights, filter_size, stride, biases, output):
     act_length1d = output.shape[1]  # dim1 * dim2
@@ -283,4 +282,6 @@ def backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_si
             if (slide + filter_size)-stride >= output.shape[2]:    # wrap indices at the end of each row
                 slide = 0
                 row+=stride
+
+
 

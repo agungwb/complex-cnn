@@ -49,6 +49,11 @@ class ConvLayer(object):
                                                            depth=self.depth,
                                                            filter_size=self.filter_size)
 
+        self.vw = np.zeros(self.weights.shape) + 0j
+        self.vb = np.zeros(self.biases.shape) + 0j
+        self.sw = np.zeros(self.weights.shape) + 0j
+        self.sb = np.zeros(self.biases.shape) + 0j
+
         # np.random.randn generate random from normal distribution
         # np.random.rand generate random from [0..1]
         # random with complex value np.random.rand(4).view(np.complex128)
@@ -155,6 +160,11 @@ class FullyConnectedLayer(Layer):
                                                         height_in=self.height_in,
                                                         width_in=self.width_in)
 
+        self.vw = np.zeros(self.weights.shape) + 0j
+        self.vb = np.zeros(self.biases.shape) + 0j
+        self.sw = np.zeros(self.weights.shape) + 0j
+        self.sb = np.zeros(self.biases.shape) + 0j
+
     def feedforward(self, input):
         '''
         forwardpropagates through the FC layer to the final output layer
@@ -168,7 +178,9 @@ class FullyConnectedLayer(Layer):
         # biases_conjugate = np.conj(self.biases)
 
         self.z_values = np.add(np.dot(self.weights, input), self.biases)
-        self.output = activate(self.z_values, self.activation)
+        shape = self.z_values.shape
+        self.output = activate_2d(self.z_values, self.activation, dim1=shape[0], dim2=shape[1])
+        # self.output = zrelu_2d(self.z_values, dim1=shape[0], dim2=shape[1])
 
         # print "self.z_values.shape : ", self.z_values.shape
         # print "self.output.shape : ", self.output.shape
@@ -194,11 +206,18 @@ class ClassifyLayer(Layer):
         self.weights, self.biases = initiate_weights_classify(num_classes = self.num_classes,
                                                               num_inputs = num_inputs)
 
+        self.vw = np.zeros(self.weights.shape) + 0j
+        self.vb = np.zeros(self.biases.shape) + 0j
+        self.sw = np.zeros(self.weights.shape) + 0j
+        self.sb = np.zeros(self.biases.shape) + 0j
+
+
     def classify(self, input):
         # weights_conjugate = np.conj(self.weights)
         # biases_conjugate = np.conj(self.biases)
         self.z_values = np.dot(self.weights, input) + self.biases
-        self.output = activate(self.z_values, self.activation)
+        shape = self.z_values.shape
+        self.output = activate_2d(self.z_values, self.activation, dim1=shape[0], dim2=shape[1])
         # print "x : ", x
         # print "w : ", self.weights
         # print "z : ", self.z_values
@@ -571,8 +590,7 @@ class Model(object):
 
         return self.layers[-1].output, nabla_b, nabla_w
 
-
-    def gradient_descent(self, training_data, batch_size, eta, num_epochs, num_output, lmbda=None, test_data=None):
+    def gradient_descent(self, training_data, test_data, batch_size, eta, num_epochs, num_output, optimizer=None):
         training_size = len(training_data)
 
 
@@ -593,17 +611,17 @@ class Model(object):
             batches = [training_data[k:k + batch_size] for k in xrange(0, training_size, batch_size)]
             losses = 0
 
-            batch_index = 0
+            batch_index = 1
 
             n_iteration = int(math.ceil(float(training_size)/batch_size))
 
             for batch in batches:
                 # print '---batch : {}', batch
                 # log.info( '------- %d', batch_index)
-                batch_index += 1
+
 
                 start = time.time()
-                loss = self.update_mini_batch(batch, eta)
+                loss = self.update_mini_batch(batch, eta, batch_index, optimizer)
                 end = time.time()
                 execution_time = end - start
                 # print "TIME mini_batch : ", execution_time
@@ -613,8 +631,10 @@ class Model(object):
                 # log.info( "losses : %s", losses)
 
                 log.info("[Epoch {0}/{1}][Iteration {2}/{3}] Loss : {4}, Avg.Loss : {5}, Time : {6}".format(int(epoch+1), num_epochs, batch_index, n_iteration, loss, average_losses, execution_time))
+                batch_index += 1
 
-                # sys.exit(0)
+            # if epoch == 1 :
+            #     sys.exit(0)
 
             mean_error.append( (np.absolute(losses)) / float(batch_size))
             log.info("Average Loss : {0}".format(mean_error))
@@ -646,7 +666,8 @@ class Model(object):
         # plt.show()
 
     # bisa di paralelisasi
-    def update_mini_batch(self, batch, eta):
+
+    def update_mini_batch(self, batch, eta, batch_index, optimizer=None):
         nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]
         nabla_b = [np.zeros(s) for s in self.layer_biases_shapes]
 
@@ -654,6 +675,8 @@ class Model(object):
 
         ex_feedforward = 0;
         ex_backprop = 0;
+
+        # i = 0
 
         for image, label in batch:
             # image = image.reshape((CHANNEL,HEIGHT,WIDTH))
@@ -671,7 +694,10 @@ class Model(object):
 
             predicted, delta_b, delta_w = self.backprop(image, label)
 
-            # sys.exit(0)
+            # if i == 2 :
+            #     sys.exit(0)
+            #
+            # i+=1
 
             # end2 = time.time()
             # execution_backprop = end2 - end1
@@ -721,9 +747,46 @@ class Model(object):
             # print "type(layer.biases) : ",layer.biases.shape
             # print "type(layer_nabla_b) : ",layer_nabla_b.shape
 
+            delta_w = layer_nabla_w / float(batch_size)
+            delta_b = layer_nabla_b / float(batch_size)
 
-            layer.weights -= (eta * (layer_nabla_w / batch_size))
-            layer.biases -= (eta * (layer_nabla_b / batch_size))
+            if optimizer == None:
+                layer.weights -= eta * delta_w
+                layer.biases -= eta * delta_b
+
+            else:
+                if optimizer['name'] == 'momentum':
+                    momentum = optimizer['momentum']
+
+                    layer.vw = (momentum * layer.vw) + ((1.0 - momentum) * delta_w)
+                    layer.vb = (momentum * layer.vb) + ((1.0 - momentum) * delta_b)
+
+                    layer.weights -= eta * layer.vw
+                    layer.biases -= eta * layer.vb
+
+                elif optimizer['name'] == 'adam':
+                    beta1 = optimizer['beta1']
+                    beta2 = optimizer['beta2']
+                    eps = optimizer['epsilon']
+
+                    layer.vw = (beta1 * layer.vw) + ((1.0 - beta1) * delta_w)
+                    layer.vb = (beta1 * layer.vb) + ((1.0 - beta1) * delta_b)
+
+                    layer.sw = (beta2 * layer.sw) + ((1.0 - beta2) * (delta_w.real**2+(1j*delta_w.imag**2)))
+                    layer.sb = (beta2 * layer.sb) + ((1.0 - beta2) * (delta_b.real**2+(1j*delta_b.imag**2)))
+
+                    # bias correction
+                    vw_correction = layer.vw / (1.0 - np.power(beta1, batch_index))
+                    vb_correction = layer.vb / (1.0 - np.power(beta1, batch_index))
+
+                    sw_correction = layer.sw / (1.0 - np.power(beta2, batch_index))
+                    sb_correction = layer.sb / (1.0 - np.power(beta2, batch_index))
+
+                    grad_w = eta * ((vw_correction.real / (np.sqrt(sw_correction.real) + eps)) + (1j * (vw_correction.imag / (np.sqrt(sw_correction.imag) + eps))))
+                    grad_b = eta * ((vb_correction.real / (np.sqrt(sb_correction.real) + eps)) + (1j * (vb_correction.imag / (np.sqrt(sb_correction.imag) + eps))))
+
+                    layer.weights -= grad_w
+                    layer.biases -= grad_b
 
         return error
 

@@ -4,6 +4,7 @@ import random
 from os import listdir
 from os.path import isfile, join
 import dtcwt
+from util import *
 
 import numpy as np
 
@@ -110,6 +111,7 @@ def load_data_dtcwt(env):
             input_cancer = np.asarray(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
             input_cancer_n = 1 - (input_cancer/255.0) #normalize value
             input_cancer_c = transform.forward(input_cancer_n, nlevels=3)
+
             for i in range(6):
                 dataset_cancer.append(tuple((input_cancer_c.highpasses[0][:, :, i], output_cancer)))
     random.shuffle(dataset_cancer)
@@ -178,14 +180,16 @@ def load_data_dtcwt2(env):
         # print "cancer_file : ",cancer_file
         if (cancer_file.endswith(FILE_TIPE)):
             input_cancer = np.asarray(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
-            input_cancer_n = 1 - (input_cancer/255.0) #normalize value
+            # input_cancer_n = 1 - (input_cancer/255.0) #normalize value
+            input_cancer_n = input_cancer
             input_cancer_c = transform.forward(input_cancer_n, nlevels=3)
-
             h, w, d = input_cancer_c.highpasses[0].shape
             input_cancer_append = np.zeros((d, h, w)) + 0j
 
             for i in range(6):
-                input_cancer_append[i] = input_cancer_c.highpasses[0][:, :, i]
+                input_cancer_append_i = input_cancer_c.highpasses[0][:, :, i]
+                input_cancer_append[i] = normalize(input_cancer_append_i)
+
             dataset_cancer.append(tuple((input_cancer_append, output_cancer)))
 
     random.shuffle(dataset_cancer)
@@ -210,13 +214,15 @@ def load_data_dtcwt2(env):
         # print "normal_file : ",normal_file
         if (normal_file.endswith(FILE_TIPE)):
             input_normal = np.asarray(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
-            input_normal_n = 1 - (input_normal / 255.0)  # normalize value
+            # input_normal_n = 1 - (input_normal / 255.0)  # normalize value
+            input_normal_n = input_normal
             input_normal_c = transform.forward(input_normal_n, nlevels=3)
             h, w, d = input_normal_c.highpasses[0].shape
             input_normal_append = np.zeros((d, h, w)) + 0j
 
             for i in range(6):
-                input_normal_append[i] = input_normal_c.highpasses[0][:, :, i]
+                input_normal_append_i = input_normal_c.highpasses[0][:, :, i]
+                input_normal_append[i] = normalize(input_normal_append_i)
 
             dataset_normal.append(tuple((input_normal_append, output_normal)))
     random.shuffle(dataset_normal)
@@ -300,4 +306,144 @@ def load_data_dtcwt3(env):
     print "dataset total : ", len(training_data)
     random.shuffle(training_data)  # randomize training dataset
     # random.shuffle(test_data)  # randomize training dataset
+    return (training_data, test_data)
+
+def load_data_fft(env):
+    transform = dtcwt.Transform2d()
+    training_data = list()
+    validation_data = list()
+    test_data = list()
+
+    path_cancer = PATH_CANCER
+    path_normal = PATH_NORMAL
+
+        #load data cancer
+    dataset_cancer = list()
+    output_cancer = np.array([[1+1j]])
+    cancer_list = [f for f in listdir(path_cancer) if isfile(join(path_cancer, f))]
+    for cancer_file in cancer_list:
+        # print "cancer_file : ",cancer_file
+        if (cancer_file.endswith(FILE_TIPE)):
+            input_cancer = np.asarray(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
+            # input_cancer_n = 1 - (input_cancer/255.0) #normalize value
+            input_cancer_n = input_cancer #normalize value
+            input_cancer_fft = np.fft.fft2(input_cancer_n)
+            input_cancer_fft_shift = np.fft.fftshift(input_cancer_fft)
+            input_cancer_fft_shift = normalize(input_cancer_fft_shift)
+            dataset_cancer.append(tuple((input_cancer_fft_shift, output_cancer)))
+
+    random.shuffle(dataset_cancer)
+
+    n = len(dataset_cancer)
+    print "dataset cancer : ", str(n)
+    if env == 'test':
+        training_data.extend(dataset_cancer[:200])
+        test_data.extend(dataset_cancer[:30])
+    else:
+        training_data.extend(dataset_cancer)
+        test_data.extend(dataset_cancer[:int(n / 10)])
+
+    # load data normal
+    dataset_normal = list()
+    output_normal = np.array([[0+0j]])
+    normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
+    for normal_file in normal_list:
+        # print "normal_file : ",normal_file
+        if (normal_file.endswith(FILE_TIPE)):
+            input_normal = np.asarray(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
+            # input_normal_n = 1 - (input_normal / 255.0)  # normalize value
+            input_normal_n = input_normal  # normalize value
+            input_normal_fft = np.fft.fft2(input_normal_n)
+            input_normal_fft_shift = np.fft.fftshift(input_normal_fft)
+            input_normal_fft_shift = normalize(input_normal_fft_shift)
+            dataset_normal.append(tuple((input_normal_fft_shift, output_normal)))
+
+    random.shuffle(dataset_normal)
+
+    n = len(dataset_normal)
+    print "dataset normal : ", str(n)
+    if env == 'test':
+        training_data.extend(dataset_normal[:200])
+        test_data.extend(dataset_normal[:30])
+    else:
+        training_data.extend(dataset_normal)
+        test_data.extend(dataset_normal[:int(n / 10)])
+
+    print "dataset total : ", len(training_data)
+    random.shuffle(training_data)  # randomize training dataset
+    # random.shuffle(test_data)  # randomize training dataset
+
+    return (training_data, test_data)
+
+def load_data_sobel(env):
+    training_data = list()
+    validation_data = list()
+    test_data = list()
+
+    path_cancer = PATH_CANCER
+    path_normal = PATH_NORMAL
+
+        #load data cancer
+    dataset_cancer = list()
+    output_cancer = np.array([[1 + 1j]])
+    cancer_list = [f for f in listdir(path_cancer) if isfile(join(path_cancer, f))]
+    for cancer_file in cancer_list:
+        # print "cancer_file : ",cancer_file
+        if (cancer_file.endswith(FILE_TIPE)):
+            input_cancer = np.asarray(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
+            # input_cancer_n = input_cancer/255.0 #normalize value
+            input_cancer_n = input_cancer
+
+            sobelx = cv2.Sobel(input_cancer_n, cv2.CV_64F, 1, 0, ksize=5)
+            sobely = cv2.Sobel(input_cancer_n, cv2.CV_64F, 0, 1, ksize=5)
+            input_cancer_sobel = sobelx + (1j * sobely)
+            input_cancer_sobel = normalize(input_cancer_sobel)
+
+            # input_cancer_fft_shift = np.fft.fftshift(input_cancer_fft)
+            dataset_cancer.append(tuple((input_cancer_sobel, output_cancer)))
+
+    random.shuffle(dataset_cancer)
+
+    n = len(dataset_cancer)
+
+    if env == 'test':
+        training_data.extend(dataset_cancer[:200])
+        test_data.extend(dataset_cancer[:30])
+    else:
+        training_data.extend(dataset_cancer)
+        test_data.extend(dataset_cancer[:int(n / 10)])
+
+    # load data normal
+    dataset_normal = list()
+    output_normal = np.array([[0 + 0j]])
+    normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
+    for normal_file in normal_list:
+        # print "normal_file : ",normal_file
+        if (normal_file.endswith(FILE_TIPE)):
+            input_normal = np.asarray(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
+            # input_normal_n = input_normal / 255.0  # normalize value
+            input_normal_n = input_normal
+
+            sobelx = cv2.Sobel(input_normal_n, cv2.CV_64F, 1, 0, ksize=5)
+            sobely = cv2.Sobel(input_normal_n, cv2.CV_64F, 0, 1, ksize=5)
+            input_normal_sobel = sobelx + (1j * sobely)
+            input_normal_sobel = normalize(input_normal_sobel)
+
+            dataset_normal.append(tuple((input_normal_sobel, output_normal)))
+
+    random.shuffle(dataset_normal)
+
+    n = len(dataset_normal)
+
+    if env == 'test':
+        training_data.extend(dataset_normal[:200])
+        test_data.extend(dataset_normal[:30])
+    else:
+        training_data.extend(dataset_normal)
+        test_data.extend(dataset_normal[:int(n / 10)])
+
+    # return (training_data, validation_data, test_data)
+    random.shuffle(training_data)  # randomize training dataset
+    # random.shuffle(test_data)  # randomize training dataset
+
     return (training_data, test_data)

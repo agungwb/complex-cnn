@@ -125,3 +125,14 @@ def save_matrix(data, filename, delimiter, mode = '2d'):
             print("Not supported : {} failed to create".format(filename))
     else:
         print("Not supported : {} failed to create".format(filename))
+
+def normalize(a):
+    max_magnitude = np.max(np.abs(a))
+    a_normalized = a / max_magnitude
+    return a_normalized
+
+def normalize_OLD(a):
+    max = np.max(a)
+    min = np.min(a)
+    a_normalized = (a-min)/(max-min)
+    return a_normalized

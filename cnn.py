@@ -49,6 +49,11 @@ class ConvLayer(object):
                                                            depth=self.depth,
                                                            filter_size=self.filter_size)
 
+        self.vw = np.zeros(self.weights.shape)
+        self.vb = np.zeros(self.biases.shape)
+        self.sw = np.zeros(self.weights.shape)
+        self.sb = np.zeros(self.biases.shape)
+
         # np.random.randn generate random from normal distribution
         # np.random.rand generate random from [0..1]
         # random with complex value np.random.rand(4).view(np.complex128)
@@ -63,6 +68,8 @@ class ConvLayer(object):
 
         # output convolution layer (after activation function) (num_filters, output_dim1, output_dim2)
         self.output = np.zeros((self.num_filters, self.output_dim1, self.output_dim2))
+
+
 
     def convolve(self, input):
         '''
@@ -153,6 +160,12 @@ class FullyConnectedLayer(Layer):
                                                         height_in=self.height_in,
                                                         width_in=self.width_in)
 
+        self.vw = np.zeros(self.weights.shape)
+        self.vb = np.zeros(self.biases.shape)
+        self.sw = np.zeros(self.weights.shape)
+        self.sb = np.zeros(self.biases.shape)
+
+
     def feedforward(self, input):
         '''
         forwardpropagates through the FC layer to the final output layer
@@ -188,6 +201,11 @@ class ClassifyLayer(Layer):
 
         self.weights, self.biases = initiate_weights_classify(num_classes = self.num_classes,
                                                               num_inputs = num_inputs)
+
+        self.vw = np.zeros(self.weights.shape)
+        self.vb = np.zeros(self.biases.shape)
+        self.sw = np.zeros(self.weights.shape)
+        self.sb = np.zeros(self.biases.shape)
 
     def classify(self, input):
         self.z_values = np.dot(self.weights, input) + self.biases
@@ -286,7 +304,7 @@ class Model(object):
         log.debug("FEED FORWARD")
 
         prev_activation = image
-        # save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
+        #save_matrix(prev_activation, "csv/feedforward/0_input.csv", delimiter="; ")
 
         # forwardpass
         i = 1
@@ -304,10 +322,10 @@ class Model(object):
                 # print "Time FullyConnectedLayer : ", ex_time
                 # print "FullyConnectedLayer : ", layer.output
 
-                # save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "w"), delimiter="; ")
-                # save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "b"), delimiter="; ")
-                # save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "z"), delimiter="; ")
-                # save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "a"), delimiter="; ")
+                #save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "w"), delimiter="; ")
+                #save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "b"), delimiter="; ")
+                #save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "z"), delimiter="; ")
+                #save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"fc", "a"), delimiter="; ")
 
             elif isinstance(layer, ConvLayer):
                 layer_name = "convolutional_layer"
@@ -320,10 +338,10 @@ class Model(object):
                 #     plt.imsave('images/cat_conv%d.png'%i, layer.output[i])
                 # for i in range(layer.weights.shape[0]):
                 #     plt.imsave('images/filter_conv%s.png'%i, layer.weights[i].reshape((5,5)))
-                # save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "w"), delimiter="; ")
-                # save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "conv", "b"), delimiter="; ")
-                # save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "z"), delimiter="; ")
-                # save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "a"), delimiter="; ")
+                #save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "w"), delimiter="; ")
+                #save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "conv", "b"), delimiter="; ")
+                #save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "z"), delimiter="; ")
+                #save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"conv", "a"), delimiter="; ")
 
             elif isinstance(layer, PoolingLayer):
                 layer_name = "pooling_layer"
@@ -334,8 +352,8 @@ class Model(object):
                 # print "Time PoolingLayer : ", ex_time
                 # for i in range(layer.output.shape[0]):
                 # #     plt.imsave('images/pool_pic%s.png'%i, layer.output[i])
-                # save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "a"), delimiter="; ")
-                # save_matrix(layer.max_indices, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "max"), delimiter="; ", mode='1d')
+                #save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "a"), delimiter="; ")
+                #save_matrix(layer.max_indices, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"pool", "max"), delimiter="; ", mode='1d')
 
             elif isinstance(layer, ClassifyLayer):
                 layer_name = "classify_layer"
@@ -345,10 +363,10 @@ class Model(object):
                 # ex_time = end - start
                 # print "Time ClassifyLayer : ", ex_time
                 # print "Classify : ", layer.output
-                # save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "w"), delimiter="; ")
-                # save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "classify", "b"), delimiter="; ")
-                # save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "z"), delimiter="; ")
-                # save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "a"), delimiter="; ")
+                #save_matrix(layer.weights, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "w"), delimiter="; ")
+                #save_matrix(layer.biases, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i), "classify", "b"), delimiter="; ")
+                #save_matrix(layer.z_values, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "z"), delimiter="; ")
+                #save_matrix(layer.output, "csv/feedforward/{0}_{1}_{2}.csv".format(str(i),"classify", "a"), delimiter="; ")
 
             else:
                 raise NotImplementedError
@@ -408,7 +426,7 @@ class Model(object):
 
         nabla_idx = len(nabla_w) - 1
 
-        # save_matrix(delta, "csv/backprop/{0}_{1}.csv".format(str(num_layers), "loss_prime"), delimiter="; ")
+        #save_matrix(delta, "csv/backprop/{0}_{1}.csv".format(str(num_layers), "loss_prime"), delimiter="; ")
 
         for l in range(num_layers - 1, -1, -1):
             # the "outer" layer is closer to classification
@@ -454,9 +472,9 @@ class Model(object):
                         z_vals=layer.z_values,
                         activation=layer.activation)
 
-                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "d"),delimiter="; ")
-                # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "dw"),delimiter="; ")
-                # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "db"),delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "d"),delimiter="; ")
+                #save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "dw"),delimiter="; ")
+                #save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "1d_to_1d", "db"),delimiter="; ")
 
             elif transition == '3d_to_1d':
                 if l == 0:
@@ -468,9 +486,9 @@ class Model(object):
                     z_vals=layer.z_values,
                     activation=layer.activation)  # (100,1)
                 # layer.weights = layer.weights.reshape((layer.num_output, layer.depth, layer.height_in, layer.width_in))
-                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "d"), delimiter="; ")
-                # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "dw"), delimiter="; ")
-                # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "db"), delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "d"), delimiter="; ")
+                #save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "dw"), delimiter="; ")
+                #save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "3d_to_1d", "db"), delimiter="; ")
 
             # pool to conv layer
             elif transition == 'pool':
@@ -496,7 +514,7 @@ class Model(object):
                         poolsize=layer.poolsize,
                         pool_output=layer.output)
 
-                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "pool", "d"), delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "pool", "d"), delimiter="; ")
 
             elif transition == 'conv':
                 # prev_output = image
@@ -509,9 +527,9 @@ class Model(object):
                     z_vals=layer.z_values,
                     activation=layer.activation)
 
-                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "d"), delimiter="; ")
-                # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "dw"), delimiter="; ")
-                # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "db"), delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "d"), delimiter="; ")
+                #save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "dw"), delimiter="; ")
+                #save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "conv", "db"), delimiter="; ")
 
             # conv to conv layer
             elif transition == 'to_conv':
@@ -533,9 +551,9 @@ class Model(object):
                     output=image,
                     z_vals=layer.z_values,
                     activation=layer.activation)
-                # save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "d"), delimiter="; ")
-                # save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "dw"), delimiter="; ")
-                # save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "db"), delimiter="; ")
+                #save_matrix(delta, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "d"), delimiter="; ")
+                #save_matrix(dw, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "dw"), delimiter="; ")
+                #save_matrix(db, "csv/backprop/{0}_{1}_{2}.csv".format(str(l+1), "to_conv", "db"), delimiter="; ")
 
             else:
                 pass
@@ -564,7 +582,7 @@ class Model(object):
         return self.layers[-1].output, nabla_b, nabla_w
 
 
-    def gradient_descent(self, training_data, batch_size, eta, num_epochs, num_output, lmbda=None, test_data=None):
+    def gradient_descent(self, training_data, test_data, batch_size, eta, num_epochs, num_output, optimizer=None):
         random.shuffle(training_data)
         training_size = len(training_data)
 
@@ -586,24 +604,27 @@ class Model(object):
             batches = [training_data[k:k + batch_size] for k in xrange(0, training_size, batch_size)]
             losses = 0
 
-            batch_index = 0
+            batch_index = 1
 
             n_iteration = int(training_size/batch_size)
 
             for batch in batches:
                 # print '---batch : {}', batch
-                batch_index += 1
+
 
                 start = time.time()
-                loss = self.update_mini_batch(batch, eta)
+                loss = self.update_mini_batch(batch, eta, batch_index, optimizer)
+
                 end = time.time()
                 execution_time = end - start
                 # print "TIME mini_batch : ", execution_time
 
                 losses += loss
-                average_losses = losses / batch_index
+                average_losses = losses / (batch_index)
                 # log.info( "losses : %s", losses)
-                log.info("[Epoch {0}/{1}][Iteration {2}/{3}] Loss : {4}, Avg.Loss : {5}, Time : {6}".format(epoch, num_epochs, batch_index, n_iteration, loss, average_losses, execution_time))
+                log.info("[Epoch {0}/{1}][Iteration {2}/{3}] Loss : {4}, Avg.Loss : {5}, Time : {6}".format(epoch, num_epochs, (batch_index), n_iteration, loss, average_losses, execution_time))
+
+                batch_index += 1
 
             mean_error.append(float(losses) / float(batch_size))
             log.info("Average Loss : {0}".format(mean_error))
@@ -636,7 +657,7 @@ class Model(object):
         # plt.show()
 
     # bisa di paralelisasi
-    def update_mini_batch(self, batch, eta):
+    def update_mini_batch(self, batch, eta, batch_index, optimizer=None):
         nabla_w = [np.zeros(s) for s in self.layer_weight_shapes]
         nabla_b = [np.zeros(s) for s in self.layer_biases_shapes]
 
@@ -702,24 +723,47 @@ class Model(object):
             # print "type(layer type) : ",type(layer)
             # print "type(layer.weights) : ",layer.weights.shape
             # print "type(layer_nabla_w) : ",layer_nabla_w.shape
-            # save_matrix(layer_nabla_w, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "nw"), delimiter="; ")
 
-            # print "type(layer.biases) : ",layer.biases.shape
-            # print "type(layer_nabla_b) : ",layer_nabla_b.shape
-            # save_matrix(layer_nabla_b, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "nb"), delimiter="; ")
+            delta_w = layer_nabla_w / float(batch_size)
+            delta_b = layer_nabla_b / float(batch_size)
 
-            # save_matrix(layer.weights, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "w"),delimiter="; ")
-            # save_matrix(layer.biases, "csv/backprop/test/{0}_{1}.csv".format(str(ix), "b"),delimiter="; ")
+            if optimizer == None:
+                layer.weights -= eta * delta_w
+                layer.biases -= eta * delta_b
 
-            layer.weights -= eta * layer_nabla_w / batch_size
-            layer.biases -= eta * layer_nabla_b / batch_size
+            else:
+                if optimizer['name'] == 'momentum':
+                    momentum = optimizer['momentum']
 
-            # layer.weights -= eta * layer_nabla_w
-            # layer.biases -= eta * layer_nabla_b
+                    layer.vw = (momentum * layer.vw) + ((1.0 - momentum) * delta_w)
+                    layer.vb = (momentum * layer.vb) + ((1.0 - momentum) * delta_b)
 
-            # save_matrix(layer.weights, "csv/backprop/test/{0}_{1}_{2}.csv".format(str(ix), "w", "after"), delimiter="; ")
-            # save_matrix(layer.biases, "csv/backprop/test/{0}_{1}_{2}.csv".format(str(ix), "b", "after"), delimiter="; ")
+                    layer.weights -= eta * layer.vw
+                    layer.biases -= eta * layer.vb
 
+                elif optimizer['name'] == 'adam':
+                    beta1 = optimizer['beta1']
+                    beta2 = optimizer['beta2']
+                    eps = optimizer['epsilon']
+
+                    layer.vw = (beta1 * layer.vw) + ((1.0 - beta1) * delta_w)
+                    layer.vb = (beta1 * layer.vb) + ((1.0 - beta1) * delta_b)
+
+                    layer.sw = (beta2 * layer.sw) + ((1.0 - beta2) * (delta_w**2))
+                    layer.sb = (beta2 * layer.sb) + ((1.0 - beta2) * (delta_b**2))
+
+                    #bias correction
+                    vw_correction = layer.vw / (1.0 - np.power(beta1, batch_index))
+                    vb_correction = layer.vb / (1.0 - np.power(beta1, batch_index))
+
+                    sw_correction = layer.sw / (1.0 - np.power(beta2, batch_index))
+                    sb_correction = layer.sb / (1.0 - np.power(beta2, batch_index))
+
+                    grad_w = eta * (vw_correction / (np.sqrt(sw_correction) + eps))
+                    grad_b = eta * (vb_correction / (np.sqrt(sb_correction) + eps))
+
+                    layer.weights -= grad_w
+                    layer.biases -= grad_b
 
         return error
 

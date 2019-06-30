@@ -6,7 +6,7 @@ from chelper import *
 
 
 #FEED FORWARD
-# @numba.njit()
+@numba.njit()
 def convole_loop(num_filters, z_values, activation, input_neurons, width_in, weights, filter_size, stride, biases, output):
     act_length1d = output.shape[1]  # dim1 * dim2
 
@@ -31,6 +31,7 @@ def convole_loop(num_filters, z_values, activation, input_neurons, width_in, wei
             z_values[j][i] = input_sum[0]
 
             z = z_values[j][i]
+
             output[j][i] = activate(z, activation)# activation function
 
             slide += stride
@@ -239,3 +240,4 @@ def backprop_to_conv_loop(num_filters, total_deltas_per_layer, output, filter_si
             if (slide + filter_size)-stride >= output.shape[2]:    # wrap indices at the end of each row
                 slide = 0
                 row+=stride
+

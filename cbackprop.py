@@ -24,7 +24,8 @@ log = logging.getLogger("__backprop__")
 
 @numba.njit()
 def backprop_1d_to_1d(delta, weights, output, z_vals, activation):
-    sp = activate_prime(z_vals, activation)
+    shape = z_vals.shape
+    sp = activate_prime_2d(z_vals, activation, shape[0], shape[1])
 
     # delta = np.dot(weights.transpose(), delta) * sp
     delta = ((np.dot(weights.real.transpose(), delta.real) + np.dot(weights.imag.transpose(), delta.imag)) * sp.real) \
@@ -39,7 +40,8 @@ def backprop_1d_to_1d(delta, weights, output, z_vals, activation):
 
 @numba.njit()
 def backprop_1d_to_1d_final(loss_prime, output, z_vals, activation):
-    sp = activate_prime(z_vals, activation)
+    shape = z_vals.shape
+    sp = activate_prime_2d(z_vals, activation, shape[0], shape[1])
 
     # delta = loss_prime * sp
 
@@ -57,7 +59,8 @@ def backprop_1d_to_1d_final(loss_prime, output, z_vals, activation):
 
 @numba.njit()
 def backprop_3d_to_1d(delta, weights, output, z_vals, activation):
-    sp = activate_prime(z_vals, activation)
+    shape = z_vals.shape
+    sp = activate_prime_2d(z_vals, activation, shape[0], shape[1])
 
     # delta = np.dot(weights.transpose(), delta) * sp
     delta = ((np.dot(weights.real.transpose(), delta.real) + np.dot(weights.imag.transpose(), delta.imag)) * sp.real) \
@@ -102,7 +105,8 @@ def backprop_conv(delta, weights_shape, stride, output, z_vals, activation):
     '''weights passed in are the ones between pooling and fc layer'''
 
     num_filters, depth, filter_size, filter_size = weights_shape
-    sp = activate_prime(z_vals, activation)
+    shape = z_vals.shape
+    sp = activate_prime_3d(z_vals, activation, shape[0], shape[1], shape[2])
 
     # delta =  sp * delta
     delta = (delta.real * sp.real) + (1j * delta.imag * sp.imag)

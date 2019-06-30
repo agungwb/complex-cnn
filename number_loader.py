@@ -4,6 +4,7 @@ import random
 from os import listdir
 from os.path import isfile, join
 import dtcwt
+from util import *
 
 import numpy as np
 
@@ -33,7 +34,7 @@ def load_data():
         # print "cancer_file : ",cancer_file
         if (cancer_file.endswith(FILE_TIPE)):
             input_cancer = np.asarray(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
-            input_cancer = input_cancer/255.0 + 0j #normalize value
+            input_cancer = input_cancer/255.0 #normalize value
             dataset_cancer.append(tuple((input_cancer, output_cancer)))
     random.shuffle(dataset_cancer)
     n = len(dataset_cancer)
@@ -55,7 +56,7 @@ def load_data():
         # print "normal_file : ",normal_file
         if (normal_file.endswith(FILE_TIPE)):
             input_normal = np.asarray(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
-            input_normal = input_normal / 255.0 + 0j  # normalize value
+            input_normal = input_normal / 255.0  # normalize value
             dataset_normal.append(tuple((input_normal, output_normal)))
     random.shuffle(dataset_normal)
     n = len(dataset_normal)
@@ -300,8 +301,10 @@ def load_data_fft():
         # print "cancer_file : ",cancer_file
         if (cancer_file.endswith(FILE_TIPE)):
             input_cancer = np.asarray(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
-            input_cancer_n = input_cancer/255.0 #normalize value
+            # input_cancer_n = input_cancer/255.0 #normalize value
+            input_cancer_n = input_cancer
             input_cancer_fft = np.fft.fft2(input_cancer_n)
+            input_cancer_fft = normalize(input_cancer_fft)
             # input_cancer_fft_shift = np.fft.fftshift(input_cancer_fft)
             dataset_cancer.append(tuple((input_cancer_fft, output_cancer)))
 
@@ -327,10 +330,89 @@ def load_data_fft():
         # print "normal_file : ",normal_file
         if (normal_file.endswith(FILE_TIPE)):
             input_normal = np.asarray(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
-            input_normal_n = input_normal / 255.0  # normalize value
+            # input_normal_n = input_normal / 255.0  # normalize value
+            input_normal_n = input_normal
             input_normal_fft = np.fft.fft2(input_normal_n)
+            input_normal_fft = normalize(input_normal_fft)
             # input_normal_fft_shift = np.fft.fftshift(input_normal_fft)
             dataset_normal.append(tuple((input_normal_fft, output_normal)))
+
+    random.shuffle(dataset_normal)
+
+    n = len(dataset_normal)
+    # training_data.extend(dataset_normal[:int(0.9 * n)])
+    # dataset_normal = dataset_normal[:n/10]
+    training_data.extend(dataset_normal)
+
+    # validation_data.extend(dataset_normal[int(0.8 * n):int(0.9 * n)])
+
+    # test_data.extend(dataset_normal[int(0.9 * n):])
+    test_data.extend(dataset_normal[:30])
+
+    # return (training_data, validation_data, test_data)
+    random.shuffle(training_data)  # randomize training dataset
+    # random.shuffle(test_data)  # randomize training dataset
+
+    return (training_data, test_data)
+
+def load_data_sobel():
+    training_data = list()
+    validation_data = list()
+    test_data = list()
+
+    path_cancer = PATH_CANCER
+    path_normal = PATH_NORMAL
+
+        #load data cancer
+    dataset_cancer = list()
+    output_cancer = np.array([[1 + 1j]])
+    cancer_list = [f for f in listdir(path_cancer) if isfile(join(path_cancer, f))]
+    for cancer_file in cancer_list:
+        # print "cancer_file : ",cancer_file
+        if (cancer_file.endswith(FILE_TIPE)):
+            input_cancer = np.asarray(cv2.imread(path_cancer+"/"+cancer_file, cv2.IMREAD_GRAYSCALE))
+            # input_cancer_n = input_cancer/255.0 #normalize value
+            input_cancer_n = input_cancer
+
+            sobelx = cv2.Sobel(input_cancer_n, cv2.CV_64F, 1, 0, ksize=5)
+            sobely = cv2.Sobel(input_cancer_n, cv2.CV_64F, 0, 1, ksize=5)
+            input_cancer_sobel = sobelx + (1j * sobely)
+            input_cancer_sobel = normalize(input_cancer_sobel)
+
+            # input_cancer_fft_shift = np.fft.fftshift(input_cancer_fft)
+            dataset_cancer.append(tuple((input_cancer_sobel, output_cancer)))
+
+    random.shuffle(dataset_cancer)
+
+    n = len(dataset_cancer)
+    # training_data.extend(dataset_cancer[:int(0.9 * n)])
+    training_data.extend(dataset_cancer)
+    # dataset_cancer = dataset_cancer
+    # training_data.extend(dataset_cancer)
+
+    # validation_data.extend(dataset_cancer[int(0.8 * n):int(0.9 * n)])
+
+    # test_data.extend(dataset_cancer[:int(0.9 * n)])
+    test_data.extend(dataset_cancer[:30])
+    # test_data.extend(dataset_cancer)
+
+    # load data normal
+    dataset_normal = list()
+    output_normal = np.array([[0 + 0j]])
+    normal_list = [f for f in listdir(path_normal) if isfile(join(path_normal, f))]
+    for normal_file in normal_list:
+        # print "normal_file : ",normal_file
+        if (normal_file.endswith(FILE_TIPE)):
+            input_normal = np.asarray(cv2.imread(path_normal+"/"+normal_file, cv2.IMREAD_GRAYSCALE))
+            # input_normal_n = input_normal / 255.0  # normalize value
+            input_normal_n = input_normal
+
+            sobelx = cv2.Sobel(input_normal_n, cv2.CV_64F, 1, 0, ksize=5)
+            sobely = cv2.Sobel(input_normal_n, cv2.CV_64F, 0, 1, ksize=5)
+            input_normal_sobel = sobelx + (1j * sobely)
+            input_normal_sobel = normalize(input_normal_sobel)
+
+            dataset_normal.append(tuple((input_normal_sobel, output_normal)))
 
     random.shuffle(dataset_normal)
 

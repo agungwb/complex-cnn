@@ -60,25 +60,28 @@ import matplotlib.pyplot as plt
 ######################### TEST IMAGE ##########################
 
 
-ETA = 0.01 #learning-rate (maybe)
+ETA = 0.001 #learning-rate
 EPOCHS = 30 #default 5
 WIDTH = 36
 HEIGHT = 36
 CHANNEL = 1
 INPUT_SHAPE = (HEIGHT*WIDTH)     # for mnist
 BATCH_SIZE = 32  #defalut 10
-LMBDA = 0.1
+LMBDA1 = 0.9
+LMBDA2 = 0.99
 OUTPUT = 1
 
 # import ipdb; ipdb.set_trace()
 # training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
 
 if sys.argv[1] == 'ccnn':
+    EPOCHS = 30  # default 5
     WIDTH = 18
     HEIGHT = 18
     OUTPUT = 1
     # training_data, validation_data, test_data = mammogram_loader.load_data_dtcwt(sys.argv[2] if len(sys.argv) > 2 else 'main')
-    training_data, test_data = mammogram_loader.load_data_dtcwt3(sys.argv[2] if len(sys.argv) > 2 else 'main')
+    training_data, test_data = mammogram_loader.load_data_dtcwt2(sys.argv[2] if len(sys.argv) > 2 else 'main')
+    # training_data, test_data = mammogram_loader.load_data_sobel(sys.argv[2] if len(sys.argv) > 2 else 'main')
     if (len(sys.argv) > 2 and sys.argv[2] == 'test'):
         BATCH_SIZE = 10  # defalut 10
         EPOCH = 1
@@ -125,7 +128,9 @@ elif sys.argv[1] == 'hanacaraka-complex':
     HEIGHT = 24
     OUTPUT = 1
     EPOCHS = 20
-    training_data, test_data = hanacaraka_loader.load_data_dtcwt3()
+    # training_data, test_data = hanacaraka_loader.load_data_dtcwt2()
+    training_data, test_data = hanacaraka_loader.load_data_sobel()
+    # training_data, test_data = hanacaraka_loader.load_data_fft()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 elif sys.argv[1] == 'number':
@@ -141,8 +146,10 @@ elif sys.argv[1] == 'number-complex':
     HEIGHT = 14
     OUTPUT = 1
     EPOCHS = 10
+    # training_data, test_data = number_loader.load_data_sobel()
     training_data, test_data = number_loader.load_data_fft()
     # training_data, test_data = number_loader.load_data_complex()
+    # training_data, test_data = number_loader.load_data_dtcwt2()
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("__run__")
 elif sys.argv[1] == 'dummy':
@@ -207,7 +214,7 @@ net = Model(input_shape,
                     {
                         'filter_size': 3,
                         'stride': 1,
-                        'num_filters': 20,
+                        'num_filters': 50,
                         'activation': 3
                     }
                 },
@@ -244,6 +251,9 @@ net = Model(input_shape,
                 }
             ])
 
+
+learning_method = []
+
 # print(np.shape(training_data))
 # print(np.shape(validation_data))
 # print(np.shape(test_data))
@@ -252,10 +262,28 @@ net = Model(input_shape,
 # print(training_data[0][0])
 # sys.exit(0)
 
+momentum = {
+    'name' : 'momentum',
+    'momentum': 0.9
+}
+
+adam = {
+    'name' : 'adam',
+    'beta1': 0.9,
+    'beta2': 0.99,
+    'epsilon': 1e-8
+}
+
 # net.gradient_descent(training_data[0:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:20])
 # net.gradient_descent(training_data[:100], BATCH_SIZE, ETA, EPOCHS, LMBDA, test_data = test_data[:100])
 start = time.time()
-net.gradient_descent(training_data, BATCH_SIZE, ETA, EPOCHS, OUTPUT, LMBDA, test_data = test_data)
+net.gradient_descent(training_data = training_data,
+                     test_data = test_data,
+                     batch_size= BATCH_SIZE,
+                     eta = ETA,
+                     num_epochs= EPOCHS,
+                     num_output=OUTPUT,
+                     optimizer=adam)
 end = time.time()
 time = end - start
 log.info("Time : {0}".format(time))
