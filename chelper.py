@@ -163,74 +163,82 @@ def relu_split(z):
 def relu_split_prime(z):
     return relu_prime(z.real) + 1j * relu_prime(z.imag)
 
-@numba.njit()
+@numba.njit(parallel=True)
 def zrelu(z):
     arr = np.array([0. + 0.j, 1. + 1.j])
     if z.real >= 0 and z.imag >= 0:
         return z
     else:
-        return arr[0]
+        # return arr[0]
+        return z*0.01
 
 
 
-@numba.njit()
+@numba.njit(parallel=True)
 def zrelu_1d(z, dim1):
     for i in numba.prange(dim1):
         if ((np.real(z[i]) < 0) or (np.imag(z[i]) < 0)):
-            z[i] = 0+0j
+            # z[i] = 0+0j
+            z[i] = z[i]*0.01
     return z
 
-@numba.njit()
+@numba.njit(parallel=True)
 def zrelu_2d(z, dim1, dim2):
-    for i in range(dim1):
-        for j in range(dim2):
+    for i in numba.prange(dim1):
+        for j in numba.prange(dim2):
             if np.real(z[i][j]) < 0 or np.imag(z[i][j]) < 0:
-                z[i][j] = 0+0j
+                # z[i][j] = 0+0j
+                z[i][j] = z[i][j]*0.01
     return z
 
-@numba.njit()
+@numba.njit(parallel=True)
 def zrelu_3d(z, dim1, dim2, dim3):
-    for i in range(dim1):
-        for j in range(dim2):
-            for k in range(dim3):
+    for i in numba.prange(dim1):
+        for j in numba.prange(dim2):
+            for k in numba.prange(dim3):
                 if np.real(z[i][j][k]) < 0 or np.imag(z[i][j][k]) < 0:
-                    z[i][j][k] = 0+0j
+                    # z[i][j][k] = 0+0j
+                    z[i][j][k] = z[i][j][k]*0.01
     return z
 
-@numba.njit()
+@numba.njit(parallel=True)
 def zrelu_prime(z):
     if z.real < 0 or z.image < 0:
-        return 0 + 0j
+        # return 0 + 0j
+        return 0.01 + 0.01j
     else:
         return 1 + 1j
 
 
-@numba.njit()
+@numba.njit(parallel=True)
 def zrelu_prime_1d(z, dim1):
-    for i in range(dim1):
+    for i in numba.prange(dim1):
         if np.real(z[i]) < 0 or np.imag(z[i]) < 0:
-            z[i] = 0 + 0j
+            # z[i] = 0 + 0j
+            z[i] = 0.01 + 0.01j
         else:
             z[i] = 1 + 1j
     return z
 
-@numba.njit()
+@numba.njit(parallel=True)
 def zrelu_prime_2d(z, dim1, dim2):
-    for i in range(dim1):
-        for j in range(dim2):
+    for i in numba.prange(dim1):
+        for j in numba.prange(dim2):
             if np.real(z[i][j]) < 0 or np.imag(z[i][j]) < 0:
-                z[i][j] = 0 + 0j
+                # z[i][j] = 0 + 0j
+                z[i][j] = 0.01 + 0.01j
             else:
                 z[i][j] = 1 + 1j
     return z
 
-@numba.njit()
+@numba.njit(parallel=True)
 def zrelu_prime_3d(z, dim1, dim2, dim3):
-    for i in range(dim1):
-        for j in range(dim2):
-            for k in range(dim3):
+    for i in numba.prange(dim1):
+        for j in numba.prange(dim2):
+            for k in numba.prange(dim3):
                 if np.real(z[i][j][k]) < 0 or np.imag(z[i][j][k]) < 0:
-                    z[i][j][k] = 0 + 0j
+                    # z[i][j][k] = 0 + 0j
+                    z[i][j][k] = 0.01 + 0.01j
                 else:
                     z[i][j][k] = 1 + 1j
     return z

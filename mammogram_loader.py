@@ -399,7 +399,6 @@ def load_data_sobel(env):
             input_cancer_sobel = sobelx + (1j * sobely)
             input_cancer_sobel = normalize(input_cancer_sobel)
 
-            # input_cancer_fft_shift = np.fft.fftshift(input_cancer_fft)
             dataset_cancer.append(tuple((input_cancer_sobel, output_cancer)))
 
     random.shuffle(dataset_cancer)
