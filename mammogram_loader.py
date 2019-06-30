@@ -184,11 +184,11 @@ def load_data_dtcwt2(env):
             input_cancer_n = input_cancer
             input_cancer_c = transform.forward(input_cancer_n, nlevels=3)
             h, w, d = input_cancer_c.highpasses[0].shape
+            normalized_result = normalize(input_cancer_c.highpasses[0])
             input_cancer_append = np.zeros((d, h, w)) + 0j
 
             for i in range(6):
-                input_cancer_append_i = input_cancer_c.highpasses[0][:, :, i]
-                input_cancer_append[i] = normalize(input_cancer_append_i)
+                input_cancer_append[i] = normalized_result[:, :, i]
 
             dataset_cancer.append(tuple((input_cancer_append, output_cancer)))
 
@@ -218,11 +218,11 @@ def load_data_dtcwt2(env):
             input_normal_n = input_normal
             input_normal_c = transform.forward(input_normal_n, nlevels=3)
             h, w, d = input_normal_c.highpasses[0].shape
+            normalized_result = normalize(input_normal_c.highpasses[0])
             input_normal_append = np.zeros((d, h, w)) + 0j
 
             for i in range(6):
-                input_normal_append_i = input_normal_c.highpasses[0][:, :, i]
-                input_normal_append[i] = normalize(input_normal_append_i)
+                input_normal_append[i] = normalized_result[:, :, i]
 
             dataset_normal.append(tuple((input_normal_append, output_normal)))
     random.shuffle(dataset_normal)
